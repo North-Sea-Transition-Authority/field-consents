@@ -184,7 +184,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -213,7 +213,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -241,7 +241,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             getCompleteApplicationDataItemForSearchBuilder()
                 .withApplicationId(applicationId)
                 .withType(ApplicationType.FLARE.getDisplayName())
-                
+
                 .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
                 .withAsset(field1JsonWithOperatorAndLicences.getName())
                 .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
@@ -275,7 +275,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -297,7 +297,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.WITHDRAWN.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -346,7 +346,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.CONSENTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .build()
     );
@@ -567,7 +567,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(searchResults).containsExactly(
         getCompleteApplicationDataItemForSearchBuilder()
             .withApplicationId(applicationId)
-            
+
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
@@ -606,7 +606,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -645,7 +645,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .build()
     );
@@ -688,7 +688,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .build()
     );
@@ -782,7 +782,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(searchResults).containsExactly(
         getCompleteApplicationDataItemForSearchBuilder()
             .withApplicationId(applicationId)
-            
+
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
@@ -807,7 +807,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(searchResults).containsExactly(
         getCompleteApplicationDataItemForSearchBuilder()
             .withApplicationId(applicationId)
-            
+
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())

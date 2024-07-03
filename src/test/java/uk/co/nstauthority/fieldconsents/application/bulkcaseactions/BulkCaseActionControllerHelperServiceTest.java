@@ -141,7 +141,7 @@ class BulkCaseActionControllerHelperServiceTest {
         .withReference("")
         .withOperator("")
         .withDuration("")
-        .withAceFlag("")
+        .withAceFlag(null)
         .withAsset("")
         .withGeographicArea("")
         .withStatus("")

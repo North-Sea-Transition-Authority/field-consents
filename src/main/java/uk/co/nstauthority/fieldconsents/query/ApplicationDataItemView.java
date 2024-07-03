@@ -2,9 +2,11 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Objects;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
 public record ApplicationDataItemView(
     Integer applicationId,
@@ -17,7 +19,8 @@ public record ApplicationDataItemView(
     String status,
     String submittedDateTime,
     String submittedBy,
-    String aceFlag,
+    Boolean aceFlag,
+    String aceFlagText,
     String caseOfficer,
     String camUser,
     Boolean withdrawalOpen,
@@ -50,7 +53,8 @@ public record ApplicationDataItemView(
     private String status;
     private String submittedDateTime;
     private String submittedBy;
-    private String aceFlag;
+    private Boolean aceFlag;
+    private String aceFlagText;
     private String caseOfficer;
     private String camUser;
     private Boolean withdrawalOpen;
@@ -119,9 +123,17 @@ public record ApplicationDataItemView(
       return this;
     }
 
-    public Builder withAceFlag(String aceFlag) {
+    public Builder withAceFlag(Boolean aceFlag) {
       this.aceFlag = aceFlag;
+      this.aceFlagText = getDisplayAceFlagText(aceFlag);
       return this;
+    }
+
+    private String getDisplayAceFlagText(Boolean aceFlag) {
+      if (Objects.isNull(aceFlag)) {
+        return "";
+      }
+      return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(aceFlag));
     }
 
     public Builder withCaseOfficer(String caseOfficer) {
@@ -207,6 +219,7 @@ public record ApplicationDataItemView(
           submittedDateTime,
           submittedBy,
           aceFlag,
+          aceFlagText,
           caseOfficer,
           camUser,
           withdrawalOpen,

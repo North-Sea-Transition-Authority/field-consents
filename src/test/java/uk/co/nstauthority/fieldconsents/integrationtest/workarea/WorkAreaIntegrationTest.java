@@ -264,7 +264,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -324,7 +324,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
                 .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
                 .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
                 .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-                .withAceFlag("ACE: No")
+                .withAceFlag(false)
                 .build()
         );
   }
@@ -655,7 +655,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .build()
     );
   }
@@ -932,7 +932,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .withTechnicalReviewOpen(false)
             .withTechnicalReviewDeadline("")
@@ -981,7 +981,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .withTechnicalReviewer("%s %s".formatted(TECHNICAL_REVIEWER_DETAIL.forename(), TECHNICAL_REVIEWER_DETAIL.surname()))
             .withTechnicalReviewOpen(true)
@@ -1022,7 +1022,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .withWithdrawalOpen(null)
             .withApplicationUpdateOpen(null)
@@ -1190,7 +1190,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
             .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
             .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
-            .withAceFlag("ACE: No")
+            .withAceFlag(false)
             .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
             .withCamUser("%s %s".formatted(CAM_USER_DETAIL.forename(), CAM_USER_DETAIL.surname()))
             .withTechnicalReviewOpen(false)
@@ -1359,7 +1359,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     return applicationVersion;
   }
-  
+
   @SuppressWarnings("unchecked")
   private List<ApplicationDataItemView> getWorkAreaItems(WorkAreaFilterForm workAreaForm, ServiceUserDetail userDetail) {
     var workAreaFilter = new WorkAreaFilter();

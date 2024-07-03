@@ -356,30 +356,6 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayAceFlag_whenTrue() {
-    var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForField();
-
-    assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
-        .isEqualTo("ACE: Yes");
-  }
-
-  @Test
-  void getDisplayAceFlag_whenFalse() {
-    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
-
-    assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
-        .isEqualTo("ACE: No");
-  }
-
-  @Test
-  void getDisplayAceFlag_whenUndefined() {
-    var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
-
-    assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
-        .isEmpty();
-  }
-
-  @Test
   void getDisplayCaseOfficer_withNoCaseOfficer() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
@@ -491,6 +467,7 @@ class ApplicationDataItemDtoServiceTest {
         applicationDataItemDto.status().getDisplayName(),
         DateUtils.format(applicationDataItemDto.submittedDateTime(), DateUtils.DATE_TIME),
         energyPortalUserDto.displayName(),
+        true,
         "ACE: Yes",
         "",
         "",
@@ -614,7 +591,6 @@ class ApplicationDataItemDtoServiceTest {
     doReturn("").when(applicationDataItemDtoService).getDisplayAssetLocation(dto, Collections.emptyMap());
     doReturn("").when(applicationDataItemDtoService).getSubmittedDateTime(dto);
     doReturn("").when(applicationDataItemDtoService).getSubmittedByName(dto, Collections.emptyMap());
-    doReturn("").when(applicationDataItemDtoService).getDisplayAceFlag(dto);
     doReturn("").when(applicationDataItemDtoService).getDisplayCaseOfficer(dto, Collections.emptyMap());
     doReturn("").when(applicationDataItemDtoService).getDisplayCamUser(dto, Collections.emptyMap(), teamType);
     doReturn("").when(applicationDataItemDtoService).getDisplayTechnicalReviewer(dto, Collections.emptyMap(), teamType);

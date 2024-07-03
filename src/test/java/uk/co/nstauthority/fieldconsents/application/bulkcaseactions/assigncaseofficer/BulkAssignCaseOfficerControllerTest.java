@@ -217,7 +217,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
         .withReference("")
         .withOperator("")
         .withDuration("")
-        .withAceFlag("")
+        .withAceFlag(null)
         .withAsset("")
         .withGeographicArea("")
         .withStatus("")

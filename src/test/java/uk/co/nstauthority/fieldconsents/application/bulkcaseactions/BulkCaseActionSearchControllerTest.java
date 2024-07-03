@@ -327,7 +327,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         .withReference("")
         .withOperator("")
         .withDuration("")
-        .withAceFlag("")
+        .withAceFlag(true)
         .withAsset("")
         .withGeographicArea("")
         .withStatus("")

@@ -550,6 +550,7 @@ public class ApplicationDataItemUtil {
         ApplicationVersionStatus.SUBMITTED.getDisplayName(),
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID),
+        false,
         "",
         "",
         "",

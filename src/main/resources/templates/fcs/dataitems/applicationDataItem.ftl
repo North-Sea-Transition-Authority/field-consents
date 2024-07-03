@@ -42,7 +42,11 @@
         <br/>
         ${dataItem.duration()}
         <br/>
-        ${dataItem.aceFlag()}
+        <#if dataItem.aceFlag()!false>
+          <@fdsResultList.resultListTag tagClass="govuk-tag--red" tagText="${dataItem.aceFlagText()}"/>
+        <#else>
+          ${dataItem.aceFlagText()}
+        </#if>
       </#assign>
       <#assign location>
         ${dataItem.asset()}

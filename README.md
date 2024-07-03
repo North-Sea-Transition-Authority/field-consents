@@ -11,8 +11,8 @@ Following the initial consents a Field then follows the Annual Consents Exercise
 [Annual Consents Exercise](https://www.nstauthority.co.uk/licensing-consents/consents/annual-consents-exercise)
 
 ## Pre-requisites
-- Java 17
-- Node LTS + NPM
+- Java 21
+- Node 18 & appropriate NPM
 - [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
   (See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
   for further information about adding your account to the `docker-users` group)
@@ -175,3 +175,7 @@ Login at http://localhost:3000 using `admin:admin`
 You will need to add a new Prometheus data source. Use the URL `http://prometheus:9090`
 
 To view metrics data, you can use the explore section. Select the Prometheus data source, then find the metric that you care about
+
+
+### User data
+Run the appropriate `insert-all-users-*.sql` in order to create the basic users to test the application.

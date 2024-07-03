@@ -32,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
 /**
  * Implements the common security rules used by both work-area and search screen for user accessibility.
@@ -187,13 +186,6 @@ public class ApplicationDataItemDtoService {
         : "Unknown area";
   }
 
-  String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
-    if (Objects.isNull(dataItemDto.aceFlag())) {
-      return "";
-    }
-    return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(dataItemDto.aceFlag()));
-  }
-
   String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
                                Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     return Objects.nonNull(dataItemDto.caseOfficerWuaId())
@@ -308,7 +300,7 @@ public class ApplicationDataItemDtoService {
         .withStatus(dataItemDto.status().getDisplayName())
         .withSubmittedDateTime(getSubmittedDateTime(dataItemDto))
         .withSubmittedBy(getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
-        .withAceFlag(getDisplayAceFlag(dataItemDto))
+        .withAceFlag(dataItemDto.aceFlag())
         .withCaseOfficer(getDisplayCaseOfficer(dataItemDto, portalUserDtoByWuaId))
         .withCamUser(getDisplayCamUser(dataItemDto, portalUserDtoByWuaId, teamType))
         .withWithdrawalOpen(withdrawalOpen)
