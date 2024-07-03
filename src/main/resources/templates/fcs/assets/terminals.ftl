@@ -1,22 +1,15 @@
 <#include '../layout/layout.ftl'>
 <#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
+<#import '_startApplicationDecisionBanner.ftl' as startApplicationDecisionBanner>
 
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="terminalJson" type="uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson" -->
 
 <#assign pageTitle = terminalJson.getName()/>
 
-<#if !operatorExists>
+<#if !startApplicationDecision.canBeStarted()>
   <#assign warningBanner>
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
-      <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
-        This facility has missing information
-        <ul>
-          <li>Facility operator</li>
-        </ul>
-        Contact <@mailTo.mailToLink mailToEmailAddress=customerBrandingConfigurationProperties.email() /> if you think the facility should have this information.
-      </@fdsNotificationBanner.notificationBannerContent>
-    </@fdsNotificationBanner.notificationBannerInfo>
+    <@startApplicationDecisionBanner.banner startApplicationDecision/>
   </#assign>
 </#if>
 
@@ -31,7 +24,7 @@
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>
     <@fdsDataItems.dataValues key="Status" value=terminalJson.getStatusDisplayName()/>
   </@fdsDataItems.dataItem>
-  <#if startApplicationEnabled>
+  <#if startApplicationDecision.canBeStarted()>
     <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
   <@fdsResultList.resultList resultCount=applicationDataItemViews?size resultCountSuffix="application">

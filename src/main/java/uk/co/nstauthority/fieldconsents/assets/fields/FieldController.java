@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -23,17 +23,17 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class FieldController {
 
   private final FieldService fieldService;
-  private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final ManageAssetService manageAssetService;
+  private final AssetService assetService;
 
   FieldController(
       FieldService fieldService,
-      OrganisationUnitPermissionService organisationUnitPermissionService,
-      ManageAssetService manageAssetService
+      ManageAssetService manageAssetService,
+      AssetService assetService
   ) {
     this.fieldService = fieldService;
-    this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.manageAssetService = manageAssetService;
+    this.assetService = assetService;
   }
 
   @GetMapping
@@ -42,11 +42,7 @@ public class FieldController {
     var fieldJson =
         fieldService.getFieldWithOperatorAndLicences(fieldId, "Get field details for management screen");
 
-    var startApplicationEnabled =
-        fieldJson.operatorExists()
-        && fieldJson.licencesExist()
-        && organisationUnitPermissionService.hasOperatorPermission(
-            user, fieldJson.getOperatorJson().organisationUnitId(), RolePermission.CREATE_FCS_APPLICATIONS);
+    var startApplicationDecision = assetService.getStartApplicationDecision(fieldJson);
 
     return new ModelAndView("fcs/assets/fields")
         .addObject("fieldJson", fieldJson)
@@ -54,7 +50,7 @@ public class FieldController {
         // so we have to pass in individually here
         .addObject("operatorExists", fieldJson.operatorExists())
         .addObject("licencesExist", fieldJson.licencesExist())
-        .addObject("startApplicationEnabled", startApplicationEnabled)
+        .addObject("startApplicationDecision", startApplicationDecision)
         .addObject("operatorName", fieldJson.getOperatorName())
         .addObject("licences", fieldJson.getLicencesAsString())
         .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))

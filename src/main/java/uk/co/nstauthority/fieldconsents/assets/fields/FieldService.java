@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -18,9 +19,11 @@ public class FieldService {
 
   // this status list has been taken from the DEVUK fields search
   // screen, we need to understand what these mean
-  static final List<FieldStatus> fieldStatusesAllowed =
+  public static final List<FieldStatus> FIELD_STATUSES_ALLOWED =
       List.of(FieldStatus.STATUS500, FieldStatus.STATUS600, FieldStatus.STATUS700,
           FieldStatus.STATUS799, FieldStatus.STATUS800, FieldStatus.STATUS899);
+
+  static final List<FieldStatus> ALL_FIELD_STATUSES = EnumSet.allOf(FieldStatus.class).stream().toList();
 
   static final FieldsProjectionRoot fieldsProjectionRoot =
       new FieldsProjectionRoot()
@@ -120,4 +123,5 @@ public class FieldService {
     return findFieldWithOperatorAndLicences(fieldId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException(FIELD_NOT_FOUND.formatted(fieldId)));
   }
+
 }

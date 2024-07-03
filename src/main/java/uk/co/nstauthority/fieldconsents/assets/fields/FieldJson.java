@@ -49,6 +49,10 @@ public class FieldJson implements AssetJson {
     return fieldName;
   }
 
+  public FieldStatusJson getStatusJson() {
+    return statusJson;
+  }
+
   @Override
   public String getStatusDisplayName() {
     return statusJson != null ? statusJson.statusDisplayName() : null;

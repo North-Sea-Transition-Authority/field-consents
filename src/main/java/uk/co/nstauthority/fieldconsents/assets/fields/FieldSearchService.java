@@ -1,14 +1,20 @@
 package uk.co.nstauthority.fieldconsents.assets.fields;
 
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldStatusesAllowed;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.ALL_FIELD_STATUSES;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldsProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldsWithOperatorsProjectionRoot;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
+import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Field;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
@@ -24,27 +30,29 @@ public class FieldSearchService {
   private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final ApplicationAssetService applicationAssetService;
 
   FieldSearchService(
       FieldApi fieldApi,
       TeamService teamService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
+      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
+      ApplicationAssetService applicationAssetService
   ) {
     this.fieldApi = fieldApi;
     this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.applicationAssetService = applicationAssetService;
   }
 
   public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
-    return fieldApi.searchFields(fieldName,
-            fieldStatusesAllowed,
-            fieldsProjectionRoot,
-            new RequestPurpose(requestPurpose))
-        .stream()
-        .map(FieldJson::from)
-        .toList();
+    return searchFields(
+        fieldName,
+        fieldsProjectionRoot,
+        new RequestPurpose(requestPurpose),
+        FieldJson::from
+    );
   }
 
   public List<FieldWithOperatorJson> searchFieldsWithOperatorForUser(
@@ -52,15 +60,12 @@ public class FieldSearchService {
       String requestPurpose,
       ServiceUserDetail user
   ) {
-    var fieldWithOperatorJsons = fieldApi.searchFields(
-            fieldName,
-            fieldStatusesAllowed,
-            fieldsWithOperatorsProjectionRoot,
-            new RequestPurpose(requestPurpose)
-        )
-        .stream()
-        .map(FieldWithOperatorJson::from)
-        .toList();
+    var fieldWithOperatorJsons = searchFields(
+        fieldName,
+        fieldsWithOperatorsProjectionRoot,
+        new RequestPurpose(requestPurpose),
+        FieldWithOperatorJson::from
+    );
 
     var userRegulatorTeamsWithPermission =
         teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
@@ -98,6 +103,20 @@ public class FieldSearchService {
                 && organisationUnitIdsUserHasPermissionFor.contains(field.getOperatorJson().organisationUnitId()))
             || fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam.contains(field.getId())
         )
+        .toList();
+  }
+
+  private <T> List<T> searchFields(
+      String fieldName,
+      FieldsProjectionRoot query,
+      RequestPurpose requestPurpose,
+      Function<Field, T> mappingFunction
+  ) {
+    var inUseFieldIds = applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.FIELD);
+    return fieldApi.searchFields(fieldName, ALL_FIELD_STATUSES, query, requestPurpose)
+        .stream()
+        .filter(field -> inUseFieldIds.contains(field.getFieldId()) || FIELD_STATUSES_ALLOWED.contains(field.getStatus()))
+        .map(mappingFunction)
         .toList();
   }
 }

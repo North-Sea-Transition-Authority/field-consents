@@ -1,10 +1,10 @@
 package uk.co.nstauthority.fieldconsents.assets.terminals;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -16,37 +16,28 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
+import uk.co.nstauthority.fieldconsents.assets.StartApplicationDecision;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = TerminalController.class)
 public class TerminalControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private OrganisationUnitPermissionService organisationUnitPermissionService;
-
-  @MockBean
   private ManageAssetService manageAssetService;
 
-  @BeforeEach
-  void setUp() {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
-        .thenReturn(true);
-  }
+  @MockBean
+  private AssetService assetService;
 
   @SecurityTest
   void manageTerminal_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -67,74 +58,37 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void manageTerminal_terminalNoOperator(boolean userHasCreatePermission) throws Exception {
+  @Test
+  void manageTerminal() throws Exception {
+    var terminalJson = terminal1JsonWithNullOperator;
+
+    // Required for HasAssetPermissionInterceptor
+    when(terminalService.getTerminalWithOperator(terminalJson.getId(), "Search terminal for asset permission")).thenReturn(terminalJson);
+    when(assetAccessService.hasAssetPermission(user, terminalJson, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS)).thenReturn(true);
+
+    when(terminalService.getTerminalWithOperator(eq(terminalJson.getId()), any())).thenReturn(terminalJson);
+
+    var startApplicationDecision = new StartApplicationDecision(List.of("no operator for this terminal"));
+    when(assetService.getStartApplicationDecision(terminalJson)).thenReturn(startApplicationDecision);
+
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
-
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithNullOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
-        .thenReturn(true);
-    when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithNullOperator.getId()), any()))
-        .thenReturn(terminal1JsonWithNullOperator);
-
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
-        .thenReturn(userHasCreatePermission);
-
-    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminal1JsonWithNullOperator), user))
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user))
         .thenReturn(applicationDataItemViews);
 
-    var modelAndView = mockMvc
-        .perform(get(ReverseRouter.route(on(TerminalController.class)
-            .manageTerminal(terminal1JsonWithNullOperator.getId(), null)))
+    var backLinkUrl = ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection());
+    var startApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalJson.getId()));
+
+    mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
+            .manageTerminal(terminalJson.getId(), null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/terminals"))
-        .andReturn().getModelAndView();
-
-    checkModelAsserts(modelAndView, terminal1JsonWithNullOperator, userHasCreatePermission, applicationDataItemViews);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void manageTerminal_terminalWithOperator(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
-
-    when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithOperator.getId()), any()))
-        .thenReturn(terminal1JsonWithOperator);
-
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
-        .thenReturn(userHasCreatePermission);
-
-    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminal1JsonWithOperator), user))
-        .thenReturn(applicationDataItemViews);
-
-    var modelAndView = mockMvc
-        .perform(get(ReverseRouter.route(on(TerminalController.class)
-            .manageTerminal(terminal1JsonWithOperator.getId(), null)))
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/assets/terminals"))
-        .andReturn().getModelAndView();
-
-    checkModelAsserts(modelAndView, terminal1JsonWithOperator, userHasCreatePermission, applicationDataItemViews);
-  }
-
-  private void checkModelAsserts(
-      ModelAndView modelAndView,
-      TerminalWithOperatorJson terminalJson,
-      boolean userHasCreatePermission,
-      List<ApplicationDataItemView> applicationDataItemViews
-  ) {
-    assertThat(modelAndView).isNotNull();
-    var model = modelAndView.getModel();
-    assertThat(model)
-        .containsEntry("terminalJson", terminalJson)
-        .containsEntry("operatorExists", terminalJson.operatorExists())
-        .containsEntry("startApplicationEnabled",
-            terminalJson.operatorExists() && userHasCreatePermission)
-        .containsEntry("operatorName", terminalJson.getOperatorName())
-        .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .getStartApplicationForm(terminalJson.getId())))
-        .containsEntry("applicationDataItemViews", applicationDataItemViews);
+        .andExpect(model().attribute("terminalJson", terminalJson))
+        .andExpect(model().attribute("operatorExists", terminalJson.operatorExists()))
+        .andExpect(model().attribute("startApplicationDecision", startApplicationDecision))
+        .andExpect(model().attribute("operatorName", terminalJson.getOperatorName()))
+        .andExpect(model().attribute("backLinkUrl", backLinkUrl))
+        .andExpect(model().attribute("startApplicationUrl", startApplicationUrl))
+        .andExpect(model().attribute("applicationDataItemViews", applicationDataItemViews));
   }
 }

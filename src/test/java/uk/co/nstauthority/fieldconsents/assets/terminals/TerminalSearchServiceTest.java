@@ -3,12 +3,12 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithNoOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperator;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3Json;
@@ -21,6 +21,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +30,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -54,6 +58,9 @@ class TerminalSearchServiceTest {
   @Mock
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
+  @Mock
+  private ApplicationAssetService applicationAssetService;
+
   @InjectMocks
   private TerminalSearchService terminalSearchService;
 
@@ -65,24 +72,36 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminals_allTestTerminals() {
-    when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalList);
 
-    List<TerminalJson> allTestTerminals = terminalSearchService.searchTerminals("T", REQUEST_PURPOSE);
-    assertThat(allTestTerminals).hasSize(3);
-    assertThat(allTestTerminals.get(0)).usingRecursiveComparison()
-        .isEqualTo(terminal1Json);
-    assertThat(allTestTerminals.get(1)).usingRecursiveComparison()
-        .isEqualTo(terminal2Json);
-    assertThat(allTestTerminals.get(2)).usingRecursiveComparison()
-        .isEqualTo(terminal3Json);
+    assertThat(terminalSearchService.searchTerminals("T", REQUEST_PURPOSE))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(terminal1Json, terminal3Json));
+  }
+
+  @Test
+  void searchTerminals_includeInUseFieldIds() {
+    var terminalList = List.of(
+        Terminal.newBuilder().terminalId(1).terminalName("T1").terminalActive(true).build(),
+        Terminal.newBuilder().terminalId(2).terminalName("T2").terminalActive(true).build(),
+        Terminal.newBuilder().terminalId(3).terminalName("T3").terminalActive(false).build()
+    );
+    var terminalJsonList = terminalList.stream().map(TerminalJson::from).toList();
+
+    when(applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.TERMINAL)).thenReturn(Set.of(3));
+
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(terminalList);
+
+    assertThat(terminalSearchService.searchTerminals("T", REQUEST_PURPOSE))
+        .usingRecursiveComparison()
+        .isEqualTo(terminalJsonList);
   }
 
   @Test
   void searchTerminals_singleTestTerminal() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3));
 
     List<TerminalJson> singleTestTerminal = terminalSearchService.searchTerminals("T3", REQUEST_PURPOSE);
@@ -93,8 +112,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenRegulator_allTestTerminals() {
-    when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -107,8 +125,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenRegulator_singleTestTerminal() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3WithOperator));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -121,8 +138,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenConsultee_allTestTerminals() {
-    when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -137,8 +153,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenConsultee_singleTestTerminal() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3WithOperator));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -153,8 +168,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenIndustryUser_twoTerminals() {
-    when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -172,8 +186,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenIndustryUser_singleTerminal() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -191,8 +204,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenIndustryUser_noPermission() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithOperator));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
@@ -210,8 +222,7 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminalsWithOperatorForUser_whenIndustryUser_noOperator() {
-    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
-        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithNoOperator));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))

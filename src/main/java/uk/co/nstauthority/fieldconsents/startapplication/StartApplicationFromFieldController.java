@@ -19,6 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -50,6 +52,8 @@ public class StartApplicationFromFieldController {
 
   private final StartApplicationOperatorFormService startApplicationOperatorFormService;
 
+  private final AssetService assetService;
+
   @Autowired
   public StartApplicationFromFieldController(ApplicationService applicationService,
                                              StartApplicationControllerHelperService startApplicationControllerHelperService,
@@ -57,7 +61,8 @@ public class StartApplicationFromFieldController {
                                              StartApplicationOperatorFormValidator operatorFormValidator,
                                              OrganisationUnitService organisationUnitService,
                                              FieldService fieldService,
-                                             StartApplicationOperatorFormService startApplicationOperatorFormService) {
+                                             StartApplicationOperatorFormService startApplicationOperatorFormService,
+                                             AssetService assetService) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
     this.formValidator = formValidator;
@@ -65,10 +70,13 @@ public class StartApplicationFromFieldController {
     this.organisationUnitService = organisationUnitService;
     this.fieldService = fieldService;
     this.startApplicationOperatorFormService = startApplicationOperatorFormService;
+    this.assetService = assetService;
   }
 
   @GetMapping("/start-application")
   public ModelAndView getStartApplicationForm(@PathVariable Integer fieldId) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+
     ModelAndView modelAndView = getStartApplicationFormModelAndView(fieldId);
     modelAndView.addObject("form", new StartApplicationForm());
     return modelAndView;
@@ -81,10 +89,11 @@ public class StartApplicationFromFieldController {
         startApplicationControllerHelperService.getApplicationTypesMap(AssetType.FIELD));
     modelAndView.addObject("continueStartApplicationUrl",
         ReverseRouter.route(on(StartApplicationFromFieldController.class).continueStartApplicationOfType(
-            fieldId,
-            null,
-            ReverseRouter.emptyBindingResult(),
-            null)
+                fieldId,
+                null,
+                null,
+                null
+            )
         )
     );
     modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId, null)));
@@ -96,6 +105,8 @@ public class StartApplicationFromFieldController {
                                                      @ModelAttribute("form") StartApplicationForm form,
                                                      BindingResult bindingResult,
                                                      RedirectAttributes redirectAttributes) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+
     formValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -112,7 +123,10 @@ public class StartApplicationFromFieldController {
   @GetMapping("/start-application/operator")
   public ModelAndView getStartApplicationOperatorForm(
       @PathVariable Integer fieldId,
-      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType) {
+      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType
+  ) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+
     ModelAndView modelAndView = getStartApplicationOperatorModelAndView(fieldId);
     modelAndView.addObject("form", new StartApplicationOperatorForm(applicationType));
     return modelAndView;
@@ -145,6 +159,8 @@ public class StartApplicationFromFieldController {
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
                                            BindingResult bindingResult,
                                            ServiceUserDetail user) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+
     operatorFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -163,5 +179,9 @@ public class StartApplicationFromFieldController {
           user).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId(), null));
     }
+  }
+
+  private AssetKey getAssetKeyForFieldId(Integer fieldId) {
+    return new AssetKey(fieldId, AssetType.FIELD);
   }
 }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,13 +25,17 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
@@ -61,6 +66,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @MockBean
   private StartApplicationOperatorFormService startApplicationOperatorFormService;
 
+  @MockBean
+  private AssetService assetService;
+
   private Map<String, String> applicationTypeMap;
 
   private ApplicationVersion applicationVersion;
@@ -79,14 +87,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   void getStartApplicationForm() throws Exception {
     String continueStartApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-        .continueStartApplicationOfType(
-            TERMINAL_ID,
-            null,
-            ReverseRouter.emptyBindingResult(),
-            null)
-    );
-    var modelAndView =
-        mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+        .continueStartApplicationOfType(TERMINAL_ID, null, null, null));
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationForm(TERMINAL_ID)))
                 .with(user(user)))
             .andExpect(status().isOk())
@@ -120,7 +123,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   void continueStartApplicationOfType() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+            .continueStartApplicationOfType(TERMINAL_ID, null, null, null)))
             .param("applicationType", ApplicationType.FLARE.name())
             .with(user(user))
             .with(csrf()))
@@ -136,7 +139,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-                .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+                .continueStartApplicationOfType(TERMINAL_ID, null, null, null)))
                 .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
@@ -153,7 +156,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @SecurityTest
   void continueStartApplicationOfType_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+            .continueStartApplicationOfType(TERMINAL_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -163,7 +166,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+            .continueStartApplicationOfType(TERMINAL_ID, null, null, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -288,4 +291,37 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
             .with(csrf()))
         .andExpect(status().isForbidden());
   }
+
+  @Test
+  void getStartApplicationForm_cannotStartApplicationForTerminal() throws Exception {
+    // Required for HasAssetPermissionInterceptor
+    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
+    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
+
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+        .when(assetService)
+        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(TERMINAL_ID, AssetType.TERMINAL));
+
+    mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .getStartApplicationForm(TERMINAL_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void continueStartApplicationOfType_cannotStartApplicationForField() throws Exception {
+    // Required for HasAssetPermissionInterceptor
+    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
+    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
+
+    doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+        .when(assetService)
+        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(TERMINAL_ID, AssetType.TERMINAL));
+
+    mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .continueStartApplicationOfType(TERMINAL_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
 }

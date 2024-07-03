@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -23,17 +23,17 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class TerminalController {
 
   private final TerminalService terminalService;
-  private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final ManageAssetService manageAssetService;
+  private final AssetService assetService;
 
   TerminalController(
       TerminalService terminalService,
-      OrganisationUnitPermissionService organisationUnitPermissionService,
-      ManageAssetService manageAssetService
+      ManageAssetService manageAssetService,
+      AssetService assetService
   ) {
     this.terminalService = terminalService;
-    this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.manageAssetService = manageAssetService;
+    this.assetService = assetService;
   }
 
   @GetMapping
@@ -42,16 +42,14 @@ public class TerminalController {
     var terminalJson =
         terminalService.getTerminalWithOperator(terminalId, "Get terminal details for management screen");
 
-    var startApplicationEnabled = terminalJson.operatorExists()
-        && organisationUnitPermissionService.hasOperatorPermission(
-            user, terminalJson.getOperatorJson().organisationUnitId(), RolePermission.CREATE_FCS_APPLICATIONS);
+    var startApplicationDecision = assetService.getStartApplicationDecision(terminalJson);
 
     return new ModelAndView("fcs/assets/terminals")
         .addObject("terminalJson", terminalJson)
         // the below default interface methods aren't accessible within the Freemarker,
         // so we have to pass in individually here
         .addObject("operatorExists", terminalJson.operatorExists())
-        .addObject("startApplicationEnabled", startApplicationEnabled)
+        .addObject("startApplicationDecision", startApplicationDecision)
         .addObject("operatorName", terminalJson.getOperatorName())
         .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
         .addObject("startApplicationUrl",

@@ -1,31 +1,15 @@
 <#include '../layout/layout.ftl'>
 <#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
+<#import '_startApplicationDecisionBanner.ftl' as startApplicationDecisionBanner>
 
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="fieldJson" type="uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson" -->
 
 <#assign pageTitle = fieldJson.getName()/>
 
-<#if !operatorExists || !licencesExist>
+<#if !startApplicationDecision.canBeStarted()>
   <#assign warningBanner>
-    <@grid.gridRow>
-      <@grid.twoThirdsColumn>
-        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
-          <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
-            This field has missing information
-            <ul>
-              <#if !operatorExists>
-                <li>Field operator</li>
-              </#if>
-              <#if !licencesExist>
-                <li>Associated licences</li>
-              </#if>
-            </ul>
-            Contact <@mailTo.mailToLink mailToEmailAddress=customerBrandingConfigurationProperties.email() /> if you think the field should have this information.
-          </@fdsNotificationBanner.notificationBannerContent>
-        </@fdsNotificationBanner.notificationBannerInfo>
-      </@grid.twoThirdsColumn>
-    </@grid.gridRow>
+    <@startApplicationDecisionBanner.banner startApplicationDecision/>
   </#assign>
 </#if>
 
@@ -42,7 +26,7 @@
     <@fdsDataItems.dataValues key="Geographic area" value=fieldJson.getGeographicArea().getDisplayName()/>
     <@fdsDataItems.dataValues key="Licences" value=licences/>
   </@fdsDataItems.dataItem>
-  <#if startApplicationEnabled>
+  <#if startApplicationDecision.canBeStarted()>
     <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
   <@fdsResultList.resultList resultCount=applicationDataItemViews?size resultCountSuffix="application">

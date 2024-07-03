@@ -4,9 +4,14 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalsWithOperatorProjectionRoot;
 
 import java.util.List;
+import java.util.function.Function;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
+import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -20,25 +25,27 @@ public class TerminalSearchService {
   private final TerminalApi terminalApi;
   private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final ApplicationAssetService applicationAssetService;
 
   TerminalSearchService(
       TerminalApi terminalApi,
       TeamService teamService,
-      OrganisationUnitPermissionService organisationUnitPermissionService
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      ApplicationAssetService applicationAssetService
   ) {
     this.terminalApi = terminalApi;
     this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.applicationAssetService = applicationAssetService;
   }
 
   public List<TerminalJson> searchTerminals(String terminalName, String requestPurpose) {
-    return terminalApi.searchTerminals(terminalName,
-            Boolean.TRUE,
-            terminalsProjectionRoot,
-            new RequestPurpose(requestPurpose))
-        .stream()
-        .map(TerminalJson::from)
-        .toList();
+    return searchTerminals(
+        terminalName,
+        terminalsProjectionRoot,
+        new RequestPurpose(requestPurpose),
+        TerminalJson::from
+    );
   }
 
   public List<TerminalWithOperatorJson> searchTerminalsWithOperatorForUser(
@@ -46,15 +53,12 @@ public class TerminalSearchService {
       String requestPurpose,
       ServiceUserDetail user
   ) {
-    var terminalWithOperatorJsons = terminalApi.searchTerminals(
-            terminalName,
-            true,
-            terminalsWithOperatorProjectionRoot,
-            new RequestPurpose(requestPurpose)
-        )
-        .stream()
-        .map(TerminalWithOperatorJson::from)
-        .toList();
+    var terminalWithOperatorJsons = searchTerminals(
+        terminalName,
+        terminalsWithOperatorProjectionRoot,
+        new RequestPurpose(requestPurpose),
+        TerminalWithOperatorJson::from
+    );
 
     var userRegulatorTeamsWithPermission =
         teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
@@ -85,4 +89,21 @@ public class TerminalSearchService {
                 && organisationUnitIdsUserHasPermissionFor.contains(terminal.getOperatorJson().organisationUnitId()))
         .toList();
   }
+
+  private <T> List<T> searchTerminals(
+      String terminalName,
+      TerminalsProjectionRoot query,
+      RequestPurpose requestPurpose,
+      Function<Terminal, T> mappingFunction
+  ) {
+    var inUseTerminalIds = applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.TERMINAL);
+    return terminalApi.searchTerminals(terminalName, null, query, requestPurpose)
+        .stream()
+        .filter(terminal ->
+            inUseTerminalIds.contains(terminal.getTerminalId()) || Boolean.TRUE.equals(terminal.getTerminalActive())
+        )
+        .map(mappingFunction)
+        .toList();
+  }
+
 }

@@ -41,6 +41,10 @@ public class TerminalJson implements AssetJson {
     return terminalName;
   }
 
+  public TerminalStatus getStatus() {
+    return status;
+  }
+
   @Override
   public String getStatusDisplayName() {
     return status != null ? status.getDisplayName() : null;

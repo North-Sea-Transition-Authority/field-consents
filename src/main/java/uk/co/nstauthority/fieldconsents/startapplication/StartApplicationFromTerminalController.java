@@ -19,6 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
@@ -50,6 +52,8 @@ public class StartApplicationFromTerminalController {
 
   private final StartApplicationOperatorFormService startApplicationOperatorFormService;
 
+  private final AssetService assetService;
+
   @Autowired
   public StartApplicationFromTerminalController(ApplicationService applicationService,
                                                 StartApplicationControllerHelperService startApplicationControllerHelperService,
@@ -57,7 +61,8 @@ public class StartApplicationFromTerminalController {
                                                 StartApplicationOperatorFormValidator operatorFormValidator,
                                                 OrganisationUnitService organisationUnitService,
                                                 TerminalService terminalService,
-                                                StartApplicationOperatorFormService startApplicationOperatorFormService) {
+                                                StartApplicationOperatorFormService startApplicationOperatorFormService,
+                                                AssetService assetService) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
     this.formValidator = formValidator;
@@ -65,10 +70,13 @@ public class StartApplicationFromTerminalController {
     this.organisationUnitService = organisationUnitService;
     this.terminalService = terminalService;
     this.startApplicationOperatorFormService = startApplicationOperatorFormService;
+    this.assetService = assetService;
   }
 
   @GetMapping("/start-application")
   public ModelAndView getStartApplicationForm(@PathVariable Integer terminalId) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+
     ModelAndView modelAndView = getStartApplicationFormModelAndView(terminalId);
     modelAndView.addObject("form", new StartApplicationForm());
     return modelAndView;
@@ -81,10 +89,11 @@ public class StartApplicationFromTerminalController {
         startApplicationControllerHelperService.getApplicationTypesMap(AssetType.TERMINAL));
     modelAndView.addObject("continueStartApplicationUrl",
         ReverseRouter.route(on(StartApplicationFromTerminalController.class).continueStartApplicationOfType(
-            terminalId,
-            null,
-            ReverseRouter.emptyBindingResult(),
-            null)
+                terminalId,
+                null,
+                ReverseRouter.emptyBindingResult(),
+                null
+            )
         )
     );
     modelAndView.addObject("cancelUrl",
@@ -97,6 +106,8 @@ public class StartApplicationFromTerminalController {
                                                      @ModelAttribute("form") StartApplicationForm form,
                                                      BindingResult bindingResult,
                                                      RedirectAttributes redirectAttributes) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+
     formValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -115,6 +126,8 @@ public class StartApplicationFromTerminalController {
       @PathVariable Integer terminalId,
       @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType
   ) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+
     ModelAndView modelAndView = getStartApplicationOperatorModelAndView(terminalId);
     modelAndView.addObject("form", new StartApplicationOperatorForm(applicationType));
     return modelAndView;
@@ -146,6 +159,8 @@ public class StartApplicationFromTerminalController {
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
                                            BindingResult bindingResult,
                                            ServiceUserDetail user) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+
     operatorFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -162,5 +177,9 @@ public class StartApplicationFromTerminalController {
       ).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId(), null));
     }
+  }
+
+  private AssetKey getAssetKeyForTerminalId(Integer terminalId) {
+    return new AssetKey(terminalId, AssetType.TERMINAL);
   }
 }

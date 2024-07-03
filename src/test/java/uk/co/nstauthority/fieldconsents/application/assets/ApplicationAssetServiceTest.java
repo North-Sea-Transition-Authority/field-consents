@@ -665,4 +665,21 @@ class ApplicationAssetServiceTest {
     assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
         .containsExactly(field1Json, field2Json);
   }
+
+  @ParameterizedTest
+  @EnumSource(AssetType.class)
+  void getAllUniqueAssetIdsForAssetType(AssetType assetType) {
+    var assetRoles = Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY);
+
+    var applicationAsset1 = new ApplicationAsset(1);
+    applicationAsset1.setAssetId(100);
+
+    var applicationAsset2 = new ApplicationAsset(2);
+    applicationAsset2.setAssetId(200);
+
+    when(applicationAssetRepository.findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(assetRoles, Set.of(assetType)))
+        .thenReturn(List.of(applicationAsset1, applicationAsset2, applicationAsset2));
+
+    assertThat(applicationAssetService.getAllUniqueAssetIdsForAssetType(assetType)).isEqualTo(Set.of(100, 200));
+  }
 }

@@ -12,6 +12,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -269,4 +270,14 @@ public class ApplicationAssetService {
   public void deleteAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles) {
     applicationAssetRepository.deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
   }
+
+  public Set<Integer> getAllUniqueAssetIdsForAssetType(AssetType assetType) {
+    var applicableAssetRoles = Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY);
+    return applicationAssetRepository
+        .findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(applicableAssetRoles, Set.of(assetType))
+        .stream()
+        .map(ApplicationAsset::getAssetId)
+        .collect(Collectors.toSet());
+  }
+
 }
