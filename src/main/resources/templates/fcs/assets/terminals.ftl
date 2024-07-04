@@ -16,7 +16,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=PageSize.TWO_THIRDS_COLUMN
+  pageSize=PageSize.FULL_WIDTH
   notificationBannerContentOverride=warningBanner
   backLinkUrl=springUrl(backLinkUrl)
 >
