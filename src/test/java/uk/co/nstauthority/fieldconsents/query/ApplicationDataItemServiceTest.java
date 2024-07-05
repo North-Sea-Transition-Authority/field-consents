@@ -10,11 +10,14 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jooq.Condition;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultDSLContext;
@@ -25,13 +28,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -56,7 +59,9 @@ class ApplicationDataItemServiceTest {
   @Mock
   private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
-  @InjectMocks
+  @Mock
+  PermissionService permissionService;
+
   private ApplicationDataItemViewService applicationDataItemService;
 
   private ServiceUserDetail user;
@@ -95,6 +100,7 @@ class ApplicationDataItemServiceTest {
         applicationDataItemDtoService,
         organisationUnitPermissionService,
         teamService,
+        permissionService,
         fieldEquityPartnerPermissionService,
         new DefaultDSLContext(SQLDialect.DEFAULT)
     );
@@ -114,10 +120,12 @@ class ApplicationDataItemServiceTest {
     var teamType = TeamType.REGULATOR;
     var orgUnit = orgUnit1Json;
 
+    when(permissionService.hasPermission(user, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(true);
+
     var applicationDataItem = mock(ApplicationDataItemView.class);
     when(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
-        user,
+        ApplicationDataItemUserAction.RESUME_APPLICATION,
         teamType,
         Map.of(orgUnit.organisationUnitId(), orgUnit.name()),
         fieldJsonById,
@@ -171,9 +179,11 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
+    when(permissionService.hasPermission(user, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(false);
+
     when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
-        eq(user),
+        eq(ApplicationDataItemUserAction.VIEW_APPLICATION),
         eq(TeamType.REGULATOR),
         organisationUnitNamesByIdCaptor.capture(),
         fieldJsonByIdCaptor.capture(),
@@ -213,7 +223,7 @@ class ApplicationDataItemServiceTest {
 
     when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
-        eq(user),
+        eq(ApplicationDataItemUserAction.VIEW_APPLICATION),
         eq(TeamType.REGULATOR),
         organisationUnitNamesByIdCaptor.capture(),
         fieldJsonByIdCaptor.capture(),
@@ -282,7 +292,7 @@ class ApplicationDataItemServiceTest {
 
     when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
-        eq(user),
+        eq(ApplicationDataItemUserAction.VIEW_APPLICATION),
         eq(TeamType.INDUSTRY),
         organisationUnitNamesByIdCaptor.capture(),
         fieldJsonByIdCaptor.capture(),
@@ -321,7 +331,7 @@ class ApplicationDataItemServiceTest {
 
     when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
-        eq(user),
+        eq(ApplicationDataItemUserAction.VIEW_APPLICATION),
         eq(TeamType.INDUSTRY),
         organisationUnitNamesByIdCaptor.capture(),
         fieldJsonByIdCaptor.capture(),
@@ -359,4 +369,17 @@ class ApplicationDataItemServiceTest {
 
     assertThat(applicationDataItemService.getConsulteeApplicationDataItemViews(conditions, user)).isEmpty();
   }
+
+  @Test
+  void getApplicationDataItemUserActionFromUser_hasEditPermission() {
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
+    assertThat(applicationDataItemService.getApplicationDataItemUserActionFromUser(user)).isEqualTo(ApplicationDataItemUserAction.RESUME_APPLICATION);
+  }
+
+  @Test
+  void getApplicationDataItemUserActionFromUser_doesNotHaveEditPermission() {
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(false);
+    assertThat(applicationDataItemService.getApplicationDataItemUserActionFromUser(user)).isEqualTo(ApplicationDataItemUserAction.VIEW_APPLICATION);
+  }
+
 }

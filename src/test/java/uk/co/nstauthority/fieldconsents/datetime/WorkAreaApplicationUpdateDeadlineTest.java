@@ -26,6 +26,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
+import uk.co.nstauthority.fieldconsents.application.ApplicationRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -54,6 +55,8 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
 
   private static final ServiceUserDetail SERVICE_USER_DETAIL = ServiceUserDetailTestUtil.Builder().build();
 
+  private int applicationNumber = 8000;
+
   @MockBean
   private UserDetailService userDetailService;
 
@@ -77,6 +80,9 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
 
   @Autowired
   private ApplicationService applicationService;
+
+  @Autowired
+  private ApplicationRepository applicationRepository;
 
   @Autowired
   private ApplicationVersionRepository applicationVersionRepository;
@@ -169,6 +175,10 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
         orgUnit1Json,
         SERVICE_USER_DETAIL
     );
+
+    var application = applicationVersion.getApplication();
+    application.setApplicationNo(applicationNumber++);
+    applicationRepository.save(application);
 
     applicationVersion.setCaseOfficerWuaId(SERVICE_USER_DETAIL.wuaId());
     applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);

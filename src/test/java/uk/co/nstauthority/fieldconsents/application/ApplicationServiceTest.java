@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 
 @ExtendWith(MockitoExtension.class)
 public class ApplicationServiceTest {
@@ -434,6 +436,63 @@ public class ApplicationServiceTest {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
 
     assertThat(applicationService.generateApplicationReference(applicationVersion)).isEqualTo("FCON/500/0 (Version 1)");
+  }
+
+  @Test
+  void generateApplicationReference_applicationDataItemDto_nullType() {
+    var applicationDataItemDto = mock(ApplicationDataItemDto.class);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationReference(applicationDataItemDto))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null application type");
+  }
+
+  @Test
+  void generateApplicationReference_applicationDataItemDto_nullApplicationNumber() {
+    var applicationDataItemDto = mock(ApplicationDataItemDto.class);
+    when(applicationDataItemDto.type()).thenReturn(ApplicationType.VENT);
+    when(applicationDataItemDto.applicationNo()).thenReturn(null);
+    when(applicationDataItemDto.variationNo()).thenReturn(null);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationReference(applicationDataItemDto))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null application number");
+  }
+
+  @Test
+  void generateApplicationReference_applicationDataItemDto_nullVariationNumber() {
+    var applicationDataItemDto = mock(ApplicationDataItemDto.class);
+    when(applicationDataItemDto.type()).thenReturn(ApplicationType.VENT);
+    when(applicationDataItemDto.applicationNo()).thenReturn(123);
+    when(applicationDataItemDto.variationNo()).thenReturn(null);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationReference(applicationDataItemDto))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null variation number");
+  }
+
+  @Test
+  void generateApplicationReference_applicationDataItemDto_nullVersionNumber() {
+    var applicationDataItemDto = mock(ApplicationDataItemDto.class);
+    when(applicationDataItemDto.type()).thenReturn(ApplicationType.VENT);
+    when(applicationDataItemDto.applicationNo()).thenReturn(123);
+    when(applicationDataItemDto.variationNo()).thenReturn(456);
+    when(applicationDataItemDto.versionNo()).thenReturn(null);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationReference(applicationDataItemDto))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null version number");
+  }
+
+  @Test
+  void generateApplicationReference_applicationDataItemDto() {
+    var applicationDataItemDto = mock(ApplicationDataItemDto.class);
+    when(applicationDataItemDto.type()).thenReturn(ApplicationType.FLARE);
+    when(applicationDataItemDto.applicationNo()).thenReturn(123);
+    when(applicationDataItemDto.variationNo()).thenReturn(456);
+    when(applicationDataItemDto.versionNo()).thenReturn(789);
+
+    assertThat(applicationService.generateApplicationReference(applicationDataItemDto)).isEqualTo("FCON/123/456 (Version 789)");
   }
 
   @Test

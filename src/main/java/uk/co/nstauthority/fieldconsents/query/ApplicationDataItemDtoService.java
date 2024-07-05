@@ -5,7 +5,6 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 
 import java.time.Clock;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,15 +14,12 @@ import java.util.stream.Stream;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -31,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 /**
  * Implements the common security rules used by both work-area and search screen for user accessibility.
@@ -48,8 +43,6 @@ public class ApplicationDataItemDtoService {
   private final EnergyPortalUserService energyPortalUserService;
   private final OrganisationUnitService organisationUnitService;
   private final ApplicationService applicationService;
-  private final ApplicationVersionService applicationVersionService;
-  private final PermissionService permissionService;
   private final ApplicationDataItemViewQueryService applicationDataItemViewQueryService;
   private final Clock clock;
 
@@ -58,8 +51,6 @@ public class ApplicationDataItemDtoService {
       EnergyPortalUserService energyPortalUserService,
       OrganisationUnitService organisationUnitService,
       ApplicationService applicationService,
-      ApplicationVersionService applicationVersionService,
-      PermissionService permissionService,
       ApplicationDataItemViewQueryService applicationDataItemViewQueryService,
       Clock clock
   ) {
@@ -67,8 +58,6 @@ public class ApplicationDataItemDtoService {
     this.energyPortalUserService = energyPortalUserService;
     this.organisationUnitService = organisationUnitService;
     this.applicationService = applicationService;
-    this.applicationVersionService = applicationVersionService;
-    this.permissionService = permissionService;
     this.applicationDataItemViewQueryService = applicationDataItemViewQueryService;
     this.clock = clock;
   }
@@ -122,26 +111,16 @@ public class ApplicationDataItemDtoService {
   }
 
   String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
-    var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.applicationVersionId());
-
     if (dataItemDto.status() == ApplicationVersionStatus.IN_PROGRESS) {
       if (dataItemDto.applicationNo() == null) {
         return "%s application".formatted(userAction.getDisplayName());
       }
-      return "%s %s".formatted(
-          userAction.getDisplayName(),
-          applicationService.generateApplicationReference(applicationVersion)
-      );
+      return "%s %s".formatted(userAction.getDisplayName(), applicationService.generateApplicationReference(dataItemDto));
     }
 
-    return applicationService.generateApplicationReference(applicationVersion);
+    return applicationService.generateApplicationReference(dataItemDto);
   }
 
-  public ApplicationDataItemUserAction getApplicationDataItemUserActionFromUser(ServiceUserDetail user) {
-    return permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))
-        ? ApplicationDataItemUserAction.RESUME_APPLICATION
-        : ApplicationDataItemUserAction.VIEW_APPLICATION;
-  }
 
   String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {
     var consentDuration = dataItemDto.duration();
@@ -276,7 +255,7 @@ public class ApplicationDataItemDtoService {
 
   public ApplicationDataItemView getApplicationDataItemView(
       ApplicationDataItemDto dataItemDto,
-      ServiceUserDetail user,
+      ApplicationDataItemUserAction userAction,
       TeamType teamType,
       Map<Integer, String> organisationUnitNameById,
       Map<Integer, FieldJson> fieldJsonById,
@@ -286,8 +265,6 @@ public class ApplicationDataItemDtoService {
     var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.applicationUpdateOpen());
     var furtherInformationOpen = FurtherInformationStatus.OPEN.equals(dataItemDto.consultationFurtherInformationStatus());
     var approvedForIssue = Boolean.TRUE.equals(dataItemDto.approvedForIssue());
-
-    var userAction = getApplicationDataItemUserActionFromUser(user);
 
     var builder = ApplicationDataItemView.newBuilder()
         .withApplicationId(dataItemDto.applicationId())

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -36,6 +37,7 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
 
   void deleteAllByApplicationVersionAndAssetRoleIn(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles);
 
+  @EntityGraph(attributePaths = {"applicationVersion", "applicationVersion.application"})
   List<ApplicationAsset> findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
       Set<AssetRole> assetRoles,
       Set<AssetType> assetTypes

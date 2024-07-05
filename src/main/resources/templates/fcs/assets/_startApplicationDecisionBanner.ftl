@@ -1,9 +1,9 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="errorList" type="uk.co.nstauthority.fieldconsents.assets.StartApplicationDecision" -->
+<#-- @ftlvariable name="startApplicationDecision" type="uk.co.nstauthority.fieldconsents.assets.StartApplicationDecision" -->
 
 <#macro banner startApplicationDecision>
-  <#if !startApplicationDecision.canBeStarted()>
+  <#if !startApplicationDecision.canBeStarted() && startApplicationDecision.reasonsWhyCannotBeStarted()?has_content>
     <@grid.gridRow>
       <@grid.twoThirdsColumn>
         <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">

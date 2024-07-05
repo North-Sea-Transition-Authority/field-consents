@@ -26,18 +26,14 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.get
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedToCamForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.submitter;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.viewer;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,16 +44,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -65,7 +57,6 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.util.SelfReturningAnswer;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,12 +77,6 @@ class ApplicationDataItemDtoServiceTest {
   private ApplicationService applicationService;
 
   @Mock
-  private ApplicationVersionService applicationVersionService;
-
-  @Mock
-  private PermissionService permissionService;
-
-  @Mock
   private ApplicationDataItemViewQueryService applicationDataItemQueryService;
 
   private ApplicationDataItemDtoService applicationDataItemDtoService;
@@ -103,8 +88,6 @@ class ApplicationDataItemDtoServiceTest {
         energyPortalUserService,
         organisationUnitService,
         applicationService,
-        applicationVersionService,
-        permissionService,
         applicationDataItemQueryService,
         clock
     ));
@@ -173,7 +156,7 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgressAndVersionNoNullAndUserCanResume() {
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNull_resume() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(null);
 
     assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
@@ -181,44 +164,7 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgressAndVersionNoNotNullAndUserCanResume() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 1);
-    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
-    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
-
-    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
-
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
-        .isEqualTo("Resume VCON/500/0 (Version 2)");
-  }
-
-  @Test
-  void getDisplayReference_whenApplicationVersion2InProgressAndUserCanResume() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1,
-        2);
-    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
-    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
-
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal();
-
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
-        .isEqualTo("Resume VCON/500/0 (Version 2)");
-  }
-
-  @Test
-  void getDisplayReference_whenApplicationSubmitted() {
-    var ventAppVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
-    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 1)");
-    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
-
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentSubmittedForTerminal();
-
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
-        .isEqualTo("VCON/500/0 (Version 1)");
-  }
-
-  @Test
-  void getDisplayReference_whenApplicationInProgressAndVersionNoNullAndUserCanView() {
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNull_view() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(null);
 
     assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
@@ -226,48 +172,32 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgressAndVersionNoNotNullAndUserCanView() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 1);
-    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
-    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
+  void getDisplayReference_whenApplicationInProgress_resume() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(1);
+    var reference = "VCON/500/0 (Version 1)";
+    when(applicationService.generateApplicationReference(applicationDataItemDto)).thenReturn(reference);
 
-    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
+        .isEqualTo("Resume %s".formatted(reference));
+  }
+
+  @Test
+  void getDisplayReference_whenApplicationInProgress_view() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(1);
+    var reference = "VCON/500/0 (Version 1)";
+    when(applicationService.generateApplicationReference(applicationDataItemDto)).thenReturn(reference);
 
     assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
-        .isEqualTo("View VCON/500/0 (Version 2)");
+        .isEqualTo("View %s".formatted(reference));
   }
 
   @Test
-  void getDisplayReference_whenApplicationVersion2InProgressAndUserCanView() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1,
-        2);
-    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
-    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
+  void getDisplayReference_whenApplicationSubmitted() {
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentSubmittedForTerminal();
+    when(applicationService.generateApplicationReference(applicationDataItemDto)).thenReturn("VCON/500/0 (Version 1)");
 
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal();
-
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
-        .isEqualTo("View VCON/500/0 (Version 2)");
-  }
-
-  @Test
-  void getApplicationDataItemUserActionFromUser_whenUserHasViewPermissions() {
-    var viewerUser = ServiceUserDetail.from(viewer);
-    when(permissionService.hasPermission(viewerUser, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
-    assertThat(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(viewerUser))
-        .isEqualTo(VIEW_APPLICATION);
-  }
-
-  @Test
-  void getApplicationDataItemUserActionFromUser_whenUserHasEditPermissions() {
-    var editUser = ServiceUserDetail.from(submitter);
-    when(permissionService.hasPermission(editUser, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)))
-        .thenReturn(true);
-
-    assertThat(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(editUser))
-        .isEqualTo(RESUME_APPLICATION);
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
+        .isEqualTo("VCON/500/0 (Version 1)");
   }
 
   @Test
@@ -448,9 +378,7 @@ class ApplicationDataItemDtoServiceTest {
     var fieldJsonById = Map.of(FIELD_ID_1, field1Json);
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(serviceUserDetail), energyPortalUserDto);
 
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationDataItemDto.type());
-    when(applicationVersionService.getApplicationVersionById(applicationDataItemDto.applicationVersionId())).thenReturn(applicationVersion);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationService.generateApplicationReference(applicationDataItemDto)).thenReturn(APPLICATION_REFERENCE);
 
     var expectedApplicationDataItem = new ApplicationDataItemView(
         applicationDataItemDto.applicationId(),
@@ -487,7 +415,7 @@ class ApplicationDataItemDtoServiceTest {
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         applicationDataItemDto,
-        serviceUserDetail,
+        VIEW_APPLICATION,
         TeamType.INDUSTRY,
         organisationUnitNameById,
         fieldJsonById,
@@ -505,14 +433,12 @@ class ApplicationDataItemDtoServiceTest {
     when(dto.applicationUpdateOpen()).thenReturn(false);
     when(dto.consultationOpen()).thenReturn(consultationOpen);
 
-    var user = mock(ServiceUserDetail.class);
-
     var teamType = TeamType.INDUSTRY;
-    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+    mockGetDisplayMethodCalls(dto, RESUME_APPLICATION, teamType);
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
-        user,
+        RESUME_APPLICATION,
         teamType,
         Collections.emptyMap(),
         Collections.emptyMap(),
@@ -532,14 +458,12 @@ class ApplicationDataItemDtoServiceTest {
     when(dto.applicationUpdateOpen()).thenReturn(applicationUpdateOpen);
     when(dto.consultationOpen()).thenReturn(false);
 
-    var user = mock(ServiceUserDetail.class);
-
     var teamType = TeamType.OPRED;
-    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+    mockGetDisplayMethodCalls(dto, VIEW_APPLICATION, teamType);
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
-        user,
+        VIEW_APPLICATION,
         teamType,
         Collections.emptyMap(),
         Collections.emptyMap(),
@@ -559,14 +483,12 @@ class ApplicationDataItemDtoServiceTest {
     when(dto.applicationUpdateOpen()).thenReturn(false);
     when(dto.consultationOpen()).thenReturn(false);
 
-    var user = mock(ServiceUserDetail.class);
-
     var teamType = TeamType.OPRED;
-    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+    mockGetDisplayMethodCalls(dto, VIEW_APPLICATION, teamType);
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
-        user,
+        VIEW_APPLICATION,
         teamType,
         Collections.emptyMap(),
         Collections.emptyMap(),
@@ -579,12 +501,9 @@ class ApplicationDataItemDtoServiceTest {
 
   private void mockGetDisplayMethodCalls(
       ApplicationDataItemDto dto,
-      ServiceUserDetail user,
       ApplicationDataItemUserAction userAction,
       TeamType teamType
   ) {
-    doReturn(userAction).when(applicationDataItemDtoService).getApplicationDataItemUserActionFromUser(user);
-
     doReturn("").when(applicationDataItemDtoService).getDisplayConsentDuration(dto);
     doReturn("").when(applicationDataItemDtoService).getDisplayReference(dto, userAction);
     doReturn("").when(applicationDataItemDtoService).getOperator(dto, Collections.emptyMap());

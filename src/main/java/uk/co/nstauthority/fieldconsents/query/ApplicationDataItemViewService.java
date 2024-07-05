@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -29,6 +31,7 @@ public class ApplicationDataItemViewService {
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final TeamService teamService;
+  private final PermissionService permissionService;
   private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
   private final DSLContext dslContext;
 
@@ -36,12 +39,14 @@ public class ApplicationDataItemViewService {
       ApplicationDataItemDtoService applicationDataItemDtoService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
       TeamService teamService,
+      PermissionService permissionService,
       FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
       DSLContext dslContext
   ) {
     this.applicationDataItemDtoService = applicationDataItemDtoService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
+    this.permissionService = permissionService;
     this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
     this.dslContext = dslContext;
   }
@@ -65,16 +70,25 @@ public class ApplicationDataItemViewService {
     var portalUserDtoByWuaId = applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
+    // TODO: FCS-879 Display appropriate action per application for users on search pages
+    var userAction = getApplicationDataItemUserActionFromUser(user);
+
     return applicationDataItemDtos.stream()
         .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItemView(
             dataItemDto,
-            user,
+            userAction,
             teamType,
             organisationUnitNamesById,
             fieldJsonById,
             portalUserDtoByWuaId
         ))
         .toList();
+  }
+
+  public ApplicationDataItemUserAction getApplicationDataItemUserActionFromUser(ServiceUserDetail user) {
+    return permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))
+        ? ApplicationDataItemUserAction.RESUME_APPLICATION
+        : ApplicationDataItemUserAction.VIEW_APPLICATION;
   }
 
   public List<ApplicationDataItemView> getRegulatorApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
@@ -93,7 +107,7 @@ public class ApplicationDataItemViewService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
+    return getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
   public List<ApplicationDataItemView> getIndustryApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
@@ -126,7 +140,7 @@ public class ApplicationDataItemViewService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
+    return getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
   }
 
   public List<ApplicationDataItemView> getConsulteeApplicationDataItemViews(List<Condition> conditions, ServiceUserDetail user) {
@@ -145,36 +159,6 @@ public class ApplicationDataItemViewService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
-  }
-
-  private List<ApplicationDataItemView> getItemsFromDtoList(
-      List<ApplicationDataItemDto> applicationDataItemDtos,
-      List<OrganisationUnitJson> organisationUnitJsons,
-      TeamType teamType,
-      ServiceUserDetail user
-  ) {
-    if (applicationDataItemDtos.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    var organisationUnitNamesById = organisationUnitJsons.stream()
-        .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
-
-    var fieldJsonById = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        applicationDataItemDtos);
-
-    var portalUserDtoByWuaId = applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
-
-    return applicationDataItemDtos.stream()
-        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItemView(
-            dataItemDto,
-            user,
-            teamType,
-            organisationUnitNamesById,
-            fieldJsonById,
-            portalUserDtoByWuaId
-        )).toList();
+    return getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 }
