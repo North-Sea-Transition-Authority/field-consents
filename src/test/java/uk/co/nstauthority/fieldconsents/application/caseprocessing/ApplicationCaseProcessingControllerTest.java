@@ -534,7 +534,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -621,7 +621,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 
   private void stubCaseHistoryServiceCall() {

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType.SHORT_TERM;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
@@ -29,6 +30,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.annual.FlareAnnual123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereport.FlareReport123SummaryService;
@@ -53,6 +56,8 @@ class FlareInformationSummarySectionServiceTest {
   private static final String FLARE_REPORT_GAS_PROPERTIES_ITEM = "Flare report gas properties";
 
   private static final String UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE = "Unsupported operation for %s";
+
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -105,7 +110,7 @@ class FlareInformationSummarySectionServiceTest {
   void getSummarySection_nonFlare(ApplicationType applicationType) {
     var nonFlareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThat(flareInformationSummarySectionService.getSummarySection(nonFlareAppVersion))
+    assertThat(flareInformationSummarySectionService.getSummarySection(nonFlareAppVersion, USER))
         .isNotPresent();
 
     verifyNoInteractions(consentLengthService);
@@ -116,7 +121,7 @@ class FlareInformationSummarySectionServiceTest {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.empty());
 
-    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isNotPresent();
   }
 
@@ -146,7 +151,7 @@ class FlareInformationSummarySectionServiceTest {
     when(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion))
         .thenReturn(List.of(expectedSummaryCard));
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -164,7 +169,7 @@ class FlareInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
     }
 
-    if (ConsentLengthType.SHORT_TERM.equals(consentLengthType)) {
+    if (SHORT_TERM.equals(consentLengthType)) {
       verify(flareShortTermService, times(1)).getFlareShortTermSummaryCard(applicationVersion);
       verifyNoInteractions(flareAnnualService);
     } else {
@@ -194,7 +199,7 @@ class FlareInformationSummarySectionServiceTest {
     when(flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -203,7 +208,7 @@ class FlareInformationSummarySectionServiceTest {
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
 
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
+    assertSummaryItem(summaryItems.get(0), SHORT_TERM.getDisplayName(), 1);
 
     for (SummaryItem summaryItem : summaryItems) {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
@@ -237,7 +242,7 @@ class FlareInformationSummarySectionServiceTest {
     when(flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -294,7 +299,7 @@ class FlareInformationSummarySectionServiceTest {
     when(flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -327,7 +332,7 @@ class FlareInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
@@ -342,7 +347,7 @@ class FlareInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
@@ -357,7 +362,7 @@ class FlareInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }

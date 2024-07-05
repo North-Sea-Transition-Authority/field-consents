@@ -62,11 +62,11 @@ public class ConsultationResponseController {
   }
 
   @GetMapping
-  public ModelAndView getResponseForm(@PathVariable Integer applicationId) {
+  public ModelAndView getResponseForm(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var consultation = consultationService.getLatestOpenConsultation(applicationVersion.getApplication());
 
-    return getModelAndView(applicationVersion, consultation, ConsultationResponseForm.from(consultation));
+    return getModelAndView(applicationVersion, consultation, ConsultationResponseForm.from(consultation), user);
   }
 
   @PostMapping
@@ -83,7 +83,7 @@ public class ConsultationResponseController {
     validator.validate(form, bindingResult, applicationVersion);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, consultation, form);
+      return getModelAndView(applicationVersion, consultation, form, user);
     }
 
     consultationService.saveConsultationResponse(
@@ -109,8 +109,8 @@ public class ConsultationResponseController {
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
       Consultation consultation,
-      ConsultationResponseForm form
-  ) {
+      ConsultationResponseForm form,
+      ServiceUserDetail user) {
     var application = applicationVersion.getApplication();
     var applicationId = application.getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
@@ -134,7 +134,7 @@ public class ConsultationResponseController {
         .addObject("backLinkUrl", ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)));
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     if (consultationService.requiresEiaRegsResponse(applicationVersion)) {
       modelAndView.addObject("eiaRegsRadioOptions", EnumSet.allOf(EiaRegsResponseType.class));

@@ -81,14 +81,14 @@ public enum CaseProcessingActionItem implements Displayable {
           .getNewCaseNote(applicationId))),
   // Technical reviewer actions
   TECHNICAL_REVIEWER_SUBMIT_REVIEW("Submit technical review", 1, true, true, null,
-      applicationId -> ReverseRouter.route(on(TechnicalReviewResponseController.class).getForm(applicationId))),
+      applicationId -> ReverseRouter.route(on(TechnicalReviewResponseController.class).getForm(applicationId, null))),
   TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 2, false, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
           .getTechnicalReviewAssignment(applicationId, null))),
   // Case officer and Technical reviewer actions
   APPLICATION_UPDATE_REQUEST("Request application update", 6, true, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-          .getApplicationUpdateRequest(applicationId))),
+          .getApplicationUpdateRequest(applicationId, null))),
   // Operator actions
   OPERATOR_PAY_AND_SUBMIT_APPLICATION("Pay and submit application", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationPaymentController.class)
@@ -108,14 +108,16 @@ public enum CaseProcessingActionItem implements Displayable {
   CONSULTATION_REQUEST("Request consultation", 99, true, false, null,
       applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),
   CONSULTATION_RESPONSE("Respond to consultation", 1, true, true, null,
-      applicationId -> ReverseRouter.route(on(ConsultationResponseController.class).getResponseForm(applicationId))),
+      applicationId -> ReverseRouter.route(on(ConsultationResponseController.class).getResponseForm(applicationId, null))),
   CONSULTATION_MANAGE_RESPONDER("Manage consultation responder", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ConsultationAllocationController.class)
           .getResponderAllocationForm(applicationId))),
   CONSULTATION_FURTHER_INFORMATION_REQUEST("Request further information", 2, true, false, null,
-      applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class).getRequestForm(applicationId))),
+      applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class)
+          .getRequestForm(applicationId, null))),
   CONSULTATION_FURTHER_INFORMATION_RESPOND("Respond to further information request", 3, true, false, null,
-      applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class).getResponseForm(applicationId))),
+      applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class)
+          .getResponseForm(applicationId, null))),
   // CAM actions
   CONSENT_ISSUING("Consent issuing", 8, false, false, null,
       applicationId -> ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null))),

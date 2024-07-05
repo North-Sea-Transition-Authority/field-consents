@@ -9,6 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
@@ -29,7 +30,7 @@ public class ProductionInformationSummarySectionService implements SummarySectio
   }
 
   @Override
-  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
+  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     List<SummaryItem> summaryItems = new ArrayList<>();
 
     if (!ApplicationType.PRODUCTION.equals(applicationVersion.getApplication().getType())) {

@@ -103,7 +103,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   @SecurityTest
   void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getForm(APPLICATION_ID))))
+            .getForm(APPLICATION_ID, user))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -113,7 +113,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
         .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getForm(APPLICATION_ID)))
+            .getForm(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -123,7 +123,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     mockGetFormInteractions();
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getForm(APPLICATION_ID)))
+            .getForm(APPLICATION_ID, user)))
             .with(user(user))
         )
         .andExpect(status().isOk())
@@ -249,7 +249,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 
 }

@@ -13,6 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
 import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionService;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
@@ -57,7 +58,7 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
   }
 
   @Override
-  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
+  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var summaryItems = new ArrayList<SummaryItem>();
 
     getApplicationContextSummaryItem(applicationVersion).ifPresent(summaryItems::add);

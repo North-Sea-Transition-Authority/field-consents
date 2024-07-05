@@ -135,7 +135,8 @@ public class IndustryCaseProcessingController {
       switch (tab) {
         case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
+            user);
         default -> {
         }
       }

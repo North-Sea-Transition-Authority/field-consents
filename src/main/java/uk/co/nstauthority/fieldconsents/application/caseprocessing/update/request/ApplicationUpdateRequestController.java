@@ -60,10 +60,11 @@ public class ApplicationUpdateRequestController {
   }
 
   @GetMapping
-  public ModelAndView getApplicationUpdateRequest(@PathVariable Integer applicationId) {
+  public ModelAndView getApplicationUpdateRequest(@PathVariable Integer applicationId,
+                                                  ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var form = applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion);
-    return getModelAndView(applicationVersion, form);
+    return getModelAndView(applicationVersion, form, user);
   }
 
   @PostMapping
@@ -79,7 +80,7 @@ public class ApplicationUpdateRequestController {
     applicationUpdateRequestFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, form);
+      return getModelAndView(applicationVersion, form, user);
     }
 
     var deadlineInstant = DateUtils.datePickerWithTimeStringToInstant(
@@ -100,7 +101,9 @@ public class ApplicationUpdateRequestController {
     return ReverseRouter.redirect(on(ApplicationUpdateController.class).getApplicationUpdates(applicationId, null));
   }
 
-  private ModelAndView getModelAndView(ApplicationVersion applicationVersion, ApplicationUpdateRequestForm form) {
+  private ModelAndView getModelAndView(ApplicationVersion applicationVersion,
+                                       ApplicationUpdateRequestForm form,
+                                       ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
@@ -111,7 +114,7 @@ public class ApplicationUpdateRequestController {
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationUpdateController.class)
             .getApplicationUpdates(applicationId, null)));
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     consultationService
         .findLatestOpenConsultation(applicationVersion.getApplication())

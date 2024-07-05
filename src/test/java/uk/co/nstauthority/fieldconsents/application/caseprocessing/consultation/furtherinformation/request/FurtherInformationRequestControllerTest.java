@@ -85,7 +85,7 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
   @SecurityTest
   void getFurtherInformationForLatestConsultation_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getRequestForm(APPLICATION_ID))))
+            .getRequestForm(APPLICATION_ID, user))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -100,10 +100,10 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getRequestForm(APPLICATION_ID)))
+            .getRequestForm(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -149,7 +149,7 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .submitRequestForm(APPLICATION_ID, null, null, null, null)))

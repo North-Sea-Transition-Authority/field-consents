@@ -12,9 +12,11 @@ import uk.co.nstauthority.fieldconsents.application.otherlegacydata.OtherLegacyD
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.Shore;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class AdditionalInformationSummarySectionService implements SummarySectionService<ApplicationVersion> {
@@ -31,21 +33,26 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
 
   private final OtherLegacyDataSummaryService otherLegacyDataSummaryService;
 
+  private final TeamService teamService;
+
   @Autowired
   AdditionalInformationSummarySectionService(SupportingInformationService supportingInformationService,
                                              ApplicationAssetService applicationAssetService,
                                              FieldService fieldService,
                                              EiaDirectionService eiaDirectionService,
-                                             OtherLegacyDataSummaryService otherLegacyDataSummaryService) {
+                                             OtherLegacyDataSummaryService otherLegacyDataSummaryService,
+                                             TeamService teamService) {
     this.supportingInformationService = supportingInformationService;
     this.applicationAssetService = applicationAssetService;
     this.fieldService = fieldService;
     this.eiaDirectionService = eiaDirectionService;
     this.otherLegacyDataSummaryService = otherLegacyDataSummaryService;
+    this.teamService = teamService;
   }
 
   @Override
-  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
+  public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+
     var summaryItems = new ArrayList<SummaryItem>();
 
     var applicationType = applicationVersion.getApplication().getType();
@@ -58,7 +65,10 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
       }
     }
 
-    summaryItems.add(getSupportingInformationSummaryItem(applicationVersion));
+    if (teamService.isRegulatorUser(user) || teamService.isIndustryUser(user)) {
+      summaryItems.add(getSupportingInformationSummaryItem(applicationVersion));
+    }
+
     getOtherLegacyDataSummaryItem(applicationVersion).ifPresent(summaryItems::add);
 
     return Optional.of(new SummarySection(30, summaryItems));

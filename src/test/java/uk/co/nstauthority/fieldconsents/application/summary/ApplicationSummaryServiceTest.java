@@ -28,10 +28,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.summary.production.ProductionInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.ConsentDetailsSummarySectionService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationSummaryServiceTest {
+
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private ConsentDetailsSummarySectionService consentDetailsSummarySectionService;
@@ -58,14 +62,14 @@ class ApplicationSummaryServiceTest {
 
   @Test
   void getSummarySections_production() {
-    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion))
+    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(getConsentDetailsSummarySection(null)));
-    when(productionInformationSummarySectionService.getSummarySection(applicationVersion))
+    when(productionInformationSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(getProductionInformationSummarySection(null)));
-    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion))
+    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(getAdditionalInformationSummarySection(null)));
 
-    List<SummarySection> summarySections = applicationSummaryService.getSummarySections(applicationVersion);
+    List<SummarySection> summarySections = applicationSummaryService.getSummarySections(applicationVersion, null);
 
     assertThat(summarySections).hasSize(3);
     assertSummarySection(summarySections.get(0), CONSENT_DETAILS_DISPLAY_ORDER);
@@ -81,8 +85,8 @@ class ApplicationSummaryServiceTest {
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         viewName,
-        pageTitle
-    );
+        pageTitle,
+        USER);
 
     assertThat(modelAndView.getModel())
         .containsEntry("pageTitle", pageTitle)
@@ -96,28 +100,28 @@ class ApplicationSummaryServiceTest {
   void addSummarySectionsToModelAndView(ApplicationType applicationType) {
     // it doesn't actually matter what the sections here are...
     var consentDetailSection = getConsentDetailsSummarySection(null);
-    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion))
+    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(consentDetailSection));
 
     var productionDetailSection = getProductionInformationSummarySection(null);
-    when(productionInformationSummarySectionService.getSummarySection(applicationVersion))
+    when(productionInformationSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(productionDetailSection));
 
     var additionalDetailSection = getAdditionalInformationSummarySection(null);
-    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion))
+    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion, null))
         .thenReturn(Optional.of(additionalDetailSection));
 
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    var newApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     var modelAndView = new ModelAndView();
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(newApplicationVersion, modelAndView, null);
 
     var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
 
     assertThat(modelAndView.getModel())
         .containsExactlyInAnyOrderEntriesOf(Map.of(
             "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
-            "accordionId", applicationVersion.getId(),
+            "accordionId", newApplicationVersion.getId(),
             "wideSummaryDisplay", wideSummaryDisplay
         ));
   }

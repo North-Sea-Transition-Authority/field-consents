@@ -111,7 +111,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
   @SecurityTest
   void getApplicationUpdateRequest_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID))))
+            .getApplicationUpdateRequest(APPLICATION_ID, user))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -125,7 +125,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
         .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .getApplicationUpdateRequest(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -150,7 +150,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     when(caseProcessingActionService.userHasAnyAction(
         applicationVersion,
@@ -159,7 +159,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
     )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .getApplicationUpdateRequest(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -186,10 +186,10 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .getApplicationUpdateRequest(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -222,10 +222,10 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .getApplicationUpdateRequest(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -258,10 +258,10 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
-            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .getApplicationUpdateRequest(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -345,7 +345,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationUpdateRequestController.class)

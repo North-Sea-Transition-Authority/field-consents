@@ -107,7 +107,8 @@ public class ConsulteeCaseProcessingController {
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
         case CONSULTATIONS -> addConsultationSummaryItems(modelAndView, applicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
+            user);
         default -> {
         }
       }

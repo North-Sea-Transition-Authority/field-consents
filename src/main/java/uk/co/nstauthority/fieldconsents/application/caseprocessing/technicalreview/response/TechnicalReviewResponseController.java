@@ -57,12 +57,12 @@ public class TechnicalReviewResponseController {
   }
 
   @GetMapping
-  public ModelAndView getForm(@PathVariable Integer applicationId) {
+  public ModelAndView getForm(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
     var form = TechnicalReviewResponseForm.empty();
 
-    return getModelAndView(applicationVersion, technicalReview, form);
+    return getModelAndView(applicationVersion, technicalReview, form, user);
   }
 
   @PostMapping
@@ -77,7 +77,7 @@ public class TechnicalReviewResponseController {
     var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, technicalReview, form);
+      return getModelAndView(applicationVersion, technicalReview, form, serviceUserDetail);
     }
 
     technicalReviewService.saveTechnicalReviewResponse(
@@ -101,7 +101,8 @@ public class TechnicalReviewResponseController {
 
   private ModelAndView getModelAndView(ApplicationVersion applicationVersion,
                                        TechnicalReview technicalReview,
-                                       TechnicalReviewResponseForm form) {
+                                       TechnicalReviewResponseForm form,
+                                       ServiceUserDetail user) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
     var technicalReviewId = technicalReview.getId();
@@ -126,7 +127,7 @@ public class TechnicalReviewResponseController {
         .addObject("rejectRadio", TechnicalReviewResponseType.REJECT)
         .addObject("fileUploadAttributes", fileUploadAttributes);
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     return modelAndView;
   }

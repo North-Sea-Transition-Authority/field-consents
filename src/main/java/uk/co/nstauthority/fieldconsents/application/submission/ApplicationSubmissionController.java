@@ -128,7 +128,7 @@ public class ApplicationSubmissionController {
       modelAndView.addObject("paymentRequired", paymentRequired);
     }
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     return modelAndView;
   }

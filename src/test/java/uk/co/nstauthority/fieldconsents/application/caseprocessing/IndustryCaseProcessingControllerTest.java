@@ -253,7 +253,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -271,7 +271,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -295,7 +295,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
   }
@@ -412,7 +412,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 
   private void stubPaymentsServiceCall(Application application) {

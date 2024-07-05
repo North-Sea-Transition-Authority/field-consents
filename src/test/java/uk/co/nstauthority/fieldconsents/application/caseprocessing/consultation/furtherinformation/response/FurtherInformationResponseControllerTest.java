@@ -103,7 +103,7 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
 
   @SecurityTest
   void getResponseForm_notSignedIn() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).getResponseForm(APPLICATION_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).getResponseForm(APPLICATION_ID, user))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -117,10 +117,10 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getResponseForm(APPLICATION_ID)))
+            .getResponseForm(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -137,7 +137,7 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
     mockServiceCalls();
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getResponseForm(APPLICATION_ID)))
+            .getResponseForm(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf())
             .param("responseText", RESPONSE_TEXT))
@@ -163,10 +163,10 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getResponseForm(APPLICATION_ID)))
+            .getResponseForm(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf())
             .param("responseText", responseText))

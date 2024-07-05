@@ -55,13 +55,13 @@ public class FurtherInformationResponseController {
   }
 
   @GetMapping
-  public ModelAndView getResponseForm(@PathVariable Integer applicationId) {
+  public ModelAndView getResponseForm(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var consultation = consultationService.getLatestOpenConsultation(application);
     var furtherInformation = furtherInformationService.getLatestOpenFurtherInformation(consultation);
 
-    return getModelAndView(applicationVersion, furtherInformation, FurtherInformationResponseForm.empty());
+    return getModelAndView(applicationVersion, furtherInformation, FurtherInformationResponseForm.empty(), user);
   }
 
   @PostMapping
@@ -78,7 +78,7 @@ public class FurtherInformationResponseController {
     var furtherInformation = furtherInformationService.getLatestOpenFurtherInformation(consultation);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, furtherInformation, form);
+      return getModelAndView(applicationVersion, furtherInformation, form, user);
     }
 
     furtherInformationService.saveFurtherInformationResponse(furtherInformation, user, form.responseText());
@@ -93,8 +93,8 @@ public class FurtherInformationResponseController {
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
       FurtherInformation furtherInformation,
-      FurtherInformationResponseForm form
-  ) {
+      FurtherInformationResponseForm form,
+      ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
@@ -108,7 +108,7 @@ public class FurtherInformationResponseController {
             furtherInformationService.getFurtherInformationView(furtherInformation))
         .addObject("form", form);
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     return modelAndView;
   }

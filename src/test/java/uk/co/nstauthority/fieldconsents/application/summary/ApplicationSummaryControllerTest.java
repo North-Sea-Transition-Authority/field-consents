@@ -53,7 +53,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_PROCESSING_REQUIRED_PERMISSIONS)).thenReturn(false);
-    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationSummaryService.getSummarySections(applicationVersion, user)).thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(teamService.isRegulatorUser(user)).thenReturn(true);
 
@@ -88,7 +88,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(user, applicationVersion, CONSULTEE_PROCESSING_REQUIRED_PERMISSIONS)).thenReturn(false);
-    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationSummaryService.getSummarySections(applicationVersion, user)).thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(teamService.isConsulteeUser(user)).thenReturn(true);
 
@@ -105,7 +105,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(user, applicationVersion, CONSULTEE_PROCESSING_REQUIRED_PERMISSIONS)).thenReturn(true);
-    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationSummaryService.getSummarySections(applicationVersion, user)).thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(teamService.isConsulteeUser(user)).thenReturn(true);
 
@@ -125,7 +125,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_PROCESSING_REQUIRED_PERMISSIONS)).thenReturn(false);
-    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationSummaryService.getSummarySections(applicationVersion, user)).thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(teamService.isIndustryUser(user)).thenReturn(true);
 
@@ -142,7 +142,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_PROCESSING_REQUIRED_PERMISSIONS)).thenReturn(true);
-    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationSummaryService.getSummarySections(applicationVersion, user)).thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(teamService.isIndustryUser(user)).thenReturn(true);
 

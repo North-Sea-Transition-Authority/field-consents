@@ -23,8 +23,11 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionService;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -35,6 +38,7 @@ class ConsentDetailsSummarySectionServiceTest {
 
   private static final SummaryCard SUMMARY_CARD = SummaryCard.emptySummaryCard();
   private static final SummaryItem SUMMARY_ITEM = SummaryItem.withCard("example item", SUMMARY_CARD);
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private ApplicationContextService applicationContextService;
@@ -57,6 +61,9 @@ class ConsentDetailsSummarySectionServiceTest {
   @Mock
   private ApplicationRationaleVentService applicationRationaleVentService;
 
+  @Mock
+  private ApplicationRationaleProductionService applicationRationaleProductionService;
+
   @Spy
   @InjectMocks
   private ConsentDetailsSummarySectionService consentDetailsSummarySectionService;
@@ -72,7 +79,7 @@ class ConsentDetailsSummarySectionServiceTest {
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getAdditionalAssetsSummaryItem(applicationVersion);
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getGasInjectionSummaryItem(applicationVersion);
 
-    assertThat(consentDetailsSummarySectionService.getSummarySection(applicationVersion)).isEmpty();
+    assertThat(consentDetailsSummarySectionService.getSummarySection(applicationVersion, USER)).isEmpty();
   }
 
   @ParameterizedTest
@@ -86,7 +93,7 @@ class ConsentDetailsSummarySectionServiceTest {
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getAdditionalAssetsSummaryItem(applicationVersion);
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getGasInjectionSummaryItem(applicationVersion);
 
-    assertThat(consentDetailsSummarySectionService.getSummarySection(applicationVersion))
+    assertThat(consentDetailsSummarySectionService.getSummarySection(applicationVersion, USER))
         .isPresent()
         .get()
         .isEqualTo(new SummarySection(10, List.of(
@@ -128,6 +135,19 @@ class ConsentDetailsSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     when(applicationRationaleVentService.getSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
+
+    assertThat(consentDetailsSummarySectionService.getApplicationRationaleSummaryItem(applicationVersion))
+        .isPresent()
+        .get()
+        .isEqualTo(SummaryItem.withCard("Application rationale", SUMMARY_CARD));
+  }
+
+
+  @Test
+  void getApplicationRationaleSummaryItem_production() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    when(applicationRationaleProductionService.getSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
 
     assertThat(consentDetailsSummarySectionService.getApplicationRationaleSummaryItem(applicationVersion))
         .isPresent()

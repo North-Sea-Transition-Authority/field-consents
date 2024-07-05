@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.delete;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -45,9 +46,9 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
     )).thenReturn(true);
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), eq(user));
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(APPLICATION_ID)))
+            .getDeleteApplication(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -77,7 +78,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
     )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(APPLICATION_ID)))
+            .getDeleteApplication(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -94,7 +95,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
     )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(APPLICATION_ID)))
+            .getDeleteApplication(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());

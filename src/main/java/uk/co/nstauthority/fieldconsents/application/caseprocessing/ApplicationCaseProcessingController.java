@@ -163,7 +163,8 @@ public class ApplicationCaseProcessingController {
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
         case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
         case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
+            user);
         default -> {
         }
       }

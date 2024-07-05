@@ -14,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
@@ -40,13 +41,13 @@ public class DeleteApplicationController {
   }
 
   @GetMapping
-  public ModelAndView getDeleteApplication(@PathVariable Integer applicationId) {
+  public ModelAndView getDeleteApplication(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/deleteApplication",
-        PAGE_TITLE
-    );
+        PAGE_TITLE,
+        user);
 
     return modelAndView
         .addObject("deleteUrl", ReverseRouter.route(on(DeleteApplicationController.class)

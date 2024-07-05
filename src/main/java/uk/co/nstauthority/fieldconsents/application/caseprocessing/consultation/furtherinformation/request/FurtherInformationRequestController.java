@@ -56,12 +56,13 @@ public class FurtherInformationRequestController {
   }
 
   @GetMapping
-  public ModelAndView getRequestForm(@PathVariable Integer applicationId) {
+  public ModelAndView getRequestForm(@PathVariable Integer applicationId,
+                                     ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var consultation = consultationService.getLatestOpenConsultation(application);
 
-    return getModelAndView(applicationVersion, consultation, FurtherInformationRequestForm.empty());
+    return getModelAndView(applicationVersion, consultation, FurtherInformationRequestForm.empty(), user);
   }
 
   @PostMapping
@@ -77,7 +78,7 @@ public class FurtherInformationRequestController {
     var consultation = consultationService.getLatestOpenConsultation(application);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, consultation, form);
+      return getModelAndView(applicationVersion, consultation, form, user);
     }
 
     furtherInformationService.saveFurtherInformationRequest(consultation, user, form.requestText());
@@ -92,8 +93,8 @@ public class FurtherInformationRequestController {
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
       Consultation consultation,
-      FurtherInformationRequestForm form
-  ) {
+      FurtherInformationRequestForm form,
+      ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var backLinkUrl = ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
@@ -106,7 +107,7 @@ public class FurtherInformationRequestController {
         .addObject("consultationRequestView", ConsultationRequestView.from(consultation))
         .addObject("form", form);
 
-    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 
     return modelAndView;
   }

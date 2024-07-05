@@ -29,6 +29,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.annual.VentAnnual123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.shortterm.VentShortTerm123SummaryService;
@@ -53,6 +55,8 @@ class VentInformationSummarySectionServiceTest {
   private static final String VENT_REPORT_GAS_PROPERTIES_ITEM = "Vent report gas properties";
 
   private static final String UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE = "Unsupported operation for %s";
+
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -105,7 +109,7 @@ class VentInformationSummarySectionServiceTest {
   void getSummarySection_nonVent(ApplicationType applicationType) {
     var nonVentAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThat(ventInformationSummarySectionService.getSummarySection(nonVentAppVersion))
+    assertThat(ventInformationSummarySectionService.getSummarySection(nonVentAppVersion, USER))
         .isNotPresent();
 
     verifyNoInteractions(consentLengthService);
@@ -116,7 +120,7 @@ class VentInformationSummarySectionServiceTest {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.empty());
 
-    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isNotPresent();
   }
 
@@ -146,7 +150,7 @@ class VentInformationSummarySectionServiceTest {
     when(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion))
         .thenReturn(List.of(expectedSummaryCard));
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -191,7 +195,7 @@ class VentInformationSummarySectionServiceTest {
     when(ventShortTerm123SummaryService.getVentShortTerm123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -234,7 +238,7 @@ class VentInformationSummarySectionServiceTest {
     when(ventAnnual123SummaryService.getVentAnnual123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -291,7 +295,7 @@ class VentInformationSummarySectionServiceTest {
     when(ventLongTermSummaryService.getVentLongTermSummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -324,7 +328,7 @@ class VentInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
@@ -339,7 +343,7 @@ class VentInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
@@ -354,7 +358,7 @@ class VentInformationSummarySectionServiceTest {
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(emissionCategoryType);
 
-    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isInstanceOf(RuntimeException.class)
         .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }

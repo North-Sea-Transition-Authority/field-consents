@@ -27,6 +27,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
@@ -34,6 +36,8 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionInformationSummarySectionServiceTest {
+
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -56,7 +60,7 @@ class ProductionInformationSummarySectionServiceTest {
   void getSummarySection_nonProduction(ApplicationType applicationType) {
     var nonProductionAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThat(productionInformationSummarySectionService.getSummarySection(nonProductionAppVersion))
+    assertThat(productionInformationSummarySectionService.getSummarySection(nonProductionAppVersion, USER))
         .isNotPresent();
 
     verifyNoInteractions(consentLengthService);
@@ -67,7 +71,7 @@ class ProductionInformationSummarySectionServiceTest {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.empty());
 
-    assertThat(productionInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThat(productionInformationSummarySectionService.getSummarySection(applicationVersion, USER))
         .isNotPresent();
   }
 
@@ -79,7 +83,7 @@ class ProductionInformationSummarySectionServiceTest {
     when(productionSummaryService.getShortTermConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
-    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -105,7 +109,7 @@ class ProductionInformationSummarySectionServiceTest {
     when(productionSummaryService.getAnnualConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
-    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
@@ -130,7 +134,7 @@ class ProductionInformationSummarySectionServiceTest {
     when(productionSummaryService.getLongTermConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
-    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();

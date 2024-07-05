@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
@@ -22,18 +23,18 @@ public class ApplicationSummaryService {
     this.summarySectionServices = summarySectionServices;
   }
 
-  public List<SummarySection> getSummarySections(ApplicationVersion applicationVersion) {
+  public List<SummarySection> getSummarySections(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     return summarySectionServices.stream()
-        .map(summarySectionService -> summarySectionService.getSummarySection(applicationVersion))
+        .map(summarySectionService -> summarySectionService.getSummarySection(applicationVersion, user))
         .flatMap(Optional::stream)
         .sorted(Comparator.comparing(SummarySection::displayOrder))
         .toList();
   }
 
   public ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion, String viewName,
-                                                        String pageTitle) {
+                                                        String pageTitle, ServiceUserDetail user) {
 
-    var summarySections = getSummarySections(applicationVersion);
+    var summarySections = getSummarySections(applicationVersion, user);
     var wideSummaryDisplay = WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
 
     return new ModelAndView(viewName)
@@ -43,8 +44,9 @@ public class ApplicationSummaryService {
         .addObject("wideSummaryDisplay", wideSummaryDisplay);
   }
 
-  public void addSummarySectionsToModelAndView(ApplicationVersion applicationVersion, ModelAndView modelAndView) {
-    var summarySections = getSummarySections(applicationVersion);
+  public void addSummarySectionsToModelAndView(ApplicationVersion applicationVersion, ModelAndView modelAndView,
+                                               ServiceUserDetail user) {
+    var summarySections = getSummarySections(applicationVersion, user);
     var wideSummaryDisplay = WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
 
     modelAndView

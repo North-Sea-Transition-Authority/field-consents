@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationType.FLARE;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +21,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import uk.co.fivum.fileuploadlibrary.core.UploadedFileTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -62,7 +63,7 @@ class SupportingInformationServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(FLARE);
     fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
     supportingInformation = getSupportingInformation();
   }
@@ -200,16 +201,18 @@ class SupportingInformationServiceTest {
   void getSupportingDocumentsSummaryCard_noFiles() {
     var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
     when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(Collections.emptyList());
+
     assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).isEmpty();
   }
 
   @Test
   void getSupportingDocumentsSummaryCard() {
     var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
-    var uploadedFile = new UploadedFile();
-    uploadedFile.setId(UUID.randomUUID());
-    uploadedFile.setName("document.pdf");
-    uploadedFile.setDescription("a file description");
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withId(UUID.randomUUID())
+        .withName("document.pdf")
+        .withDescription("a file description")
+        .build();
 
     when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(Collections.singletonList(uploadedFile));
 

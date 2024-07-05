@@ -75,7 +75,7 @@ public class ApplicationTaskListController {
         .addObject("applicationReference", applicationReference)
         .addObject("hasPermissionToDeleteApplication", hasPermissionToDeleteApplication)
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(applicationId)));
+            .getDeleteApplication(applicationId, user)));
 
     if (consentService.shouldCheckProductionConsentExists(applicationVersion)) {
       var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);

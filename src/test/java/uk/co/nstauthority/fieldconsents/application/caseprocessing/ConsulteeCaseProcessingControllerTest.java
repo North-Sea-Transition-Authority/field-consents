@@ -237,6 +237,6 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 }

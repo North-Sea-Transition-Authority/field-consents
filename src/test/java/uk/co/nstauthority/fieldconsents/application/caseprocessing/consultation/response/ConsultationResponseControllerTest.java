@@ -98,7 +98,8 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
 
   @SecurityTest
   void getResponseForm_securityTest() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ConsultationResponseController.class).getResponseForm(APPLICATION_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(ConsultationResponseController.class).getResponseForm(APPLICATION_ID,
+            user))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -107,7 +108,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
     mockGetResponseFormInvocations(true);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ConsultationResponseController.class)
-            .getResponseForm(APPLICATION_ID)))
+            .getResponseForm(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -126,7 +127,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
     mockGetResponseFormInvocations(false);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ConsultationResponseController.class)
-            .getResponseForm(APPLICATION_ID)))
+            .getResponseForm(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -251,7 +252,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 
   private void addApplicationSummaryAttributes(ModelAndView modelAndView) {
