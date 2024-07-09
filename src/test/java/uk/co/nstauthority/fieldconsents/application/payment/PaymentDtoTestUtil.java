@@ -23,9 +23,9 @@ public class PaymentDtoTestUtil {
     private String returnUrl = "testReturnUrl";
     private String createdByUserId = "testCreatedByUserId";
     private Instant createdInstant = Instant.now();
+    private Instant successInstant = Instant.now().plusSeconds(30);
     private String govUkPayId = "testGovUkPayId";
     private String govUkPayNextUrl = "testGovUkPayNextUrl";
-    private Instant govUkPayCaptureSubmitInstant = Instant.now();
     private PaymentStatus status = PaymentStatus.IN_PROGRESS;
 
     private Builder() {
@@ -76,6 +76,11 @@ public class PaymentDtoTestUtil {
       return this;
     }
 
+    public Builder withSuccessInstant(Instant successInstant) {
+      this.successInstant = successInstant;
+      return this;
+    }
+
     public Builder withGovUkPayId(String govUkPayId) {
       this.govUkPayId = govUkPayId;
       return this;
@@ -83,11 +88,6 @@ public class PaymentDtoTestUtil {
 
     public Builder withGovUkPayNextUrl(String govUkPayNextUrl) {
       this.govUkPayNextUrl = govUkPayNextUrl;
-      return this;
-    }
-
-    public Builder withGovUkPayCaptureSubmitInstant(Instant govUkPayCaptureSubmitInstant) {
-      this.govUkPayCaptureSubmitInstant = govUkPayCaptureSubmitInstant;
       return this;
     }
 
@@ -107,9 +107,9 @@ public class PaymentDtoTestUtil {
           returnUrl,
           createdByUserId,
           createdInstant,
+          successInstant,
           govUkPayId,
           govUkPayNextUrl,
-          govUkPayCaptureSubmitInstant,
           status
       );
     }

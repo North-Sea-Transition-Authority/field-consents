@@ -19,12 +19,14 @@ class PaymentsTabPaymentSummaryViewTest {
     var createdByUser = ServiceUserDetailTestUtil.Builder().build();
 
     var paymentDtoAmountPence = 118000;
-    var paymentDtoGovUkPayCaptureSubmitInstant = Instant.now();
+    var createdInstant = Instant.now();
+    var successInstant = Instant.now().plusSeconds(30);
     var paymentDtoDescription = "testDescription";
     var paymentDtoItemReference = "testItemReference";
 
     when(paymentDto.amountPence()).thenReturn(paymentDtoAmountPence);
-    when(paymentDto.govUkPayCaptureSubmitInstant()).thenReturn(paymentDtoGovUkPayCaptureSubmitInstant);
+    when(paymentDto.createdInstant()).thenReturn(createdInstant);
+    when(paymentDto.successInstant()).thenReturn(successInstant);
     when(paymentDto.description()).thenReturn(paymentDtoDescription);
     when(paymentDto.itemReference()).thenReturn(paymentDtoItemReference);
 
@@ -34,7 +36,7 @@ class PaymentsTabPaymentSummaryViewTest {
             paymentDtoDescription,
             DecimalFormatUtils.formatMoney((double) paymentDtoAmountPence / 100),
             createdByUser.displayNameAndEmail(),
-            DateUtils.format(paymentDtoGovUkPayCaptureSubmitInstant, DateUtils.DATE_TIME),
+            DateUtils.format(successInstant, DateUtils.DATE_TIME),
             paymentDtoItemReference
         )
     );

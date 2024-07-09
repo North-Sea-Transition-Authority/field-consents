@@ -84,17 +84,17 @@ class PaymentsTabServiceTest {
 
     var paymentDto1 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto1CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now)
+        .withSuccessInstant(now)
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto2 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto2CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now.minusMillis(1))
+        .withSuccessInstant(now.minusMillis(1))
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto3 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto3CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now.minusMillis(2))
+        .withSuccessInstant(now.minusMillis(2))
         .withStatus(PaymentStatus.SUCCESS)
         .build();
 
@@ -152,12 +152,12 @@ class PaymentsTabServiceTest {
 
     var paymentDto1 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto1CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now)
+        .withSuccessInstant(now)
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto2 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto2CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now.minusMillis(1))
+        .withSuccessInstant(now.minusMillis(1))
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto3 = PaymentDtoTestUtil.builder()
@@ -211,17 +211,17 @@ class PaymentsTabServiceTest {
 
     var paymentDto1 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto1CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now)
+        .withSuccessInstant(now)
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto2 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto2CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now.minusMillis(1))
+        .withSuccessInstant(now.minusMillis(1))
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     var paymentDto3 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId(paymentDto3CreatedByUserId)
-        .withGovUkPayCaptureSubmitInstant(now.minusMillis(2))
+        .withSuccessInstant(now.minusMillis(2))
         .withStatus(PaymentStatus.SUCCESS)
         .build();
 

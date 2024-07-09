@@ -78,7 +78,7 @@ public class CaseHistoryEventTestUtil {
     return CaseEvent.builder(applicationVersion)
         .withEventType(CaseEventType.PAYMENT_COMPLETED)
         .withMainEventUserWuaId(Long.parseLong(paymentDto.createdByUserId()))
-        .withEventDateTime(paymentDto.govUkPayCaptureSubmitInstant())
+        .withEventDateTime(paymentDto.successInstant())
         .withEventText(DecimalFormatUtils.formatMoney((double) paymentDto.amountPence() / 100))
         .build();
   }

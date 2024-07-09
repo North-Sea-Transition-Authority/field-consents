@@ -19,7 +19,7 @@ public record PaymentsTabPaymentSummaryView(
   static PaymentsTabPaymentSummaryView from(PaymentDto paymentDto, ServiceUserDetail createdByUser) {
     var paidByUser = createdByUser.displayNameAndEmail();
     var formattedPaymentAmount = DecimalFormatUtils.formatMoney((double) paymentDto.amountPence() / 100);
-    var formattedPaymentDate = DateUtils.format(paymentDto.govUkPayCaptureSubmitInstant(), DateUtils.DATE_TIME);
+    var formattedPaymentDate = DateUtils.format(paymentDto.successInstant(), DateUtils.DATE_TIME);
 
     return new PaymentsTabPaymentSummaryView(
         PAID_STATUS,

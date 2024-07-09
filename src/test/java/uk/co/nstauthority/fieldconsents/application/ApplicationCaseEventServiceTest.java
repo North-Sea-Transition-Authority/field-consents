@@ -70,13 +70,13 @@ class ApplicationCaseEventServiceTest {
 
     successfulPaymentDto1 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId("1")
-        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withSuccessInstant(Instant.now())
         .withAmountPence(118000)
         .withStatus(PaymentStatus.SUCCESS)
         .build();
     successfulPaymentDto2 = PaymentDtoTestUtil.builder()
         .withCreatedByUserId("2")
-        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withSuccessInstant(Instant.now())
         .withAmountPence(93000)
         .withStatus(PaymentStatus.SUCCESS)
         .build();
@@ -95,7 +95,7 @@ class ApplicationCaseEventServiceTest {
 
     var paymentDto = PaymentDtoTestUtil.builder()
         .withCreatedByUserId("1")
-        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withSuccessInstant(Instant.now())
         .withAmountPence(118000)
         .withStatus(otherPaymentStatus)
         .build();

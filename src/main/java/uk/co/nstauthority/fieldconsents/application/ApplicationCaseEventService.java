@@ -77,7 +77,7 @@ public class ApplicationCaseEventService implements CaseEventService<Application
             CaseEvent.builder(applicationVersion)
                 .withEventType(PAYMENT_COMPLETED)
                 .withMainEventUserWuaId(Long.parseLong(paymentDto.createdByUserId()))
-                .withEventDateTime(paymentDto.govUkPayCaptureSubmitInstant())
+                .withEventDateTime(paymentDto.successInstant())
                 .withEventText(DecimalFormatUtils.formatMoney((double) paymentDto.amountPence() / 100))
                 .build()
         );

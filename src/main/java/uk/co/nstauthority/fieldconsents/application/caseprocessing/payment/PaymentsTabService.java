@@ -60,7 +60,7 @@ public class PaymentsTabService {
         ));
 
     return paymentDtos.stream()
-        .sorted(Comparator.comparing(PaymentDto::govUkPayCaptureSubmitInstant).reversed())
+        .sorted(Comparator.comparing(PaymentDto::successInstant).reversed())
         .map(paymentDto ->
             PaymentsTabPaymentSummaryView.from(
                 paymentDto,
