@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.ALL_FIELD_STATUSES;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
@@ -14,6 +15,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.fieldIdList;
@@ -21,10 +23,12 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.fieldsWithOperatorList;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3Json;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -82,7 +86,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFields_allTestFields() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldList);
 
     assertThat(fieldSearchService.searchFields("F", REQUEST_PURPOSE))
@@ -98,11 +102,19 @@ class FieldSearchServiceTest {
         defaultFieldBuilder.fieldId(2).status(FieldStatus.STATUS600).build(),
         defaultFieldBuilder.fieldId(3).status(FieldStatus.UNKNOWN).build()
     );
+    var completeFieldIdSet = completeFieldList.stream().map(Field::getFieldId).collect(Collectors.toSet());
     var completeFieldJsonList = completeFieldList.stream().map(FieldWithOperatorJson::from).toList();
 
+    var fieldsWithAllowedStatuses = List.of(completeFieldList.get(0), completeFieldList.get(1));
+
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(fieldsWithAllowedStatuses);
+
     // field 3 doesn't have an ALLOWED_FIELD_STATUSES status, but should still be included because it's used by the service
-    when(applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.FIELD)).thenReturn(Set.of(3));
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose))).thenReturn(completeFieldList);
+    when(applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.FIELD))
+        .thenReturn(completeFieldIdSet);
+    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), eq(List.of(completeFieldList.get(2).getFieldId())), any(FieldsProjectionRoot.class), eq(requestPurpose), eq(null)))
+        .thenReturn(List.of(completeFieldList.get(2)));
 
     assertThat(fieldSearchService.searchFields("F", REQUEST_PURPOSE))
         .usingRecursiveComparison()
@@ -111,7 +123,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFields_singleTestField() {
-    when(fieldApi.searchFields(eq("F2"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F2"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2));
 
     List<FieldJson> singleTestField = fieldSearchService.searchFields("F2", REQUEST_PURPOSE);
@@ -121,7 +133,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_regulatorUser_allTestFields() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
@@ -133,7 +145,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_consulteeUser_allTestFields() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -147,7 +159,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_industryUser_twoFields() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -161,7 +173,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_regulatorUser_singleTestField() {
-    when(fieldApi.searchFields(eq("F2"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F2"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
@@ -173,7 +185,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_consulteeUser_singleTestField() {
-    when(fieldApi.searchFields(eq("F2"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F2"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -187,7 +199,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_industryUser_singleField() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -203,8 +215,47 @@ class FieldSearchServiceTest {
   }
 
   @Test
+  void searchFieldsWithOperatorForUser_industryUser_allFields_remainingFieldIdsEmpty() {
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(fieldsWithOperatorList);
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
+
+    assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field1JsonWithOperator, field2JsonWithOperator, field3JsonWithOperator));
+  }
+
+  @Test
+  void searchFieldsWithOperatorForUser_industryUser_twoFields_userHasViewFcsPermissionForInOperatorTeamAndFieldEquityPartnerTeam() {
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(fieldsWithOperatorList);
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(orgUnit2Json));
+
+    when(fieldEquityPartnerPermissionService.getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(
+        USER, List.of(field1.getFieldId(), field3.getFieldId()), Set.of(RolePermission.VIEW_FCS_CONSENTS)))
+        .thenReturn(List.of(field1.getFieldId()));
+
+    assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field1JsonWithOperator, field2JsonWithOperator));
+  }
+
+
+  @Test
   void searchFieldsWithOperatorForUser_industryUser_singleField_userHasViewFcsPermissionForInFieldEquityPartnerTeam() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -224,7 +275,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_industryUser_noPermissions() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field1WithOperator));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
@@ -240,7 +291,7 @@ class FieldSearchServiceTest {
 
   @Test
   void searchFieldsWithOperatorForUser_industryUser_noOperator() {
-    when(fieldApi.searchFields(eq("F"), eq(ALL_FIELD_STATUSES), any(FieldsProjectionRoot.class), eq(requestPurpose)))
+    when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field1WithNoOperatorButLicences));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());

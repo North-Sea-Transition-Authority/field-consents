@@ -42,7 +42,8 @@ backLinkUrl=springUrl(cancelUrl)
         pathForSelector="form.ventingLocationAssetKeysSelector"
         restUrl=springUrl(ventingLocationSearchUrl)
         alreadyAdded=ventingLocations
-        itemName="Venting locations"/>
+        itemName="Venting locations"
+        selectorMinInputLength=2/>
     </@fdsFieldset.fieldset>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
@@ -55,7 +56,8 @@ backLinkUrl=springUrl(cancelUrl)
         restUrl=springUrl(hostLocationSearchUrl)
         labelText=""
         labelHeadingClass="govuk-label--s"
-        preselectedItems={hostLocation.id(): hostLocation.text()}/>
+        preselectedItems={hostLocation.id(): hostLocation.text()}
+        selectorMinInputLength=2/>
     </@fdsFieldset.fieldset>
     <@fdsAction.submitButtons
       primaryButtonText="Save and continue"

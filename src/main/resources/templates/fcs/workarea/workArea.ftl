@@ -70,6 +70,7 @@
       labelText=""
       preselectedItems={prefilledAsset.id() : prefilledAsset.text()}
       inputClass="govuk-input--width-10"
+      selectorMinInputLength=2
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

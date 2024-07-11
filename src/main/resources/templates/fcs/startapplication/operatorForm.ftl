@@ -14,6 +14,7 @@
       labelHeadingClass="govuk-label--xl"
       preselectedItems={prefilledOperator.id(): prefilledOperator.text()}
       hintText="The field or facility operator has been preselected here."
+      selectorMinInputLength=2
     />
     <@fdsAction.submitButtons
       linkSecondaryAction=true

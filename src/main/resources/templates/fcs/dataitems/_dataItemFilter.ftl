@@ -35,6 +35,7 @@
       labelText=""
       preselectedItems={prefilledOperator.id() : prefilledOperator.text()}
       inputClass="govuk-input--width-10"
+      selectorMinInputLength=2
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
@@ -71,6 +72,7 @@
       labelText=""
       preselectedItems={prefilledField.id() : prefilledField.text()}
       inputClass="govuk-input--width-10"
+      selectorMinInputLength=2
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
@@ -83,6 +85,7 @@
       labelText=""
       preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
       inputClass="govuk-input--width-10"
+      selectorMinInputLength=2
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

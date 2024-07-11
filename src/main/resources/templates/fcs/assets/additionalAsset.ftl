@@ -13,7 +13,8 @@
       labelText="Add another field"
       pageHeading=true
       hintText=ADDITIONAL_ASSET_HINT_TEXT
-      labelHeadingClass="govuk-label--xl"/>
+      labelHeadingClass="govuk-label--xl"
+      selectorMinInputLength=2/>
     <@fdsAction.submitButtons
       primaryButtonText="Save and continue"
       secondaryLinkText="Cancel"

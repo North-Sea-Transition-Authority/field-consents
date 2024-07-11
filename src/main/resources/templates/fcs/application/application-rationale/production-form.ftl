@@ -50,7 +50,8 @@ backLinkUrl=springUrl(cancelUrl)
         pathForSelector="form.productionLocationAssetKeysSelector"
         restUrl=springUrl(productionLocationSearchUrl)
         alreadyAdded=productionLocations
-        itemName="Production locations"/>
+        itemName="Production locations"
+        selectorMinInputLength=2/>
     </@fdsFieldset.fieldset>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
@@ -63,7 +64,8 @@ backLinkUrl=springUrl(cancelUrl)
         restUrl=springUrl(hostLocationSearchUrl)
         labelText=""
         labelHeadingClass="govuk-label--s"
-        preselectedItems={hostLocation.id(): hostLocation.text()}/>
+        preselectedItems={hostLocation.id(): hostLocation.text()}
+        selectorMinInputLength=2/>
     </@fdsFieldset.fieldset>
     <@fdsAction.submitButtons
       primaryButtonText="Save and continue"

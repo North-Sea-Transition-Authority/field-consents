@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fields
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
@@ -83,25 +84,44 @@ public class FieldSearchService {
       return fieldWithOperatorJsons;
     }
 
+    // industry access
+
     var organisationUnitIdsUserHasPermissionFor =
         organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();
 
-    var fieldIds = fieldWithOperatorJsons.stream()
+    var fieldWithOperatorJsonsUserHasViewFcsPermissionForInOperatorTeam = fieldWithOperatorJsons
+        .stream()
+        .filter(field -> field.operatorExists()
+            && organisationUnitIdsUserHasPermissionFor.contains(field.getOperatorJson().organisationUnitId()))
+        .toList();
+
+    var remainingFieldIds = fieldWithOperatorJsons
+        .stream()
+        .filter(fieldWithOperatorJson ->
+            !fieldWithOperatorJsonsUserHasViewFcsPermissionForInOperatorTeam.contains(fieldWithOperatorJson))
         .map(FieldWithOperatorJson::getId)
         .toList();
 
-    var fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam = fieldEquityPartnerPermissionService
-        .getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(user, fieldIds, Set.of(RolePermission.VIEW_FCS_CONSENTS));
+    if (remainingFieldIds.isEmpty()) {
+      return fieldWithOperatorJsonsUserHasViewFcsPermissionForInOperatorTeam;
+    }
+
+    // industry access - find addition fields user has view consent permission in a FEP team
+
+    var fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam =
+        fieldEquityPartnerPermissionService
+            .getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(
+                user, remainingFieldIds, Set.of(RolePermission.VIEW_FCS_CONSENTS));
 
     return fieldWithOperatorJsons
         .stream()
-        .filter(field ->
-            (field.operatorExists()
-                && organisationUnitIdsUserHasPermissionFor.contains(field.getOperatorJson().organisationUnitId()))
+        .filter(field -> (
+            fieldWithOperatorJsonsUserHasViewFcsPermissionForInOperatorTeam.contains(field)
             || fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam.contains(field.getId())
+            )
         )
         .toList();
   }
@@ -112,10 +132,28 @@ public class FieldSearchService {
       RequestPurpose requestPurpose,
       Function<Field, T> mappingFunction
   ) {
-    var inUseFieldIds = applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.FIELD);
-    return fieldApi.searchFields(fieldName, ALL_FIELD_STATUSES, query, requestPurpose)
+    // search over fields with the allowed statuses
+    var fieldsWithAllowedStatuses = fieldApi.searchFields(fieldName, FIELD_STATUSES_ALLOWED, query, requestPurpose);
+    var fieldsIdsWithAllowedStatuses = fieldsWithAllowedStatuses.stream().map(Field::getFieldId).toList();
+
+    // find any other FCS in use fields which don't currently have one of the allowed statuses
+    var otherInUseFieldIds = applicationAssetService.getAllUniqueAssetIdsForAssetType(AssetType.FIELD)
         .stream()
-        .filter(field -> inUseFieldIds.contains(field.getFieldId()) || FIELD_STATUSES_ALLOWED.contains(field.getStatus()))
+        .filter(fieldId -> !fieldsIdsWithAllowedStatuses.contains(fieldId))
+        .toList();
+
+    if (otherInUseFieldIds.isEmpty()) {
+      return fieldsWithAllowedStatuses
+          .stream()
+          .map(mappingFunction)
+          .toList();
+    }
+
+    // search over the other FCS in use fields with any status
+    var inUseFieldsWithAnyStatus = fieldApi
+        .searchFields(fieldName, ALL_FIELD_STATUSES, otherInUseFieldIds, query, requestPurpose, null);
+
+    return Stream.concat(fieldsWithAllowedStatuses.stream(), inUseFieldsWithAnyStatus.stream())
         .map(mappingFunction)
         .toList();
   }

@@ -25,7 +25,8 @@ backLinkUrl=springUrl(backLinkUrl)
                 nestingPath=path
                 restUrl=springUrl(petsSearchRestUrl)
                 labelText="EIA screening direction reference"
-                preselectedItems={prefilledEiaDirectionRef.id(): prefilledEiaDirectionRef.text()}/>
+                preselectedItems={prefilledEiaDirectionRef.id(): prefilledEiaDirectionRef.text()}
+                selectorMinInputLength=2/>
             </@fdsRadio.radioYes>
             <@fdsRadio.radioNo path=path/>
         </@fdsRadio.radioGroup>
