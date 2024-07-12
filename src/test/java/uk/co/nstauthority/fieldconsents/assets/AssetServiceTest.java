@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.BAD_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
@@ -375,7 +376,7 @@ public class AssetServiceTest {
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
-            List.of("The field is not in a valid 'producing' status")
+            List.of("The field %s".formatted(FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
         ));
   }
 

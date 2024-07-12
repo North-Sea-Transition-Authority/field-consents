@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 
 import java.util.ArrayList;
@@ -118,7 +119,7 @@ public class AssetService {
     }
 
     if (!FIELD_STATUSES_ALLOWED.contains(fieldJson.getStatusJson().status())) {
-      reasonsWhyApplicationCannotBeStarted.add("The field is not in a valid 'producing' status");
+      reasonsWhyApplicationCannotBeStarted.add("The field %s".formatted(FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE));
     }
 
     return reasonsWhyApplicationCannotBeStarted.isEmpty()

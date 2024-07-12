@@ -23,6 +23,9 @@ public class FieldService {
       List.of(FieldStatus.STATUS500, FieldStatus.STATUS600, FieldStatus.STATUS700,
           FieldStatus.STATUS799, FieldStatus.STATUS800, FieldStatus.STATUS899);
 
+  public static final String FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE
+      = "does not have a valid 'producing' status";
+
   static final List<FieldStatus> ALL_FIELD_STATUSES = EnumSet.allOf(FieldStatus.class).stream().toList();
 
   static final FieldsProjectionRoot fieldsProjectionRoot =

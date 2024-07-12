@@ -1,5 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.assets;
 
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
+
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +28,13 @@ class AdditionalAssetSelectionFormValidator implements Validator {
   public static final String ASSET_EMPTY = "Select a field";
 
   public static final String ASSET_MUST_HAVE_OPERATOR_LICENCES =
-      "This field does not have an operator or any associated licences therefore cannot be added to this application, ";
+      "%s does not have an operator or any associated licences therefore cannot be added to this application, ";
 
   public static final String ASSET_MUST_HAVE_OPERATOR =
-      "This field does not have an operator therefore cannot be added to this application, ";
+      "%s does not have an operator therefore cannot be added to this application, ";
 
   public static final String ASSET_MUST_HAVE_LICENCES =
-      "This field does not have any associated licences therefore cannot be added to this application, ";
+      "%s does not have any associated licences therefore cannot be added to this application, ";
 
   public static final String ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL =
       " please contact %s if you think the field should have this information";
@@ -41,6 +44,8 @@ class AdditionalAssetSelectionFormValidator implements Validator {
   public static final String DUPLICATED_PRIMARY_FIELD = "%s is the primary field of this application";
 
   public static final String DUPLICATED_SECONDARY_FIELD = "%s has already been added as an additional field on this application";
+
+  public static final String ASSET_MUST_HAVE_ALLOWED_STATUS = "%s " + FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 
   private final AssetService assetService;
 
@@ -69,7 +74,7 @@ class AdditionalAssetSelectionFormValidator implements Validator {
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors) {
     var form = (AssetSelectionForm) target;
-    var purpose = "Check operator and associated licences exist when adding a field to an application";
+    var purpose = "Check field status and that an operator and associated licences exist when adding a field to an application";
 
     ValidationUtils.rejectIfEmpty(errors, ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".required",
         ASSET_EMPTY);
@@ -83,17 +88,28 @@ class AdditionalAssetSelectionFormValidator implements Validator {
             fieldService.getFieldWithOperatorAndLicences(assetJson.getId(), purpose);
 
         rejectIfDuplicatedField(errors, form.getApplicationVersion(), fieldJson);
+
+        if (errors.hasFieldErrors(ASSET_KEY_FIELD_NAME)) {
+          return;
+        }
+
+        if (!FIELD_STATUSES_ALLOWED.contains(fieldJson.getStatusJson().status())) {
+          errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveAllowedStatus",
+              ASSET_MUST_HAVE_ALLOWED_STATUS.formatted(fieldJson.getName()));
+          return;
+        }
+
         if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
-              ASSET_MUST_HAVE_OPERATOR_LICENCES +
+              ASSET_MUST_HAVE_OPERATOR_LICENCES.formatted(fieldJson.getName()) +
               ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         } else if (!fieldJson.operatorExists()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperator",
-              ASSET_MUST_HAVE_OPERATOR +
+              ASSET_MUST_HAVE_OPERATOR.formatted(fieldJson.getName()) +
               ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         } else if (!fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveLicences",
-              ASSET_MUST_HAVE_LICENCES +
+              ASSET_MUST_HAVE_LICENCES.formatted(fieldJson.getName()) +
               ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         }
       } else if (assetJson.getAssetType() == AssetType.TERMINAL) {

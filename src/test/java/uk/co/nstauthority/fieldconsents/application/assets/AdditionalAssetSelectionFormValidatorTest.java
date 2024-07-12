@@ -98,6 +98,26 @@ class AdditionalAssetSelectionFormValidatorTest {
   }
 
   @Test
+  void validate_fieldAssetWithInvalidStatus() {
+    form.setAssetKey(AssetTestUtil.FIELD4_ASSET_KEY);
+
+    when(assetService.getAsset(AssetTestUtil.FIELD4_ASSET_KEY))
+        .thenReturn(AssetTestUtil.field4AssetJson);
+    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field4AssetJson.getId()), any()))
+        .thenReturn(FieldTestUtil.field4JsonWithOperatorAndLicences);
+
+    ValidationUtils.invokeValidator(validator, form, errors);
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
+            Collections.singletonList(
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_ALLOWED_STATUS
+                    .formatted(AssetTestUtil.field4AssetJson.getName())))
+    );
+  }
+
+  @Test
   void validate_fieldAssetNoOperatorButLicencesExist() {
     form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
 
@@ -112,7 +132,8 @@ class AdditionalAssetSelectionFormValidatorTest {
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
-                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR
+                    .formatted(AssetTestUtil.field1AssetJson.getName()) +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
                     .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );
@@ -133,7 +154,8 @@ class AdditionalAssetSelectionFormValidatorTest {
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
-                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES
+                    .formatted(AssetTestUtil.field1AssetJson.getName())+
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
                     .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );
@@ -154,7 +176,8 @@ class AdditionalAssetSelectionFormValidatorTest {
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
-                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES
+                    .formatted(AssetTestUtil.field1AssetJson.getName())+
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
                     .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );

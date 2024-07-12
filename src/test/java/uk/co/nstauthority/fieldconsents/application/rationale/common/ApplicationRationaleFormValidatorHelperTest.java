@@ -5,8 +5,13 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_4;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_5;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field4JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field5JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
@@ -115,6 +120,46 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
+  void validateLocationAssets_fieldDoesntHaveAllowedStatus() {
+    var locations = List.of(field4JsonWithOperatorAndLicences.getSelectionId(), "1TERMINAL", "2TERMINAL");
+    var form = new Form(locations, null);
+    var bindingResult = getBindingResult(form);
+
+    when(fieldService.findFieldsWithOperatorAndLicences(eq(Collections.singletonList(FIELD_ID_4)), anyString()))
+        .thenReturn(Collections.singletonList(field4JsonWithOperatorAndLicences));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(field4JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
+        );
+  }
+
+  @Test
+  void validateLocationAssets_fieldsDontHaveAllowedStatuses() {
+    var locations = List.of(field4JsonWithOperatorAndLicences.getSelectionId(), "1TERMINAL", field5JsonWithOperatorAndLicences.getSelectionId(), "2TERMINAL");
+    var form = new Form(locations, null);
+    var bindingResult = getBindingResult(form);
+
+    when(fieldService.findFieldsWithOperatorAndLicences(eq(List.of(FIELD_ID_4, FIELD_ID_5)), anyString()))
+        .thenReturn(List.of(field4JsonWithOperatorAndLicences, field5JsonWithOperatorAndLicences));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(field4JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE)),
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(field5JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
+        );
+  }
+
+  @Test
   void validateLocationAssets_fieldsDontHaveOperatorOrLicenses() {
     var form = new Form(NON_HOST_LOCATIONS, null);
     var bindingResult = getBindingResult(form);
@@ -208,6 +253,28 @@ class ApplicationRationaleFormValidatorHelperTest {
         .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(HOST_LOCATION_FIELD, "invalid", "Select a location with an operator")
+        );
+  }
+
+  @Test
+  void validateHostLocationAsset_fieldDoesntHaveAllowedStatus() {
+    var hostLocationAssetKey = field4JsonWithOperatorAndLicences.getSelectionId();
+    var locations = List.of(hostLocationAssetKey, "1TERMINAL", "2TERMINAL");
+    List<AssetKey> locationAssetKeys = locations.stream().map(AssetKey::parse).flatMap(Optional::stream).toList();
+
+    var form = new Form(locations, hostLocationAssetKey);
+    var bindingResult = getBindingResult(form);
+
+    when(fieldService.findFieldsWithOperatorAndLicences(eq(Collections.singletonList(FIELD_ID_4)), anyString()))
+        .thenReturn(Collections.singletonList(field4JsonWithOperatorAndLicences));
+
+    validatorHelper.validateHostLocationAsset(form.hostLocationAssetKey(), locationAssetKeys, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(HOST_LOCATION_FIELD, "invalid",
+                "%s %s".formatted(field4JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
         );
   }
 

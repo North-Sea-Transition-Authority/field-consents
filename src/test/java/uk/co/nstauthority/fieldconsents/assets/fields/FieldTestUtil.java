@@ -15,10 +15,14 @@ public class FieldTestUtil {
   public static final Integer FIELD_ID_1 = 312;
   public static final Integer FIELD_ID_2 = 178;
   public static final Integer FIELD_ID_3 = 674;
+  public static final Integer FIELD_ID_4 = 1432;
+  public static final Integer FIELD_ID_5 = 9452;
 
   public static final String FIELD_NAME_1 = "F1";
   public static final String FIELD_NAME_2 = "F2";
   public static final String FIELD_NAME_3 = "F3";
+  public static final String FIELD_NAME_4 = "F4";
+  public static final String FIELD_NAME_5 = "F4";
 
   public static final FieldStatusJson FIELD_1_STATUS =
       new FieldStatusJson(FieldStatus.STATUS500, "500 - Appraisal - FDP submitted review");
@@ -26,16 +30,22 @@ public class FieldTestUtil {
       new FieldStatusJson(FieldStatus.STATUS600, "600 - Construction - FDP approved");
   public static final FieldStatusJson FIELD_3_STATUS =
       new FieldStatusJson(FieldStatus.STATUS700, "700 - Producing");
+  public static final FieldStatusJson FIELD_4_NON_PRODUCING_STATUS =
+      new FieldStatusJson(FieldStatus.STATUS450, "450 - Under discovery - CoPP");
+  public static final FieldStatusJson FIELD_5_NON_PRODUCING_STATUS =
+      new FieldStatusJson(FieldStatus.STATUS900, "900 - Production ceased");
 
   public static final GeographicArea FIELD_1_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.CNS.name());
   public static final GeographicArea FIELD_2_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.SNS.name());
   public static final GeographicArea FIELD_3_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.NNS.name());
+  public static final GeographicArea FIELD_4_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.IS.name());
+  public static final GeographicArea FIELD_5_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.LAND.name());
 
   public static final Shore FIELD_1_SHORE = Shore.valueOf(FieldShore.OFFSHORE.name());
-
   public static final Shore FIELD_2_SHORE = Shore.valueOf(FieldShore.ONSHORE.name());
-
   public static final Shore FIELD_3_SHORE = Shore.valueOf(FieldShore.UNKNOWN.name());
+  public static final Shore FIELD_4_SHORE = Shore.valueOf(FieldShore.OFFSHORE.name());
+  public static final Shore FIELD_5_SHORE = Shore.valueOf(FieldShore.ONSHORE.name());
 
   public static Field field1 = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
@@ -223,6 +233,34 @@ public class FieldTestUtil {
       FIELD_3_SHORE,
       OrganisationUnitJson.from(field3WithOperator.getFieldOperator())
   );
+
+  public static Field field4WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_4).fieldName(FIELD_NAME_4)
+      .status(FIELD_4_NON_PRODUCING_STATUS.status())
+      .statusDisplayName(FIELD_4_NON_PRODUCING_STATUS.statusDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_4_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_4_GEOGRAPHIC_AREA.getDisplayName())
+      .shore(FieldShore.valueOf(FIELD_4_SHORE.name()))
+      .shoreDisplayName(FIELD_4_SHORE.getDisplayName())
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
+      .licences(LicenceTestUtil.licences3)
+      .build();
+
+  public static FieldWithOperatorAndLicencesJson field4JsonWithOperatorAndLicences =
+      FieldWithOperatorAndLicencesJson.from(field4WithOperatorAndLicences);
+
+  public static Field field5WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_5).fieldName(FIELD_NAME_5)
+      .status(FIELD_5_NON_PRODUCING_STATUS.status())
+      .statusDisplayName(FIELD_5_NON_PRODUCING_STATUS.statusDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_5_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_5_GEOGRAPHIC_AREA.getDisplayName())
+      .shore(FieldShore.valueOf(FIELD_5_SHORE.name()))
+      .shoreDisplayName(FIELD_5_SHORE.getDisplayName())
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
+      .licences(LicenceTestUtil.licences3)
+      .build();
+
+  public static FieldWithOperatorAndLicencesJson field5JsonWithOperatorAndLicences =
+      FieldWithOperatorAndLicencesJson.from(field5WithOperatorAndLicences);
 
   public static List<Field> fieldList = List.of(field1, field2, field3);
   public static List<Integer> fieldIdList = List.of(field1.getFieldId(), field2.getFieldId(), field3.getFieldId());
