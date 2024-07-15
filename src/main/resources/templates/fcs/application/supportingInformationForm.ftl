@@ -13,7 +13,8 @@ pageSize=PageSize.TWO_THIRDS_COLUMN>
     <@fdsTextarea.textarea
       path="form.notes.inputValue"
       labelText="Notes"
-      hintText="Please add additional information to support the application in the box provided below."/>
+      hintText="Please add additional information to support the application in the box provided below. There is also an option to attach files to the application towards the bottom of this page if more detailed supporting information is required."
+    />
     <#if erapInformationAllowed>
       <@fdsTextarea.textarea
         path="form.erapNotes.inputValue"

@@ -7,24 +7,30 @@
 <#assign caption="EIA screening direction"/>
 
 <@defaultPage
-htmlTitle=heading
-caption=caption
-errorItems=errorList
-backLinkUrl=springUrl(backLinkUrl)
+  htmlTitle=heading
+  caption=caption
+  errorItems=errorList
+  backLinkUrl=springUrl(backLinkUrl)
 >
-    <@fdsForm.htmlForm>
-        <@fdsRadio.radioGroup
-        path=path
-        labelText=heading
-        fieldsetHeadingClass="govuk-fieldset__legend--l"
-        fieldsetHeadingSize="h1">
-            <@fdsRadio.radioYes path=path/>
-            <@fdsRadio.radioNo path=path/>
-        </@fdsRadio.radioGroup>
-        <@fdsAction.submitButtons
-        primaryButtonText="Save and continue"
-        secondaryLinkText="Cancel"
-        linkSecondaryAction=true
-        linkSecondaryActionUrl=springUrl(cancelUrl)/>
-    </@fdsForm.htmlForm>
+  <@fdsForm.htmlForm>
+    <@fdsRadio.radioGroup
+      path=path
+      labelText=heading
+      fieldsetHeadingClass="govuk-fieldset__legend--l"
+      fieldsetHeadingSize="h1"
+    >
+      <p class="govuk-body">
+        Read the <@fdsAction.link linkText="guidance on the definition of a \"project\"" linkUrl="https://www.gov.uk/guidance/oil-and-gas-offshore-environmental-legislation#offshore-oil-and-gas-exploration-production-unloading-and-storage-environmental-impact-assessment-regulations-2020" />.
+      </p>
+
+      <@fdsRadio.radioYes path=path/>
+      <@fdsRadio.radioNo path=path/>
+    </@fdsRadio.radioGroup>
+    <@fdsAction.submitButtons
+      primaryButtonText="Save and continue"
+      secondaryLinkText="Cancel"
+      linkSecondaryAction=true
+      linkSecondaryActionUrl=springUrl(cancelUrl)
+    />
+  </@fdsForm.htmlForm>
 </@defaultPage>
