@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Produ
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -66,6 +67,7 @@ public class IndustryCaseProcessingController {
   private final PaymentsTabService paymentsTabService;
   private final ConsentTabService consentTabService;
   private final ConsentService consentService;
+  private final ApplicationWithdrawalService applicationWithdrawalService;
 
   @Autowired
   IndustryCaseProcessingController(
@@ -79,7 +81,8 @@ public class IndustryCaseProcessingController {
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       PaymentsTabService paymentsTabService,
       ConsentTabService consentTabService,
-      ConsentService consentService
+      ConsentService consentService,
+      ApplicationWithdrawalService applicationWithdrawalService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -92,6 +95,7 @@ public class IndustryCaseProcessingController {
     this.paymentsTabService = paymentsTabService;
     this.consentTabService = consentTabService;
     this.consentService = consentService;
+    this.applicationWithdrawalService = applicationWithdrawalService;
   }
 
   @GetMapping("industry-case-processing")
@@ -129,7 +133,8 @@ public class IndustryCaseProcessingController {
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
+        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
+        .addObject("openWithdrawal", applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion).isPresent());
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {

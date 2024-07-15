@@ -92,7 +92,7 @@ public class ApplicationWithdrawalService {
     }
   }
 
-  private Optional<ApplicationWithdrawal> findOpenApplicationWithdrawal(ApplicationVersion applicationVersion) {
+  public Optional<ApplicationWithdrawal> findOpenApplicationWithdrawal(ApplicationVersion applicationVersion) {
     return applicationWithdrawalRepository
         .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), WithdrawalStatus.OPEN);
   }

@@ -27,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.Payme
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -70,6 +71,7 @@ public class ApplicationCaseProcessingController {
   private final ApplicationContextService applicationContextService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSummaryService applicationSummaryService;
+  private final ApplicationWithdrawalService applicationWithdrawalService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final CaseProcessingTaskListService caseProcessingTaskListService;
   private final CaseProcessingTabService caseProcessingTabService;
@@ -89,6 +91,7 @@ public class ApplicationCaseProcessingController {
       ApplicationContextService applicationContextService,
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
+      ApplicationWithdrawalService applicationWithdrawalService,
       CaseProcessingActionService caseProcessingActionService,
       CaseProcessingTaskListService caseProcessingTaskListService,
       CaseProcessingTabService caseProcessingTabService,
@@ -106,6 +109,7 @@ public class ApplicationCaseProcessingController {
     this.applicationContextService = applicationContextService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
+    this.applicationWithdrawalService = applicationWithdrawalService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.caseProcessingTaskListService = caseProcessingTaskListService;
     this.caseProcessingTabService = caseProcessingTabService;
@@ -150,7 +154,8 @@ public class ApplicationCaseProcessingController {
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", pageTitle)
-        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
+        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
+        .addObject("openWithdrawal", applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion).isPresent());
 
     if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
       modelAndView.addObject("consentIssuingApprovalSummaryView",

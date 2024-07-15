@@ -58,6 +58,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.Payme
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawal;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -72,6 +74,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
   private static final String VIEW_NAME = "fcs/application/industryCaseProcessing";
+  private static final String OPEN_WITHDRAWAL_ATTRIBUTE = "openWithdrawal";
 
   @MockBean
   private ApplicationService applicationService;
@@ -81,6 +84,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
+
+  @MockBean
+  private ApplicationWithdrawalService applicationWithdrawalService;
 
   @MockBean
   private CaseProcessingTabService caseProcessingTabService;
@@ -364,6 +370,51 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
 
+
+  @ParameterizedTest
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
+  void getIndustryCaseProcessing_noTabSelected_withdrawnBanner(ApplicationVersion applicationVersion) throws Exception {
+    stubBaseServiceCalls(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    var applicationWithdrawal = new ApplicationWithdrawal();
+    when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, true));
+
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+
+    verifyNoInteractions(applicationUpdateRequestViewService);
+  }
+
+
+  @ParameterizedTest
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
+  void getIndustryCaseProcessing_noTabSelected_noWithdrawnBanner(ApplicationVersion applicationVersion) throws Exception {
+    stubBaseServiceCalls(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, false));
+
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+
+    verifyNoInteractions(applicationUpdateRequestViewService);
+  }
+
   @Test
   void getIndustryCaseProcessing_notWithinProductionPeriodWarning() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
@@ -400,7 +451,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .build());
     when(applicationService.isMigratedApplication(applicationVersion.getApplication())).thenReturn(true);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
-  }
+}
 
   private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();

@@ -10,6 +10,7 @@
 <#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
 <#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
 <#import 'consent/_approvedForIssue.ftl' as approvedForIssue/>
+<#import '_withdrawalRequestedBanner.ftl' as withdrawalRequestedBanner/>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
@@ -18,6 +19,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
+  <@withdrawalRequestedBanner.withdrawalRequestedBanner openWithdrawal=openWithdrawal/>
   <#if consentIssuingApprovalSummaryView?has_content>
     <@approvedForIssue.notificationBanner consentIssuingApprovalSummaryView=consentIssuingApprovalSummaryView/>
   </#if>

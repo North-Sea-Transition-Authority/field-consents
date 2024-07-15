@@ -69,6 +69,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.Case
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawal;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -97,6 +99,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String CONSENT_TAB_CONSENT_SUMMARY_VIEW_ATTRIBUTE = "consentTabConsentSummaryView";
   private static final String CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE = "consentIssuingApprovalSummaryView";
   private static final String IS_MIGRATED_APPLICATION_ATTRIBUTE = "isMigratedApplication";
+  private static final String OPEN_WITHDRAWAL_ATTRIBUTE = "openWithdrawal";
 
   @MockBean
   private ApplicationService applicationService;
@@ -106,6 +109,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
+
+  @MockBean
+  private ApplicationWithdrawalService applicationWithdrawalService;
 
   @MockBean
   private CaseProcessingTabService caseProcessingTabService;
@@ -495,6 +501,49 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
             .caseProcessing(APPLICATION_ID, null, null)))
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(TASKS, applicationVersion))
+        .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
+        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
+  }
+
+  @Test
+  void caseProcessing_noTabSelected_withdrawnBanner() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    var applicationWithdrawal = new ApplicationWithdrawal();
+    when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, true))
+        .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
+        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
+  }
+
+  @Test
+  void caseProcessing_noTabSelected_noWithdrawnBanner() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
+        .thenReturn(Optional.empty());
+
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, false))
         .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
         .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
