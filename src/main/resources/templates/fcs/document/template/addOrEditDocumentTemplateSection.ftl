@@ -3,7 +3,13 @@
 
 <#import '../_mailMergeFieldSummaryDetails.ftl' as _mailMergeFieldSummaryDetails>
 
-<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle pageSize=PageSize.FULL_WIDTH errorItems=errorList>
+<@defaultPage
+  htmlTitle=pageTitle
+  pageHeading=pageTitle
+  pageSize=PageSize.FULL_WIDTH
+  errorItems=errorList
+  backLinkUrl=springUrl(cancelUrl)
+>
   <@fdsForm.htmlForm>
     <@grid.gridRow>
       <@grid.twoThirdsColumn>

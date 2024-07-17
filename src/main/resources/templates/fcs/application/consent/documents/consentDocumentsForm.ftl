@@ -7,7 +7,9 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  errorItems=errorList>
+  errorItems=errorList
+  backLinkUrl=springUrl(cancelUrl)
+>
   <@fdsForm.htmlForm>
     <div class="govuk-!-margin-bottom-6">
       <@fdsResultList.resultList resultCount=documentInstanceSummaryViews?size resultCountSuffix="consent document">

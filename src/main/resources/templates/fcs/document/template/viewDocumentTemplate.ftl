@@ -1,6 +1,6 @@
 <#include '../../layout/layout.ftl'>
 
-<@defaultPageWithSubNavigation htmlTitle=pageTitle>
+<@defaultPageWithSubNavigation htmlTitle=pageTitle backLinkUrl=springUrl(backLinkUrl)>
   <@defaultPageWithSubNavigationSubNav smallSubnav=true>
     <@fdsSubNavigation.subNavigation>
       <@fdsSubNavigation.subNavigationSection>

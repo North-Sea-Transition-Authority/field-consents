@@ -40,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
@@ -154,7 +155,9 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, false, null))))
         .andExpect(model().attribute("reloadUrl", ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))));
+            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
+            .editDocuments(APPLICATION_ID))));
   }
 
   @SecurityTest

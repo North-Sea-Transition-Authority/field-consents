@@ -126,6 +126,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/viewDocumentTemplate"))
         .andExpect(model().attribute("pageTitle", documentTemplateDto.title()))
-        .andExpect(model().attribute("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews));
+        .andExpect(model().attribute("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates())));
   }
 }

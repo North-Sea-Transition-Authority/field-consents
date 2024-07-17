@@ -143,6 +143,7 @@
   htmlTitle
   phaseBanner=true
   showNavigationItems=true
+  backLinkUrl=""
 >
   <#local serviceName = serviceBrandingConfigurationProperties.name() />
   <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
@@ -168,6 +169,8 @@
     topNavigation=showNavigationItems
     footerContent=footerContent
     cookieBannerMacro=_cookieBanner
+    backLink=backLinkUrl?has_content
+    backLinkUrl=backLinkUrl
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>

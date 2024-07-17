@@ -2,7 +2,12 @@
 
 <#assign pageTitle = "Remove section"/>
 
-<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle pageSize=PageSize.FULL_WIDTH>
+<@defaultPage
+  htmlTitle=pageTitle
+  pageHeading=pageTitle
+  pageSize=PageSize.FULL_WIDTH
+  backLinkUrl=springUrl(cancelUrl)
+>
   <@fdsForm.htmlForm>
     <@fdsSummaryList.summaryListCard headingText="Section details" summaryListId="section-details-summary-card-list">
       <@fdsSummaryList.summaryListRowNoAction keyText="Section title">

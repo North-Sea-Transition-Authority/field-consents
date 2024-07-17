@@ -19,6 +19,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
@@ -66,6 +67,11 @@ public class ApplicationDocumentInstanceController {
     return new ModelAndView("fcs/application/caseprocessing/document/instance/viewDocumentInstance")
         .addObject("pageTitle", documentInstanceDto.documentTemplateDto().title())
         .addObject("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView)
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
+                    .editDocuments(applicationId))
+        )
         .addObject(
             "previewUrl",
             ReverseRouter.route(on(ApplicationDocumentInstanceController.class)

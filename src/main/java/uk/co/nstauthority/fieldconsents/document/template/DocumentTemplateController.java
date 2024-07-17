@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.template;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.UUID;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -46,6 +49,7 @@ public class DocumentTemplateController {
 
     return new ModelAndView("fcs/document/template/viewDocumentTemplate")
         .addObject("pageTitle", documentTemplateDto.title())
-        .addObject("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews);
+        .addObject("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews)
+        .addObject("backLinkUrl", ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates()));
   }
 }
