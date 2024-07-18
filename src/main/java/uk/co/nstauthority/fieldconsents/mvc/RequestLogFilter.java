@@ -55,14 +55,13 @@ public class RequestLogFilter extends OncePerRequestFilter {
       var proxyWuaId = MDC.get(MDC_PROXY_WUA_ID);
 
       LOGGER.info(
-          "[{}] {}ms {} {}{} ({}) logCorrelationId:{} wuaId:{} proxyWuaId:{} {}",
+          "[{}] {}ms {} {}{} ({}) wuaId:{} proxyWuaId:{} {}",
           response.getStatus(),
           elapsedMs,
           request.getMethod(),
           request.getRequestURI(),
           queryString,
           pattern,
-          correlationId,
           wuaId,
           proxyWuaId,
           getQueryCounts()
