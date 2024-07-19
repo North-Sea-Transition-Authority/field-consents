@@ -27,7 +27,7 @@
     selectedTab=selectedTab
     controllerUrl=controllerUrl>
     <#if selectedTab == "VIEW_APPLICATION">
-      <@applicationSummary.applicationSummary accordionId=accordionId/>
+      <@applicationSummary.applicationSummary accordionId=accordionId selectedTab=selectedTab/>
     </#if>
     <#if selectedTab == "PAYMENTS">
       <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews isMigratedApplication=isMigratedApplication/>

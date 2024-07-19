@@ -132,7 +132,7 @@ public class ConsultationResponseController {
         .addObject("habitatsRegsRadioOptions", EnumSet.allOf(HabitatsRegsResponseType.class))
         .addObject("consultationSummaryView", ConsultationRequestView.from(consultation))
         .addObject("backLinkUrl", ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)));
+            .caseProcessing(applicationId, null, null, null)));
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 

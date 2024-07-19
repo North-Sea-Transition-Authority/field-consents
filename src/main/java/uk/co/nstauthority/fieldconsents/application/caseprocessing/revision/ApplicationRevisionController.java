@@ -44,7 +44,7 @@ public class ApplicationRevisionController {
     return new ModelAndView("fcs/application/revision/startRevision")
         .addObject("applicationReference", applicationReference)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)))
+            .caseProcessing(applicationId, null, null, null)))
         .addObject("startRevisionUrl", ReverseRouter.route(on(ApplicationRevisionController.class)
             .startRevision(applicationId, null)));
   }

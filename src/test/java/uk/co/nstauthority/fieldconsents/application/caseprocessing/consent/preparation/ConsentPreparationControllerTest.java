@@ -141,7 +141,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("pageTitle", "Consent preparation"))
         .andExpect(model().attribute("applicationType", application.getType()))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))))
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null,
+                null
+            ))))
         .andExpect(model().attribute("consentPreparationGroupActionViewList", consentPreparationGroupActionViewList));
   }
 
@@ -207,7 +209,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("pageTitle", "Consent preparation"))
         .andExpect(model().attribute("applicationType", application.getType()))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))))
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null,
+                null
+            ))))
         .andExpect(model().attribute("consentPreparationGroupActionViewList", consentPreparationGroupActionViewList))
         .andExpect(model().attribute("consentLengthType", consentLengthType))
         .andExpect(model().attribute("consentDataView", consentDataView))

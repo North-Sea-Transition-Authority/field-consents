@@ -109,7 +109,8 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", PAGE_TITLE))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ConsulteeCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))))
+            ReverseRouter.route(on(ConsulteeCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null,
+                null))))
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)))
         .andExpect(model().attribute("form", FurtherInformationRequestForm.empty()));

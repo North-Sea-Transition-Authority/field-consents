@@ -153,7 +153,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("fileUploadAttributes", fileUploadComponentAttributes))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest
@@ -248,7 +248,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
                 .param("caseNoteText", "test"))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
   }
 

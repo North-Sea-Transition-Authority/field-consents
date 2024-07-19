@@ -138,7 +138,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
                 .submitApplicationWithdrawalRequest(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(IndustryCaseProcessingController.class)
-                .getIndustryCaseProcessing(APPLICATION_ID, null, null))));
+                .getIndustryCaseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest
@@ -209,7 +209,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null))))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
   }
 
@@ -297,7 +297,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
                 .submitApplicationWithdrawalResponse(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest

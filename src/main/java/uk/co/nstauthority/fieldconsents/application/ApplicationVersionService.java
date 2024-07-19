@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collection;
 import java.util.Comparator;
@@ -25,6 +26,31 @@ public class ApplicationVersionService {
         );
   }
 
+  public ApplicationVersion getApplicationVersionByApplicationIdAndVersionNumber(Integer applicationId, Integer versionNumber) {
+    return applicationVersionRepository.findAllByApplicationIdAndVersion(applicationId, versionNumber).stream()
+        .filter(applicationVersion -> !ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus()))
+        .findFirst()
+        .orElseThrow(() ->
+            new EntityNotFoundException("Application version not found for application with id %s and version number %s"
+                .formatted(applicationId, versionNumber))
+        );
+  }
+
+  public ApplicationVersion getSelectedApplicationVersionOrCurrent(
+      ApplicationVersion applicationVersion,
+      @Nullable Integer versionNumber
+  ) {
+    // if no version number is supplied, or it's the same as the supplied application version's number
+    // then return the supplied application version
+    if (versionNumber == null || applicationVersion.getVersion().equals(versionNumber)) {
+      return applicationVersion;
+    } else {
+      // if the supplied version number is different to the supplied application version's number then get the
+      // application version for the supplied version number
+      return getApplicationVersionByApplicationIdAndVersionNumber(applicationVersion.getApplication().getId(), versionNumber);
+    }
+  }
+
   public ApplicationVersion getLatestApplicationVersionByApplicationId(Integer applicationId) {
     return findLatestApplicationVersion(applicationId)
         .orElseThrow(() ->
@@ -37,14 +63,18 @@ public class ApplicationVersionService {
   }
 
   public Optional<ApplicationVersion> findLatestApplicationVersion(Integer applicationId) {
-    return getAllApplicationVersionsByApplicationId(applicationId)
-        .stream()
-        .filter(applicationVersion -> !ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus()))
+    return getAllNonDeletedApplicationVersionsByApplicationId(applicationId).stream()
         .max(Comparator.comparing(ApplicationVersion::getVersion));
   }
 
   public List<ApplicationVersion> getAllApplicationVersionsByApplicationId(Integer applicationId) {
     return applicationVersionRepository.findAllByApplicationIdOrderByVersion(applicationId);
+  }
+
+  public List<ApplicationVersion> getAllNonDeletedApplicationVersionsByApplicationId(Integer applicationId) {
+    return getAllApplicationVersionsByApplicationId(applicationId).stream()
+        .filter(version -> !ApplicationVersionStatus.DELETED.equals(version.getStatus()))
+        .toList();
   }
 
   public void deleteApplicationVersion(ApplicationVersion applicationVersion) {

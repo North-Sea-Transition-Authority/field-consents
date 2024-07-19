@@ -99,7 +99,7 @@ public class ConsentIssuingController {
 
     var modelAndView = new ModelAndView("fcs/application/consent/consentIssuing")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)))
+            .caseProcessing(applicationId, null, null, null)))
         .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView)
         .addObject("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList)
         .addObject("applicationType", application.getType())

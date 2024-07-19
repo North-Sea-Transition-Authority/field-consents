@@ -59,12 +59,12 @@ public class ApplicationSummaryController {
 
     if (isRegulatorCaseProcessingUser(user, applicationVersion)) {
       return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-          .caseProcessing(applicationId, null, null));
+          .caseProcessing(applicationId, null, null, null));
     }
 
     if (isConsulteeCaseProcessingUser(user, applicationVersion)) {
       return ReverseRouter.redirect(on(ConsulteeCaseProcessingController.class)
-          .caseProcessing(applicationId, null, null));
+          .caseProcessing(applicationId, null, null, null));
     }
 
     // Industry users can access the task-list of applications in progress,
@@ -75,7 +75,7 @@ public class ApplicationSummaryController {
         return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
       }
       return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
-          .getIndustryCaseProcessing(applicationId, null, null));
+          .getIndustryCaseProcessing(applicationId, null, null, null));
     }
 
     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported user type");

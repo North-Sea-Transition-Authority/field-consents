@@ -27,6 +27,7 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
   )
   List<ApplicationVersion> findLatestByApplicationIds(Collection<Integer> applicationIds);
 
+  List<ApplicationVersion> findAllByApplicationIdAndVersion(Integer applicationId, Integer version);
 
   @Query(
       """

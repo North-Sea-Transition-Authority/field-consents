@@ -80,41 +80,44 @@ public class ConsulteeCaseProcessingController {
   @GetMapping
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
+      @RequestParam(required = false) Integer versionNumber,
       @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
-    return getModelAndView(applicationId, tab, user);
-  }
+    var latestApplicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var applicationType = latestApplicationVersion.getApplication().getType();
 
-  private ModelAndView getModelAndView(Integer applicationId, CaseProcessingTab tab, ServiceUserDetail user) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationType = applicationVersion.getApplication().getType();
+    var selectedApplicationVersion = applicationVersionService
+        .getSelectedApplicationVersionOrCurrent(latestApplicationVersion, versionNumber);
 
-    var caseProcessingTabs = caseProcessingTabService.getConsulteeTabsAvailableToUser(user, applicationVersion);
+    var caseProcessingTabs = caseProcessingTabService.getConsulteeTabsAvailableToUser(user, latestApplicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {
-      tab = caseProcessingTabs.get(0);
+      tab = caseProcessingTabs.getFirst();
     }
 
     var modelAndView = new ModelAndView("fcs/application/consultation/caseProcessing")
         .addObject("selectedTab", tab)
-        .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
-        .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
+        .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null, null)))
+        .addObject("actionList", caseProcessingActionService.getUserActionViews(latestApplicationVersion, user))
+        .addObject("applicationContext", applicationContextService.getApplicationContext(latestApplicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
-        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
+        .addObject("pageTitle", applicationService.generateApplicationReference(latestApplicationVersion));
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
-        case CONSULTATIONS -> addConsultationSummaryItems(modelAndView, applicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
-            user);
+        case CONSULTATIONS -> addConsultationSummaryItems(modelAndView, latestApplicationVersion, user);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+            selectedApplicationVersion,
+            modelAndView,
+            user
+        );
         default -> {
         }
       }
     }
 
-    consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+    consultationService.findLatestOpenConsultation(latestApplicationVersion.getApplication())
         .map(ConsultationRequestView::from)
         .ifPresent(view -> modelAndView.addObject("consultationRequestView", view));
 

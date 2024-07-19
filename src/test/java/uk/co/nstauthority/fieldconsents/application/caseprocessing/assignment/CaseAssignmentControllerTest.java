@@ -137,7 +137,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest
@@ -175,7 +175,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
@@ -211,7 +211,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest
@@ -243,7 +243,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
@@ -279,7 +279,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))

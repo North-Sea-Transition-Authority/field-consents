@@ -126,7 +126,7 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", PAGE_TITLE))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))))
+                .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("furtherInformationView", furtherInformationView))
         .andExpect(model().attribute("form", FurtherInformationResponseForm.empty()));

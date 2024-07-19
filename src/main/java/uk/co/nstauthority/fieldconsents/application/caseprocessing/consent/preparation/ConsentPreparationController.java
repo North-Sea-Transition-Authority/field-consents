@@ -100,7 +100,7 @@ public class ConsentPreparationController {
         .addObject("pageTitle", CONSENT_PREPARATION.getDisplayName())
         .addObject("applicationType", application.getType())
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(application.getId(), null, null)))
+            .caseProcessing(application.getId(), null, null, null)))
         .addObject("consentPreparationGroupActionViewList", consentPreparationGroupActionViewList);
 
     if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT)) {

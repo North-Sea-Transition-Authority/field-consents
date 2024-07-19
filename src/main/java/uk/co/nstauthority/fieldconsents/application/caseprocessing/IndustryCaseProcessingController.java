@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
@@ -101,22 +100,17 @@ public class IndustryCaseProcessingController {
   @GetMapping("industry-case-processing")
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
+      @RequestParam(required = false) Integer versionNumber,
       @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var latestApplicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = latestApplicationVersion.getApplication();
 
-    return getApplicationSummaryModelAndView(applicationVersion, tab, user);
-  }
+    var selectedApplicationVersion = applicationVersionService
+        .getSelectedApplicationVersionOrCurrent(latestApplicationVersion, versionNumber);
 
-  private ModelAndView getApplicationSummaryModelAndView(
-      ApplicationVersion applicationVersion,
-      CaseProcessingTab tab,
-      ServiceUserDetail user
-  ) {
-    var application = applicationVersion.getApplication();
-
-    var caseProcessingTabs = caseProcessingTabService.getIndustryTabsAvailableToUser(user, applicationVersion);
+    var caseProcessingTabs = caseProcessingTabService.getIndustryTabsAvailableToUser(user, latestApplicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {
       tab = caseProcessingTabs.getFirst();
     }
@@ -126,35 +120,40 @@ public class IndustryCaseProcessingController {
         .addObject(
             "controllerUrl",
             ReverseRouter.route(on(IndustryCaseProcessingController.class)
-                .getIndustryCaseProcessing(application.getId(), null, null))
+                .getIndustryCaseProcessing(application.getId(), null, null, null))
         )
-        .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
+        .addObject("actionList", caseProcessingActionService.getUserActionViews(latestApplicationVersion, user))
+        .addObject("applicationContext", applicationContextService.getApplicationContext(latestApplicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
-        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("pageTitle", applicationService.generateApplicationReference(latestApplicationVersion))
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
-        .addObject("openWithdrawal", applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion).isPresent());
+        .addObject("openWithdrawal", applicationWithdrawalService
+            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent());
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
-        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
+        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(latestApplicationVersion, modelAndView);
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
-            user);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+            selectedApplicationVersion,
+            modelAndView,
+            user
+        );
         default -> {
         }
       }
     }
 
-    if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
+    if (applicationUpdateService.openApplicationUpdateExists(latestApplicationVersion)) {
       modelAndView.addObject("applicationUpdateRequestView",
-          applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion)
+          applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(latestApplicationVersion)
       );
     }
 
-    if (consentService.shouldCheckProductionConsentExists(applicationVersion)) {
-      var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
+    if (consentService.shouldCheckProductionConsentExists(latestApplicationVersion)) {
+      var productionConsentCheckResult = consentService
+          .checkProductionConsentExistsForInProgressApplication(latestApplicationVersion);
       if (productionConsentCheckResult == ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT) {
         modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
       }

@@ -127,56 +127,62 @@ public class ApplicationCaseProcessingController {
   @GetMapping("case-processing")
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
+      @RequestParam(required = false) Integer versionNumber,
       @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
-    return renderCaseProcessingOnTab(applicationId, tab, user);
-  }
-
-  private ModelAndView renderCaseProcessingOnTab(Integer applicationId, CaseProcessingTab tab, ServiceUserDetail user) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var application = applicationVersion.getApplication();
+    var latestApplicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = latestApplicationVersion.getApplication();
     var applicationType = application.getType();
 
-    var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion);
+    var selectedApplicationVersion = applicationVersionService
+        .getSelectedApplicationVersionOrCurrent(latestApplicationVersion, versionNumber);
+
+    var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, latestApplicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {
       tab = caseProcessingTabs.getFirst();
     }
 
     var pageTitle = applicationService
-        .getApplicationReference(applicationVersion, applicationType.getDisplayName() + " application");
+        .getApplicationReference(latestApplicationVersion, applicationType.getDisplayName() + " application");
 
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
         .addObject("selectedTab", tab)
-        .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
-        .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
+        .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null,
+            null
+        )))
+        .addObject("actionList", caseProcessingActionService.getUserActionViews(latestApplicationVersion, user))
+        .addObject("applicationContext", applicationContextService.getApplicationContext(latestApplicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", pageTitle)
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
-        .addObject("openWithdrawal", applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion).isPresent());
+        .addObject("openWithdrawal", applicationWithdrawalService
+            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent());
 
-    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
+    if (ApplicationVersionStatus.SUBMITTED.equals(latestApplicationVersion.getStatus())) {
       modelAndView.addObject("consentIssuingApprovalSummaryView",
           consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application).orElse(null));
     }
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
-        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
+        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(latestApplicationVersion, modelAndView);
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
-        case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
-        case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView,
-            user);
+        case CASE_HISTORY -> addCaseHistoryTab(modelAndView, latestApplicationVersion);
+        case TASKS -> addTasksTab(modelAndView, latestApplicationVersion, user);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+            selectedApplicationVersion,
+            modelAndView,
+            user
+        );
         default -> {
         }
       }
     }
 
     if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
-      technicalReviewService.findOpenTechnicalReview(applicationVersion)
+      technicalReviewService.findOpenTechnicalReview(latestApplicationVersion)
           .map(TechnicalReviewSummaryView::from)
           .ifPresent(view -> modelAndView.addObject("technicalReviewSummaryView", view));
     }
@@ -188,8 +194,9 @@ public class ApplicationCaseProcessingController {
           .ifPresent(view -> modelAndView.addObject("furtherInformationView", view));
     }
 
-    if (consentService.shouldCheckProductionConsentExists(applicationVersion)) {
-      var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
+    if (consentService.shouldCheckProductionConsentExists(latestApplicationVersion)) {
+      var productionConsentCheckResult = consentService
+          .checkProductionConsentExistsForInProgressApplication(latestApplicationVersion);
       if (productionConsentCheckResult == ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT) {
         modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
       }

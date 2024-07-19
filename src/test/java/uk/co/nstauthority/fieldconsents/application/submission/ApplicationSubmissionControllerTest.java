@@ -3,11 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.submission;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,6 +28,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -132,7 +129,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
@@ -173,7 +174,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
@@ -214,7 +219,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
@@ -254,7 +263,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
@@ -292,7 +305,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
@@ -411,7 +428,11 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
         .thenReturn(applicationUpdateRequestView);
-    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID, null, null, null)))

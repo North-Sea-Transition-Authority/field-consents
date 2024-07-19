@@ -75,7 +75,7 @@ class AceFlagControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name(CHANGE_ACE_STATUS_VIEW))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))))
+                .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("form", aceFlagForm));
   }
 
@@ -99,7 +99,7 @@ class AceFlagControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name(CHANGE_ACE_STATUS_VIEW))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))))
+                .caseProcessing(APPLICATION_ID, null, null, null))))
         .andReturn().getModelAndView();
 
     verifyNoInteractions(aceFlagService);

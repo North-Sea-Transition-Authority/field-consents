@@ -98,7 +98,7 @@ public class FurtherInformationRequestController {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var backLinkUrl = ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-        .caseProcessing(applicationId, null, null));
+        .caseProcessing(applicationId, null, null, null));
 
     var modelAndView = new ModelAndView("fcs/application/consultation/further-information/requestForm")
         .addObject("pageTitle", PAGE_TITLE)

@@ -55,6 +55,6 @@ public class ConsultationController {
         .addObject("consultationSummaryItems", consultationSummaryService.getConsultationSummaryItems(application))
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)));
+            .caseProcessing(applicationId, null, null, null)));
   }
 }

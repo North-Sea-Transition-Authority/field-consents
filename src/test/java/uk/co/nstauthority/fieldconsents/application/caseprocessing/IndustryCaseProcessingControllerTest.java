@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.PAYMENTS;
@@ -22,6 +23,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import jakarta.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +33,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -62,6 +66,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
+import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
@@ -161,7 +166,21 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @SecurityTest
   void getIndustryCaseProcessing_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null))))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @ParameterizedSecurityTest
+  @EnumSource(CaseProcessingTab.class)
+  @NullSource
+  void getIndustryCaseProcessing_forTabs_noUser(CaseProcessingTab caseProcessingTab) throws Exception {
+    var tabParam = Optional.ofNullable(caseProcessingTab)
+        .map(CaseProcessingTab::getAnchor)
+        .map("?tab=%s"::formatted)
+        .orElse("");
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -180,7 +199,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -199,7 +218,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -218,7 +237,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -243,7 +262,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -255,11 +274,11 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     stubSummaryServiceCall(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -273,13 +292,33 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
+  }
+
+  @Test
+  void getIndustryCaseProcessing_viewApplication_withVersionNumber() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    stubBaseServiceCallsWithVersionNumber(applicationVersion, APPLICATION_VERSION_NUMBER);
+    stubSummaryServiceCall(applicationVersion);
+
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+    var versionNumberParam = "&versionNumber=%d".formatted(APPLICATION_VERSION_NUMBER);
+
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam + versionNumberParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
+        .andExpect(model().attributeDoesNotExist("paymentsTabPaymentSummaryViews"))
+        .andExpect(model().attribute("summarySections", summarySections));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @ParameterizedTest
@@ -296,12 +335,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
   }
@@ -317,7 +356,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     var tabParam = "?tab=%s".formatted(PAYMENTS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion));
 
@@ -342,7 +381,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     var tabParam = "?tab=%s".formatted(PAYMENTS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView));
@@ -356,12 +395,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @MethodSource("getInProgressAndSubmittedApplicationVersions")
   void getIndustryCaseProcessing_consent(ApplicationVersion applicationVersion) throws Exception {
     stubBaseServiceCalls(applicationVersion);
-    stubConsentServiceCall(applicationVersion);
+    stubConsentServiceCall(applicationVersion, CONSENT);
 
     var tabParam = "?tab=%s".formatted(CONSENT.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(CONSENT, applicationVersion));
 
@@ -382,13 +421,13 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationWithdrawal));
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, true));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -404,13 +443,13 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, false));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -421,7 +460,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     stubBaseServiceCalls(applicationVersion);
-    stubConsentServiceCall(applicationVersion);
+    stubConsentServiceCall(applicationVersion, VIEW_APPLICATION);
     stubSummaryServiceCall(applicationVersion);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
@@ -431,16 +470,25 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(teamService.isIndustryUser(user)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(model().attribute("warning", ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT.getWarning()));
   }
 
   private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {
+    stubBaseServiceCallsWithVersionNumber(applicationVersion, null);
+  }
+
+  private void stubBaseServiceCallsWithVersionNumber(
+      ApplicationVersion applicationVersion,
+      @Nullable Integer versionNumber
+  ) {
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, versionNumber))
+        .thenReturn(applicationVersion);
     when(caseProcessingTabService.getIndustryTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
@@ -453,7 +501,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 }
 
-  private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {
+  private void stubSummaryServiceCall(
+      ApplicationVersion applicationVersion
+  ) {
     var applicationType = applicationVersion.getApplication().getType();
     doAnswer(invocation -> {
       invocation.getArgument(1, ModelAndView.class)
@@ -463,27 +513,34 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
+        .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 
-  private void stubPaymentsServiceCall(Application application) {
+  private void stubPaymentsServiceCall(
+      Application application
+  ) {
     doAnswer(invocation -> {
       invocation.getArgument(1, ModelAndView.class)
-          .addObject("paymentsTabPaymentSummaryViews", paymentsTabPaymentSummaryViews);
-      return null;
+        .addObject("paymentsTabPaymentSummaryViews", paymentsTabPaymentSummaryViews);
+    return null;
     })
         .when(paymentsTabService)
         .addPaymentsTabContentToModelAndView(eq(application), any(ModelAndView.class));
   }
 
-  private void stubConsentServiceCall(ApplicationVersion applicationVersion) {
-    doAnswer(invocation -> {
-      invocation.getArgument(1, ModelAndView.class)
-          .addObject("consentTabConsentSummaryView", consentTabConsentSummaryView);
-      return null;
-    })
-        .when(consentTabService)
-        .addConsentTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+  private void stubConsentServiceCall(
+      ApplicationVersion applicationVersion,
+      @Nullable CaseProcessingTab tab
+  ) {
+    if (CONSENT.equals(tab)) {
+      doAnswer(invocation -> {
+        invocation.getArgument(1, ModelAndView.class)
+            .addObject("consentTabConsentSummaryView", consentTabConsentSummaryView);
+        return null;
+      })
+          .when(consentTabService)
+          .addConsentTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+    }
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {
@@ -492,7 +549,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         status().isOk(),
         view().name(VIEW_NAME),
         model().attribute("controllerUrl", ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null, null))),
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null))),
         model().attribute("pageTitle", DUMMY_APP_REF),
         model().attribute("selectedTab", tab),
         model().attribute("actionList", caseProcessingActionViews),

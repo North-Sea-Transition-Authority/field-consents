@@ -87,7 +87,7 @@ public class TechnicalReviewAssignmentController {
         .addObject("technicalReviewerAssignmentCandidates", technicalReviewerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(applicationId, null, null)));
+                .caseProcessing(applicationId, null, null, null)));
   }
 
   @PostMapping
@@ -117,6 +117,6 @@ public class TechnicalReviewAssignmentController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, successMessage);
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null, null));
   }
 }

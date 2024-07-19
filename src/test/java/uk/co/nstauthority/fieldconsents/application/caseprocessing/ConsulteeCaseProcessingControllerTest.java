@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -11,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
@@ -18,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import jakarta.annotation.Nullable;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +28,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
@@ -99,7 +101,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
   @SecurityTest
   void caseProcessing_unauthorised() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null, null))))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -108,7 +110,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     setUpMocksWithConsultation(null);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -124,7 +126,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     setUpMocksWithConsultation(consultation);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -140,12 +142,14 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
         .andExpect(model().attribute("summarySections", summarySections))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -158,13 +162,36 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
         .andExpect(model().attribute("summarySections", summarySections))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()))
         .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+  }
+
+  @Test
+  void caseProcessing_viewApplication_withVersionNumber() throws Exception {
+    setUpMocksWithConsultationAndVersionNumber(null, APPLICATION_VERSION_NUMBER);
+
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+    var versionNumberParam = "&versionNumber=%d".formatted(APPLICATION_VERSION_NUMBER);
+
+    when(applicationVersionService
+        .getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, APPLICATION_VERSION_NUMBER))
+        .thenReturn(applicationVersion);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam + versionNumberParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
+        .andExpect(model().attribute("summarySections", summarySections))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -176,7 +203,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(CONSULTATIONS));
@@ -195,7 +222,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(CONSULTATIONS))
@@ -206,7 +233,8 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var applicationType = applicationVersion.getApplication().getType();
     return new ResultMatcher[] {
         view().name(VIEW_NAME),
-        model().attribute("controllerUrl", ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null, null))),
+        model().attribute("controllerUrl", ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null,
+            null, null))),
         model().attribute("pageTitle", PAGE_TITLE),
         model().attribute("selectedTab", tab),
         model().attribute("actionList", caseProcessingActionViews),
@@ -215,8 +243,19 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     };
   }
 
-  private void setUpMocksWithConsultation(@Nullable Consultation consultation) {
+  private void setUpMocksWithConsultation(
+      @Nullable Consultation consultation
+  ) {
+    setUpMocksWithConsultationAndVersionNumber(consultation, null);
+  }
+
+  private void setUpMocksWithConsultationAndVersionNumber(
+      @Nullable Consultation consultation,
+      @Nullable Integer versionNumber
+  ) {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, versionNumber))
+        .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(PAGE_TITLE);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)
@@ -237,6 +276,6 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
       return null;
     })
         .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
+        .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 }

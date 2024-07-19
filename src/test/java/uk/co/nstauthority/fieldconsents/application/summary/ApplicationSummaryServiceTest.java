@@ -25,11 +25,13 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.summary.production.ProductionInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.ConsentDetailsSummarySectionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,18 +48,21 @@ class ApplicationSummaryServiceTest {
   @Mock
   private ProductionInformationSummarySectionService productionInformationSummarySectionService;
 
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
   private ApplicationSummaryService applicationSummaryService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationSummaryService = new ApplicationSummaryService(List.of(
         additionalInformationSummarySectionService,
         productionInformationSummarySectionService,
         consentDetailsSummarySectionService
-    ));
+    ), applicationVersionService);
   }
 
   @Test
@@ -124,5 +129,100 @@ class ApplicationSummaryServiceTest {
             "accordionId", newApplicationVersion.getId(),
             "wideSummaryDisplay", wideSummaryDisplay
         ));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void addSummarySectionsAndVersionOptionsToModelAndView_withOneSubmittedApplication(ApplicationType applicationType) {
+    // it doesn't actually matter what the sections here are...
+    var consentDetailSection = getConsentDetailsSummarySection(null);
+    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(consentDetailSection));
+
+    var productionDetailSection = getProductionInformationSummarySection(null);
+    when(productionInformationSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(productionDetailSection));
+
+    var additionalDetailSection = getAdditionalInformationSummarySection(null);
+    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(additionalDetailSection));
+
+    var latestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    latestApplicationVersion.setVersion(2);
+
+    var modelAndView = new ModelAndView();
+
+    applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(latestApplicationVersion, modelAndView, null);
+
+    var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
+
+    assertThat(modelAndView.getModel())
+        .containsExactlyInAnyOrderEntriesOf(Map.of(
+            "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
+            "accordionId", latestApplicationVersion.getId(),
+            "wideSummaryDisplay", wideSummaryDisplay
+        ));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void addSummarySectionsAndVersionOptionsToModelAndView_withMultipleSubmittedApplications(ApplicationType applicationType) {
+    // it doesn't actually matter what the sections here are...
+    var consentDetailSection = getConsentDetailsSummarySection(null);
+    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(consentDetailSection));
+
+    var productionDetailSection = getProductionInformationSummarySection(null);
+    when(productionInformationSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(productionDetailSection));
+
+    var additionalDetailSection = getAdditionalInformationSummarySection(null);
+    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion, null))
+        .thenReturn(Optional.of(additionalDetailSection));
+
+    var latestApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationType);
+    latestApplicationVersion.setVersion(2);
+
+    when(applicationVersionService.getAllNonDeletedApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(List.of(applicationVersion, latestApplicationVersion));
+
+    var modelAndView = new ModelAndView();
+
+    applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(latestApplicationVersion, modelAndView, null);
+
+    var expectedApplicationVersions = Map.of(
+        latestApplicationVersion.getVersion(), "Version %s: %s".formatted(latestApplicationVersion.getVersion(),
+            DateUtils.format(latestApplicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE)),
+        applicationVersion.getVersion(), "Version %s: %s".formatted(applicationVersion.getVersion(),
+            DateUtils.format(applicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE))
+    );
+
+    var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
+
+    assertThat(modelAndView.getModel())
+        .containsExactlyInAnyOrderEntriesOf(Map.of(
+            "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
+            "accordionId", latestApplicationVersion.getId(),
+            "wideSummaryDisplay", wideSummaryDisplay,
+            "currentVersionNumber", latestApplicationVersion.getVersion(),
+            "availableVersions", expectedApplicationVersions
+        ));
+  }
+
+  @Test
+  void getApplicationVersionDisplayText_whenInProgressApplicationVersion() {
+    var inProgressApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    assertThat(applicationSummaryService.getApplicationVersionDisplayText(inProgressApplicationVersion))
+        .isEqualTo("Version %s: %s".formatted(
+            applicationVersion.getVersion(),
+                inProgressApplicationVersion.getStatus().getDisplayName()));
+  }
+
+  @Test
+  void getApplicationVersionDisplayText_whenNotInProgressApplicationVersion() {
+    assertThat(applicationSummaryService.getApplicationVersionDisplayText(applicationVersion))
+        .isEqualTo("Version %s: %s".formatted(
+            applicationVersion.getVersion(),
+            DateUtils.format(applicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE)));
   }
 }

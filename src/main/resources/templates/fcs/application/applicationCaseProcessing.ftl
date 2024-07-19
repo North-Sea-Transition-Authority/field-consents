@@ -42,7 +42,7 @@
       <@taskList.standardTaskList taskListSections=taskListSections showSectionNumber=false/>
     </#if>
     <#if selectedTab == "VIEW_APPLICATION">
-      <@applicationSummary.applicationSummary accordionId=accordionId/>
+      <@applicationSummary.applicationSummary accordionId=accordionId selectedTab=selectedTab/>
     </#if>
     <#if selectedTab == "CASE_HISTORY">
       <@caseHistoryTab.tab caseHistoryEvents=caseHistoryEvents/>

@@ -95,7 +95,9 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .andExpect(model().attribute("applicationUpdateSummaryItems", summaryItems))
         .andExpect(model().attribute("captionTitle", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
-        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID,
+            null, null, null
+        ))));
   }
 
 }

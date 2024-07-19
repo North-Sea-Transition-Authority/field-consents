@@ -96,6 +96,8 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("consultationSummaryItems", consultationSummaryItems))
         .andExpect(model().attribute("captionTitle", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
-        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID,
+            null, null, null
+        ))));
   }
 }

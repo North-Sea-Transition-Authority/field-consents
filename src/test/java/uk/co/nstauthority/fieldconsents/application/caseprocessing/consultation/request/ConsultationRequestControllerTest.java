@@ -127,7 +127,9 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         .getModel();
 
     assertThat(model)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null,null)))
+        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId,
+            null, null, null
+        )))
         .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", ConsultationRequestForm.empty());
@@ -206,7 +208,9 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
     var form = new ConsultationRequestForm(deadlineDate, deadlineHours, deadlineMinutes);
 
     assertThat(model)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null)))
+        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId,
+            null, null, null
+        )))
         .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", form);

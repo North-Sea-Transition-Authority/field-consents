@@ -140,7 +140,7 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
         .containsEntry("form", ConsultationAllocationForm.empty())
         .containsEntry("pageTitle", PAGE_TITLE)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("availableRespondersMap", TEAM_MEMBER_VIEWS_AS_MAP);
   }
@@ -162,7 +162,7 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
         .containsEntry("form", new ConsultationAllocationForm(WebUserAccountId.from(ENERGY_PORTAL_USER_DTO.webUserAccountId())))
         .containsEntry("pageTitle", PAGE_TITLE)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("availableRespondersMap", TEAM_MEMBER_VIEWS_AS_MAP);
   }

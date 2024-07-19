@@ -160,7 +160,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates", TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   @SecurityTest
@@ -204,7 +204,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(technicalReviewAssignmentService, times(1))
@@ -244,7 +244,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
+            .caseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(technicalReviewAssignmentService, times(1))
@@ -286,7 +286,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates", TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+                .caseProcessing(APPLICATION_ID, null, null, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

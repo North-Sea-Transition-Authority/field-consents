@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CASE_HISTORY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSENT;
@@ -23,6 +24,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import jakarta.annotation.Nullable;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -259,7 +261,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .orElse("");
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam))
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -268,17 +270,17 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @NullSource
   void caseProcessing(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     var tabParam = Optional.ofNullable(caseProcessingTab).map(tab -> "?tab=%s".formatted(tab.getAnchor())).orElse("");
     var expectedTab = Optional.ofNullable(caseProcessingTab).orElse(TASKS);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(expectedTab, applicationVersion));
   }
@@ -286,18 +288,14 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_checkProductionConsentWarning() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     var checkResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-        .caseProcessing(APPLICATION_ID, null, null)))
+        .caseProcessing(APPLICATION_ID, null, null, null)))
         .with(user(user)))
         .andExpect(model().attribute("warning", checkResult.getWarning()));
   }
@@ -310,17 +308,13 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   )
   void caseProcessing_checkProductionConsentWarning_ignoredResults(ProductionConsentCheckResult checkResult) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(model().attributeDoesNotExist("warning"));
   }
@@ -328,18 +322,14 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_checkProductionConsentWarning_activeConsentExists() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(model().attributeDoesNotExist("warning"));
   }
@@ -348,11 +338,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_isTechnicalReviewer_checkTechnicalReviewBannerExists(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
@@ -360,7 +350,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attribute(TECHNICAL_REVIEW_ATTRIBUTE, TechnicalReviewSummaryView.from(technicalReview)));
@@ -370,18 +360,18 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_isNotTechnicalReviewer_checkTechnicalReviewBannerDoesNotExist(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TECHNICAL_REVIEW_ATTRIBUTE));
@@ -391,11 +381,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_isCaseOfficer_checkFurtherInformationBannerExists(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
@@ -405,7 +395,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attribute(FURTHER_INFORMATION_ATTRIBUTE, furtherInformationView));
@@ -415,18 +405,18 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_isNotCaseOfficer_checkFurtherInformationBannerDoesNotExist(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attributeDoesNotExist(FURTHER_INFORMATION_ATTRIBUTE));
@@ -436,11 +426,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_whenCaseIsReadyToGrantAndIssue_thenConsentIssuingApprovalSummaryViewExists(CaseProcessingTab caseProcessingTab) throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
@@ -452,7 +442,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attribute(CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE, consentIssuingApprovalSummaryView));
@@ -465,11 +455,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     application = applicationVersion.getApplication();
 
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
-    stubSummaryServiceCall();
-    stubCaseHistoryServiceCall();
-    stubPaymentsServiceCall();
-    stubConsentServiceCall();
+    stubTaskListServiceCall(caseProcessingTab);
+    stubSummaryServiceCall(caseProcessingTab);
+    stubCaseHistoryServiceCall(caseProcessingTab);
+    stubPaymentsServiceCall(caseProcessingTab);
+    stubConsentServiceCall(caseProcessingTab);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
@@ -481,7 +471,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andReturn().getModelAndView();
@@ -495,10 +485,10 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_noTabSelected() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(TASKS, applicationVersion))
         .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
@@ -510,7 +500,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_noTabSelected_withdrawnBanner() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     var applicationWithdrawal = new ApplicationWithdrawal();
     when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
@@ -518,7 +508,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -532,14 +522,14 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_noTabSelected_noWithdrawnBanner() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     when(applicationWithdrawalService.findOpenApplicationWithdrawal(applicationVersion))
         .thenReturn(Optional.empty());
 
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -553,12 +543,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_tasks() throws Exception {
     stubBaseServiceCalls();
-    stubTaskListServiceCall();
+    stubTaskListServiceCall(TASKS);
 
     var tabParam = "?tab=%s".formatted(TASKS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(TASKS, applicationVersion))
         .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
@@ -570,12 +560,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_viewApplication() throws Exception {
     stubBaseServiceCalls();
-    stubSummaryServiceCall();
+    stubSummaryServiceCall(VIEW_APPLICATION);
 
     var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
@@ -583,18 +573,41 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
 
-    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+  }
+
+  @Test
+  void caseProcessing_viewApplication_withVersionNumber() throws Exception {
+    when(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, APPLICATION_VERSION_NUMBER))
+        .thenReturn(applicationVersion);
+
+    stubBaseServiceCallsWithVersionNumber(APPLICATION_VERSION_NUMBER);
+    stubSummaryServiceCall(VIEW_APPLICATION);
+
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+    var versionNumberParam = "&versionNumber=%d".formatted(APPLICATION_VERSION_NUMBER);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam + versionNumberParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
+        .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
+        .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
   void caseProcessing_caseHistory() throws Exception {
     stubBaseServiceCalls();
-    stubCaseHistoryServiceCall();
+    stubCaseHistoryServiceCall(CASE_HISTORY);
 
     var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
@@ -606,12 +619,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_payments() throws Exception {
     stubBaseServiceCalls();
-    stubPaymentsServiceCall();
+    stubPaymentsServiceCall(PAYMENTS);
 
     var tabParam = "?tab=%s".formatted(PAYMENTS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
@@ -623,12 +636,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @Test
   void caseProcessing_consent() throws Exception {
     stubBaseServiceCalls();
-    stubConsentServiceCall();
+    stubConsentServiceCall(CONSENT);
 
     var tabParam = "?tab=%s".formatted(CONSENT.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(CONSENT, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
@@ -639,10 +652,16 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   }
 
   private void stubBaseServiceCalls() {
+    stubBaseServiceCallsWithVersionNumber(null);
+  }
+
+  private void stubBaseServiceCallsWithVersionNumber(@Nullable Integer versionNumber) {
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, versionNumber))
+        .thenReturn(applicationVersion);
     when(caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
@@ -656,46 +675,60 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationService.isMigratedApplication(application)).thenReturn(false);
   }
 
-  private void stubTaskListServiceCall() {
-    when(caseProcessingTaskListService.getTaskListSections(applicationVersion, user)).thenReturn(taskListSections);
+  private void stubTaskListServiceCall(@Nullable CaseProcessingTab tab) {
+    if (TASKS.equals(tab)) {
+      when(caseProcessingTaskListService.getTaskListSections(applicationVersion, user)).thenReturn(taskListSections);
+    }
   }
 
-  private void stubSummaryServiceCall() {
-    var applicationType = applicationVersion.getApplication().getType();
-    doAnswer(invocation -> {
-      invocation.getArgument(1, ModelAndView.class)
-          .addObject("summarySections", summarySections)
-          .addObject("accordionId", applicationVersion.getId())
-          .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType));
-      return null;
-    })
-        .when(applicationSummaryService)
-        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
+  private void stubSummaryServiceCall(@Nullable CaseProcessingTab tab) {
+    if (VIEW_APPLICATION.equals(tab)) {
+      var applicationType = applicationVersion.getApplication().getType();
+      when(applicationVersionService
+          .getAllNonDeletedApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+          .thenReturn(List.of(applicationVersion));
+
+      doAnswer(invocation -> {
+        invocation.getArgument(1, ModelAndView.class)
+            .addObject("summarySections", summarySections)
+            .addObject("accordionId", applicationVersion.getId())
+            .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType));
+        return null;
+      })
+          .when(applicationSummaryService)
+          .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
+    }
   }
 
-  private void stubCaseHistoryServiceCall() {
-    var application = applicationVersion.getApplication();
-    when(caseHistoryTabContentService.getCaseHistoryTabContent(application)).thenReturn(caseEventViews);
+  private void stubCaseHistoryServiceCall(@Nullable CaseProcessingTab tab) {
+    if (CASE_HISTORY.equals(tab)) {
+      var application = applicationVersion.getApplication();
+      when(caseHistoryTabContentService.getCaseHistoryTabContent(application)).thenReturn(caseEventViews);
+    }
   }
 
-  private void stubPaymentsServiceCall() {
-    doAnswer(invocation -> {
-      invocation.getArgument(1, ModelAndView.class)
-          .addObject(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE, paymentsTabPaymentSummaryViews);
-      return null;
-    })
-        .when(paymentsTabService)
-        .addPaymentsTabContentToModelAndView(eq(application), any(ModelAndView.class));
+  private void stubPaymentsServiceCall(@Nullable CaseProcessingTab tab) {
+    if (PAYMENTS.equals(tab)) {
+      doAnswer(invocation -> {
+        invocation.getArgument(1, ModelAndView.class)
+            .addObject(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE, paymentsTabPaymentSummaryViews);
+        return null;
+      })
+          .when(paymentsTabService)
+          .addPaymentsTabContentToModelAndView(eq(application), any(ModelAndView.class));
+    }
   }
 
-  private void stubConsentServiceCall() {
-    doAnswer(invocation -> {
+  private void stubConsentServiceCall(@Nullable CaseProcessingTab tab) {
+    if (CONSENT.equals(tab)) {
+      doAnswer(invocation -> {
       invocation.getArgument(1, ModelAndView.class)
           .addObject(CONSENT_TAB_CONSENT_SUMMARY_VIEW_ATTRIBUTE, consentTabConsentSummaryView);
       return null;
     })
         .when(consentTabService)
         .addConsentTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+    }
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {
@@ -703,7 +736,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     return new ResultMatcher[]{
         status().isOk(),
         view().name(VIEW_NAME),
-        model().attribute("controllerUrl", ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null, null))),
+        model().attribute("controllerUrl", ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null,
+            null, null
+        ))),
         model().attribute("pageTitle", APPLICATION_REFERENCE),
         model().attribute("selectedTab", tab),
         model().attribute("actionList", caseProcessingActionViews),
