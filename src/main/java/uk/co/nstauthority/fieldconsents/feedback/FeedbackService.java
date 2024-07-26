@@ -66,7 +66,7 @@ class FeedbackService {
     try {
       feedbackClientService.saveFeedback(feedback);
     } catch (CannotSendFeedbackException e) {
-      LOGGER.warn("Feedback failed to send: {} ", e.getMessage());
+      LOGGER.error("Feedback failed to send: ", e);
     }
   }
 }
