@@ -40,6 +40,7 @@
   justify-content: center;
   border: 2px solid $govuk-input-border-colour;
   background-color: $govuk-body-background-colour;
+  stroke: govuk-colour("black");
 
   width: 2.5rem;
   height: 2.5rem;
@@ -50,10 +51,12 @@
 
   &__active {
     background-color: rgba($govuk-button-colour-blue, 0.5);
-  }
+}
 
   &:disabled {
+    background-color: rgba(govuk-colour("mid-grey"), 0.5);
     cursor: default;
+    stroke: govuk-colour("dark-grey");
   }
 
   &:hover {
