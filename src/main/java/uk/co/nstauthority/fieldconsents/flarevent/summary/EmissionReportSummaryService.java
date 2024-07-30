@@ -12,8 +12,11 @@ import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummary
 
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
@@ -27,6 +30,12 @@ import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 
 @Service
 public class EmissionReportSummaryService {
+
+  private final EmissionsChartDataService emissionsChartDataService;
+
+  EmissionReportSummaryService(EmissionsChartDataService emissionsChartDataService) {
+    this.emissionsChartDataService = emissionsChartDataService;
+  }
 
   public SummaryCard getReportPeriodSummaryCard(FlareVentReportPeriod reportPeriod,
                                                 ApplicationType applicationType) {
@@ -105,6 +114,10 @@ public class EmissionReportSummaryService {
         );
 
     return SummaryCard.tableSummaryCard(summaryTable);
+  }
+
+  public Optional<SummaryCard> getEmissionsReportChartSummaryCard(ApplicationVersion applicationVersion) {
+    return emissionsChartDataService.getReportChartData(applicationVersion).map(SummaryCard::stackedBarChartSummaryCard);
   }
 
   private int getReportMonthShutDownDays(FlareVentRow reportMonth) {

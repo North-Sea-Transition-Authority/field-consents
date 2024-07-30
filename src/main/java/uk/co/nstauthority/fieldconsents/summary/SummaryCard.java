@@ -1,6 +1,9 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
 
 public record SummaryCard(
     String displayName,
@@ -52,6 +55,16 @@ public record SummaryCard(
         SummaryCardType.FILES_SUMMARY,
         fileViews
     );
+  }
+
+  public static SummaryCard stackedBarChartSummaryCard(EmissionsChartData emissionsChartData) {
+    var objectMapper = new ObjectMapper();
+    try {
+      var chartDataJson = objectMapper.writeValueAsString(emissionsChartData);
+      return new SummaryCard(null, SummaryCardType.STACKED_BAR_CHART_SUMMARY, chartDataJson);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Failed to serialise chart data into JSON");
+    }
   }
 
 }

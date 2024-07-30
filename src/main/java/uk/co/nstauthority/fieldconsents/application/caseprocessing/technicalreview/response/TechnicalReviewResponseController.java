@@ -116,9 +116,7 @@ public class TechnicalReviewResponseController {
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .caseProcessing(applicationId, null, null, null));
 
-    var modelAndView = new ModelAndView("fcs/application/review/technicalReviewResponse");
-
-    modelAndView
+    var modelAndView = new ModelAndView("fcs/application/review/technicalReviewResponse")
         .addObject("form", form)
         .addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
         .addObject("applicationReference", applicationReference)

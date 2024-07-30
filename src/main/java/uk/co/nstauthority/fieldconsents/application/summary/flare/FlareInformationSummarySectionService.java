@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.summary.flare;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -11,61 +10,68 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.annual.FlareAnnual123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereport.FlareReport123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereportgas.FlareReport123GasDataSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.shortterm.FlareShortTerm123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.longterm.FlareLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
 @Service
 public class FlareInformationSummarySectionService implements SummarySectionService<ApplicationVersion> {
+
   private final ConsentLengthService consentLengthService;
   private final ApplicationUnitService applicationUnitService;
   private final FlareAnnualService flareAnnualService;
   private final FlareShortTermService flareShortTermService;
   private final FlareSummaryService flareSummaryService;
-  private final FlareReportService flareReportService;
   private final FlareReportGasDataService flareReportGasDataService;
   private final FlareAnnual123SummaryService flareAnnual123SummaryService;
   private final FlareShortTerm123SummaryService flareShortTerm123SummaryService;
   private final FlareReport123SummaryService flareReport123SummaryService;
   private final FlareReport123GasDataSummaryService flareReport123GasDataSummaryService;
   private final FlareLongTermSummaryService flareLongTermSummaryService;
+  private final EmissionsChartDataService emissionsChartDataService;
+  private final FlareReportSummaryService flareReportSummaryService;
 
-  @Autowired
-  public FlareInformationSummarySectionService(ConsentLengthService consentLengthService,
-                                               ApplicationUnitService applicationUnitService,
-                                               FlareAnnualService flareAnnualService,
-                                               FlareShortTermService flareShortTermService,
-                                               FlareSummaryService flareSummaryService,
-                                               FlareReportService flareReportService,
-                                               FlareReportGasDataService flareReportGasDataService,
-                                               FlareAnnual123SummaryService flareAnnual123SummaryService,
-                                               FlareShortTerm123SummaryService flareShortTerm123SummaryService,
-                                               FlareReport123SummaryService flareReport123SummaryService,
-                                               FlareReport123GasDataSummaryService flareReport123GasDataSummaryService,
-                                               FlareLongTermSummaryService flareLongTermSummaryService) {
+  FlareInformationSummarySectionService(
+      ConsentLengthService consentLengthService,
+      ApplicationUnitService applicationUnitService,
+      FlareAnnualService flareAnnualService,
+      FlareShortTermService flareShortTermService,
+      FlareSummaryService flareSummaryService,
+      FlareReportGasDataService flareReportGasDataService,
+      FlareAnnual123SummaryService flareAnnual123SummaryService,
+      FlareShortTerm123SummaryService flareShortTerm123SummaryService,
+      FlareReport123SummaryService flareReport123SummaryService,
+      FlareReport123GasDataSummaryService flareReport123GasDataSummaryService,
+      FlareLongTermSummaryService flareLongTermSummaryService,
+      EmissionsChartDataService emissionsChartDataService,
+      FlareReportSummaryService flareReportSummaryService
+  ) {
     this.consentLengthService = consentLengthService;
     this.applicationUnitService = applicationUnitService;
     this.flareAnnualService = flareAnnualService;
     this.flareShortTermService = flareShortTermService;
     this.flareSummaryService = flareSummaryService;
-    this.flareReportService = flareReportService;
     this.flareReportGasDataService = flareReportGasDataService;
     this.flareAnnual123SummaryService = flareAnnual123SummaryService;
     this.flareShortTerm123SummaryService = flareShortTerm123SummaryService;
     this.flareReport123SummaryService = flareReport123SummaryService;
     this.flareReport123GasDataSummaryService = flareReport123GasDataSummaryService;
     this.flareLongTermSummaryService = flareLongTermSummaryService;
+    this.emissionsChartDataService = emissionsChartDataService;
+    this.flareReportSummaryService = flareReportSummaryService;
   }
 
   @Override
@@ -115,7 +121,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
     return SummaryItem.withCards("Flare report",
         switch (emissionCategoryType) {
           case CATEGORY_123 -> List.of(flareReport123SummaryService.getFlareReport123SummaryCard(applicationVersion));
-          case CATEGORY_ABC -> flareReportService.getFlareReportSummaryCards(applicationVersion);
+          case CATEGORY_ABC -> flareReportSummaryService.getFlareReportSummaryCards(applicationVersion);
           case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
         }
     );
@@ -133,34 +139,35 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
     );
   }
 
-  private SummaryItem getFlareConsentSummaryItem(ApplicationVersion applicationVersion,
-                                                 ConsentLengthType consentLengthType,
-                                                 EmissionCategoryType emissionCategoryType) {
+  private SummaryItem getFlareConsentSummaryItem(
+      ApplicationVersion applicationVersion,
+      ConsentLengthType consentLengthType,
+      EmissionCategoryType emissionCategoryType
+  ) {
+    var summaryCards = new ArrayList<SummaryCard>();
 
-    return switch (consentLengthType) {
-      case SHORT_TERM ->
-          SummaryItem.withCard(consentLengthType.getDisplayName(),
-              switch (emissionCategoryType) {
-                case CATEGORY_123 -> flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion);
-                case CATEGORY_ABC -> flareShortTermService.getFlareShortTermSummaryCard(applicationVersion);
-                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
-              }
-          );
-      case ANNUAL ->
-          SummaryItem.withCard(consentLengthType.getDisplayName(),
-              switch (emissionCategoryType) {
-                case CATEGORY_123 -> flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion);
-                case CATEGORY_ABC -> flareAnnualService.getFlareAnnualSummaryCard(applicationVersion);
-                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
-              }
-          );
+    emissionsChartDataService.getConsentChartData(applicationVersion)
+        .map(SummaryCard::stackedBarChartSummaryCard)
+        .ifPresent(summaryCards::add);
+
+    var tableCard = switch (consentLengthType) {
+      case SHORT_TERM -> switch (emissionCategoryType) {
+        case CATEGORY_123 -> flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion);
+        case CATEGORY_ABC -> flareShortTermService.getFlareShortTermSummaryCard(applicationVersion);
+        case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
+      };
+      case ANNUAL -> switch (emissionCategoryType) {
+        case CATEGORY_123 -> flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion);
+        case CATEGORY_ABC -> flareAnnualService.getFlareAnnualSummaryCard(applicationVersion);
+        case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
+      };
       case LONG_TERM -> switch (emissionCategoryType) {
-        case LEGACY_LONG_TERM ->
-            SummaryItem.withCard(consentLengthType.getDisplayName(),
-                flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion)
-            );
-        case CATEGORY_123, CATEGORY_ABC -> throw emissionCategoryType.unsupportedOperation();
+        case CATEGORY_ABC, CATEGORY_123 -> throw emissionCategoryType.unsupportedOperation();
+        case LEGACY_LONG_TERM -> flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion);
       };
     };
+    summaryCards.add(tableCard);
+
+    return SummaryItem.withCards(consentLengthType.getDisplayName(), summaryCards);
   }
 }

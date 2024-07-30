@@ -10,7 +10,6 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -18,15 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
-import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
-import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FlareReportServiceTest {
@@ -37,20 +31,13 @@ class FlareReportServiceTest {
   @Mock
   private FlareReportPeriodService flareReportPeriodService;
 
-  @Mock
-  private ApplicationUnitService applicationUnitService;
-
-  @Mock
-  private EmissionReportSummaryService emissionReportSummaryService;
-
+  @InjectMocks
   private FlareReportService flareReportService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    flareReportService = new FlareReportService(flareReportMonthRepository, flareReportPeriodService,
-        applicationUnitService, emissionReportSummaryService);
     applicationVersion = FlareReportTestUtil.flareAppVersion;
   }
 
@@ -253,56 +240,5 @@ class FlareReportServiceTest {
 
     ArgumentCaptor<FlareReportMonth> flareReportMonthArgumentCaptor = ArgumentCaptor.forClass(FlareReportMonth.class);
     verify(flareReportMonthRepository, times(12)).save(flareReportMonthArgumentCaptor.capture());
-  }
-
-  @Test
-  void getFlareReportSummaryCards_noPeriodExists() {
-    when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
-        .thenReturn(Optional.empty());
-
-    assertThat(flareReportService.getFlareReportSummaryCards(applicationVersion))
-        .isEqualTo(SummaryCard.emptySummaryCardList());
-  }
-
-  @Test
-  void getFlareReportSummaryCards_periodExists_noReportMonths() {
-    var flareReportPeriod = FlareReportTestUtil.getFullFlareReportPeriod();
-    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
-
-    when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
-        .thenReturn(Optional.of(flareReportPeriod));
-    when(emissionReportSummaryService.getReportPeriodSummaryCard(flareReportPeriod, ApplicationType.FLARE))
-        .thenReturn(simpleSummaryCard);
-    when(flareReportMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(flareReportService.getFlareReportSummaryCards(applicationVersion))
-        .isEqualTo(List.of(simpleSummaryCard));
-  }
-
-  @Test
-  void getFlareReportSummaryCards_periodExists_reportMonthsExist() {
-    var flareReportPeriod = FlareReportTestUtil.getFullFlareReportPeriod();
-    var flareReportMonths = FlareReportTestUtil.getFlareReportMonthsForYear(applicationVersion, flareReportPeriod.getReportEndYear());
-    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
-    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
-    var flareCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
-    var flareAverageUnit = FlareVentUnit.TONNES_PER_DAY;
-
-    when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
-        .thenReturn(Optional.of(flareReportPeriod));
-    when(emissionReportSummaryService.getReportPeriodSummaryCard(flareReportPeriod, ApplicationType.FLARE))
-        .thenReturn(simpleSummaryCard);
-    when(flareReportMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(flareReportMonths);
-    when(applicationUnitService.getFlareCategoryUnit(applicationVersion))
-        .thenReturn(flareCategoryUnit);
-    when(applicationUnitService.getFlareAverageUnit(applicationVersion))
-        .thenReturn(flareAverageUnit);
-    when(emissionReportSummaryService.getReportTableSummaryCard(flareReportMonths, flareCategoryUnit, flareAverageUnit))
-        .thenReturn(tableSummaryCard);
-
-    assertThat(flareReportService.getFlareReportSummaryCards(applicationVersion))
-        .isEqualTo(List.of(simpleSummaryCard, tableSummaryCard));
   }
 }

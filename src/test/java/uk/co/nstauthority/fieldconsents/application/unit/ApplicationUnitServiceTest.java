@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.unit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -17,9 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -117,6 +120,41 @@ class ApplicationUnitServiceTest {
         null,
         null,
         EmissionCategoryType.CATEGORY_123);
+  }
+
+  @Test
+  void getEmissionCategoryUnit_flare() {
+    var applicationUnit = mock(ApplicationUnit.class);
+    var flareVentUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    when(applicationUnit.getFlareCategoryUnit()).thenReturn(flareVentUnit);
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getEmissionCategoryUnit(flareAppVersion)).isEqualTo(flareVentUnit);
+  }
+
+  @Test
+  void getEmissionCategoryUnit_vent() {
+    var applicationUnit = mock(ApplicationUnit.class);
+    var flareVentUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    when(applicationUnit.getVentCategoryUnit()).thenReturn(flareVentUnit);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getEmissionCategoryUnit(ventAppVersion)).isEqualTo(flareVentUnit);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"}, mode = Mode.EXCLUDE)
+  void getEmissionCategoryUnit_nonEmissions(ApplicationType applicationType) {
+    var applicationVersion = new ApplicationVersion();
+    var application = new Application();
+    application.setType(applicationType);
+    applicationVersion.setApplication(application);
+
+    assertThatThrownBy(() -> applicationUnitService.getEmissionCategoryUnit(applicationVersion))
+        .isInstanceOf(UnsupportedOperationException.class)
+        .hasMessage("Unsupported application type %s".formatted(applicationVersion.getApplication().getType()));
   }
 
   @Test
@@ -227,7 +265,7 @@ class ApplicationUnitServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = FlareVentUnit.class, mode = EnumSource.Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
+  @EnumSource(value = FlareVentUnit.class, mode = Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
   void getFlareAverageUnit_manualMismatchUnits(FlareVentUnit flareUnit) {
     ApplicationUnit applicationUnit = new ApplicationUnit();
     applicationUnit.setApplicationVersion(flareAppVersion);
@@ -348,7 +386,7 @@ class ApplicationUnitServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = FlareVentUnit.class, mode = EnumSource.Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
+  @EnumSource(value = FlareVentUnit.class, mode = Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
   void getVentAverageUnit_manualMismatchUnits(FlareVentUnit ventUnit) {
     ApplicationUnit applicationUnit = new ApplicationUnit();
     applicationUnit.setApplicationVersion(ventAppVersion);

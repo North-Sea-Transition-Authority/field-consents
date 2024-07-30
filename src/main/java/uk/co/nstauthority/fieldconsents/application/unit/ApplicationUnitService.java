@@ -47,6 +47,15 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
         .orElseGet(() -> createApplicationUnit(applicationVersion));
   }
 
+  public FlareVentUnit getEmissionCategoryUnit(ApplicationVersion applicationVersion) {
+    var applicationType = applicationVersion.getApplication().getType();
+    return switch (applicationType) {
+      case FLARE -> getFlareCategoryUnit(applicationVersion);
+      case VENT -> getVentCategoryUnit(applicationVersion);
+      default -> throw new UnsupportedOperationException("Unsupported application type %s".formatted(applicationType));
+    };
+  }
+
   public FlareVentUnit getFlareCategoryUnit(ApplicationVersion applicationVersion) {
     return getOrCreateApplicationUnit(applicationVersion).getFlareCategoryUnit();
   }

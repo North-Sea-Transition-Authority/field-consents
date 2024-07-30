@@ -8,36 +8,24 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
-import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class VentReportService {
 
   private final VentReportMonthRepository ventReportMonthRepository;
-
   private final VentReportPeriodService ventReportPeriodService;
 
-  private final ApplicationUnitService applicationUnitService;
-
-  private final EmissionReportSummaryService emissionReportSummaryService;
-
-  @Autowired
-  VentReportService(VentReportMonthRepository ventReportMonthRepository,
-                    VentReportPeriodService ventReportPeriodService,
-                    ApplicationUnitService applicationUnitService,
-                    EmissionReportSummaryService emissionReportSummaryService) {
+  VentReportService(
+      VentReportMonthRepository ventReportMonthRepository,
+      VentReportPeriodService ventReportPeriodService
+  ) {
     this.ventReportMonthRepository = ventReportMonthRepository;
     this.ventReportPeriodService = ventReportPeriodService;
-    this.applicationUnitService = applicationUnitService;
-    this.emissionReportSummaryService = emissionReportSummaryService;
   }
 
   public List<VentReportMonth> getVentReportMonths(ApplicationVersion applicationVersion) {
@@ -149,33 +137,5 @@ public class VentReportService {
     // save new form data to the DB for each month
     ventReportMonthForms.forEach(ventReportMonthForm ->
         ventReportMonthRepository.save(VentReportMonth.from(applicationVersion, ventReportMonthForm)));
-  }
-
-  public List<SummaryCard> getVentReportSummaryCards(ApplicationVersion applicationVersion) {
-
-    var ventReportPeriodOptional = ventReportPeriodService.findVentReportPeriod(applicationVersion);
-
-    if (ventReportPeriodOptional.isEmpty()) {
-      return SummaryCard.emptySummaryCardList();
-    }
-
-    var summaryCards = new ArrayList<SummaryCard>();
-
-    summaryCards.add(emissionReportSummaryService.getReportPeriodSummaryCard(
-        ventReportPeriodOptional.get(),
-        applicationVersion.getApplication().getType()));
-
-    var ventReportMonths = getVentReportMonths(applicationVersion);
-
-    if (ventReportMonths.isEmpty()) {
-      return summaryCards;
-    }
-
-    var categoryUnit = applicationUnitService.getVentCategoryUnit(applicationVersion);
-    var averageUnit = applicationUnitService.getVentAverageUnit(applicationVersion);
-
-    summaryCards.add(emissionReportSummaryService.getReportTableSummaryCard(ventReportMonths, categoryUnit, averageUnit));
-
-    return summaryCards;
   }
 }

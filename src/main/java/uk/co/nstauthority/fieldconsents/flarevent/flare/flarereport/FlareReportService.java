@@ -8,36 +8,24 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
-import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class FlareReportService {
 
   private final FlareReportMonthRepository flareReportMonthRepository;
-
   private final FlareReportPeriodService flareReportPeriodService;
 
-  private final ApplicationUnitService applicationUnitService;
-
-  private final EmissionReportSummaryService emissionReportSummaryService;
-
-  @Autowired
-  FlareReportService(FlareReportMonthRepository flareReportMonthRepository,
-                     FlareReportPeriodService flareReportPeriodService,
-                     ApplicationUnitService applicationUnitService,
-                     EmissionReportSummaryService emissionReportSummaryService) {
+  FlareReportService(
+      FlareReportMonthRepository flareReportMonthRepository,
+      FlareReportPeriodService flareReportPeriodService
+  ) {
     this.flareReportMonthRepository = flareReportMonthRepository;
     this.flareReportPeriodService = flareReportPeriodService;
-    this.applicationUnitService = applicationUnitService;
-    this.emissionReportSummaryService = emissionReportSummaryService;
   }
 
   public List<FlareReportMonth> getFlareReportMonths(ApplicationVersion applicationVersion) {
@@ -149,33 +137,5 @@ public class FlareReportService {
     // save new form data to the DB for each month
     flareReportMonthForms.forEach(flareReportMonthForm ->
         flareReportMonthRepository.save(FlareReportMonth.from(applicationVersion, flareReportMonthForm)));
-  }
-
-  public List<SummaryCard> getFlareReportSummaryCards(ApplicationVersion applicationVersion) {
-
-    var flareReportPeriodOptional = flareReportPeriodService.findFlareReportPeriod(applicationVersion);
-
-    if (flareReportPeriodOptional.isEmpty()) {
-      return SummaryCard.emptySummaryCardList();
-    }
-
-    var summaryCards = new ArrayList<SummaryCard>();
-
-    summaryCards.add(emissionReportSummaryService.getReportPeriodSummaryCard(
-            flareReportPeriodOptional.get(),
-            applicationVersion.getApplication().getType()));
-
-    var flareReportMonths = getFlareReportMonths(applicationVersion);
-
-    if (flareReportMonths.isEmpty()) {
-      return summaryCards;
-    }
-
-    var categoryUnit = applicationUnitService.getFlareCategoryUnit(applicationVersion);
-    var averageUnit = applicationUnitService.getFlareAverageUnit(applicationVersion);
-
-    summaryCards.add(emissionReportSummaryService.getReportTableSummaryCard(flareReportMonths, categoryUnit, averageUnit));
-
-    return summaryCards;
   }
 }

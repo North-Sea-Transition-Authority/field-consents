@@ -1,16 +1,19 @@
 package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
-import static uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil.ventAppVersion;
-
 import java.math.BigDecimal;
 import java.time.Month;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 public class VentReportTestUtil {
+
+  static ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
+      ApplicationType.VENT);
 
   static VentReportMonthForm getFullVentReportMonthForm() {
     VentReportMonthForm ventReportMonthForm = new VentReportMonthForm();

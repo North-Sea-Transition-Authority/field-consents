@@ -2,14 +2,9 @@ package uk.co.nstauthority.fieldconsents.application.summary.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.VENT_INFORMATION_DISPLAY_ORDER;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +26,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.annual.VentAnnual123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.shortterm.VentShortTerm123SummaryService;
@@ -39,11 +36,12 @@ import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreportgas
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.longterm.VentLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
-import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
+import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
 class VentInformationSummarySectionServiceTest {
@@ -74,9 +72,6 @@ class VentInformationSummarySectionServiceTest {
   private VentSummaryService ventSummaryService;
 
   @Mock
-  private VentReportService ventReportService;
-
-  @Mock
   private VentReportGasDataService ventReportGasDataService;
 
   @Mock
@@ -94,10 +89,28 @@ class VentInformationSummarySectionServiceTest {
   @Mock
   private VentLongTermSummaryService ventLongTermSummaryService;
 
+  @Mock
+  private EmissionsChartDataService emissionsChartDataService;
+
+  @Mock
+  private VentReportSummaryService ventReportSummaryService;
+
   @InjectMocks
   private VentInformationSummarySectionService ventInformationSummarySectionService;
 
-  ApplicationVersion applicationVersion;
+  private ApplicationVersion applicationVersion;
+
+  private final EmissionsChartData emissionsChartData = new EmissionsChartData(
+      "Example chart title",
+      List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
+      "Month",
+      "Days in month",
+      List.of(new EmissionsChartData.Series(
+          "Days",
+          "highcharts-colour-blue",
+          List.of(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+      ))
+  );
 
   @BeforeEach
   void setUp() {
@@ -132,55 +145,28 @@ class VentInformationSummarySectionServiceTest {
 
     if (ConsentLengthType.SHORT_TERM.equals(consentLengthType)) {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
-      when(ventShortTermService.getVentShortTermSummaryCard(applicationVersion))
-          .thenReturn(expectedSummaryCard);
+      when(ventShortTermService.getVentShortTermSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
     } else {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
-      when(ventAnnualService.getVentAnnualSummaryCard(applicationVersion))
-          .thenReturn(expectedSummaryCard);
+      when(ventAnnualService.getVentAnnualSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
     }
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_ABC);
-    when(ventSummaryService.getSummariesForVents(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(ventReportService.getVentReportSummaryCards(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_ABC);
+    when(ventSummaryService.getSummariesForVents(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(ventReportSummaryService.getVentReportSummaryCards(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.of(emissionsChartData));
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(4);
-
-    assertSummaryItem(summaryItems.get(0), VENTS_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), VENT_REPORT_ITEM, 1);
-    assertSummaryItem(summaryItems.get(2), VENT_REPORT_GAS_PROPERTIES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(3), consentLengthType.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    if (ConsentLengthType.SHORT_TERM.equals(consentLengthType)) {
-      verify(ventShortTermService, times(1)).getVentShortTermSummaryCard(applicationVersion);
-      verifyNoInteractions(ventAnnualService);
-    } else {
-      verify(ventAnnualService, times(1)).getVentAnnualSummaryCard(applicationVersion);
-      verifyNoInteractions(ventShortTermService);
-    }
-
-    verify(ventSummaryService, times(1)).getSummariesForVents(applicationVersion);
-    verify(ventReportService, times(1)).getVentReportSummaryCards(applicationVersion);
-    verify(ventReportGasDataService, times(1)).getVentReportGasDataSummaryCards(applicationVersion);
-
-    verifyNo123Interactions();
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(VENT_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(VENTS_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(VENT_REPORT_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(VENT_REPORT_GAS_PROPERTIES_ITEM, expectedSummaryCard),
+            SummaryItem.withCards(consentLengthType.getDisplayName(), List.of(
+                SummaryCard.stackedBarChartSummaryCard(emissionsChartData),
+                expectedSummaryCard
+            ))
+        )));
   }
 
   @Test
@@ -188,30 +174,15 @@ class VentInformationSummarySectionServiceTest {
     var expectedSummaryCard = SummaryCard.emptySummaryCard();
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(ventShortTerm123SummaryService.getVentShortTerm123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_123);
+    when(ventShortTerm123SummaryService.getVentShortTerm123SummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.empty());
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(1);
-
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(ventShortTerm123SummaryService, times(1))
-        .getVentShortTerm123SummaryCard(applicationVersion);
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(VENT_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(ConsentLengthType.SHORT_TERM.getDisplayName(), expectedSummaryCard)
+        )));
 
     verifyNoInteractions(ventSummaryService);
     verifyNoInteractions(ventAnnual123SummaryService);
@@ -225,44 +196,21 @@ class VentInformationSummarySectionServiceTest {
     var expectedSummaryCard = SummaryCard.emptySummaryCard();
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(ventSummaryService.getSummariesForVents(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(ventReport123SummaryService.getVentReport123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
-    when(ventReport123GasDataSummaryService.getVentReport123GasDataSummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
-    when(ventAnnual123SummaryService.getVentAnnual123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_123);
+    when(ventSummaryService.getSummariesForVents(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(ventReport123SummaryService.getVentReport123SummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(ventReport123GasDataSummaryService.getVentReport123GasDataSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(ventAnnual123SummaryService.getVentAnnual123SummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.empty());
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(4);
-
-    assertSummaryItem(summaryItems.get(0), VENTS_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), VENT_REPORT_ITEM, 1);
-    assertSummaryItem(summaryItems.get(2), VENT_REPORT_GAS_PROPERTIES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(3), ConsentLengthType.ANNUAL.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(ventSummaryService, times(1)).getSummariesForVents(applicationVersion);
-    verify(ventReport123SummaryService, times(1))
-        .getVentReport123SummaryCard(applicationVersion);
-    verify(ventReport123GasDataSummaryService, times(1))
-        .getVentReport123GasDataSummaryCard(applicationVersion);
-    verify(ventAnnual123SummaryService, times(1))
-        .getVentAnnual123SummaryCard(applicationVersion);
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(VENT_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(VENTS_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(VENT_REPORT_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(VENT_REPORT_GAS_PROPERTIES_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(ConsentLengthType.ANNUAL.getDisplayName(), expectedSummaryCard)
+        )));
 
     verifyNoInteractions(ventShortTerm123SummaryService);
     verifyNoABCInteractions();
@@ -278,7 +226,6 @@ class VentInformationSummarySectionServiceTest {
   private void verifyNoABCInteractions() {
     verifyNoInteractions(ventShortTermService);
     verifyNoInteractions(ventAnnualService);
-    verifyNoInteractions(ventReportService);
     verifyNoInteractions(ventReportGasDataService);
   }
 
@@ -288,30 +235,15 @@ class VentInformationSummarySectionServiceTest {
     var expectedSummaryCard = SummaryCard.emptySummaryCard();
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(emissionCategoryType);
-    when(ventLongTermSummaryService.getVentLongTermSummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(emissionCategoryType);
+    when(ventLongTermSummaryService.getVentLongTermSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.empty());
 
-    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(1);
-
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(ventLongTermSummaryService, times(1))
-        .getVentLongTermSummaryCard(applicationVersion);
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(VENT_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(ConsentLengthType.LONG_TERM.getDisplayName(), expectedSummaryCard)
+        )));
 
     verifyNoInteractions(ventSummaryService);
     verifyNo123Interactions();

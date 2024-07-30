@@ -66,6 +66,10 @@ public class DateUtils {
     return formatShort(month) + " " + year;
   }
 
+  public static String formatShort(YearMonth yearMonth) {
+    return formatShort(yearMonth.getMonth(), yearMonth.getYear());
+  }
+
   public static Map<String, String> monthsMap() {
     return Arrays.stream(Month.values())
         .collect(StreamUtils.toLinkedHashMap(Enum::name, DateUtils::formatFull));

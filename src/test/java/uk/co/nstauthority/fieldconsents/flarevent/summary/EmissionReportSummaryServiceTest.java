@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.flarevent.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryTestUtil.getCategoryATotal;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryTestUtil.getCategoryBTotal;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryTestUtil.getCategoryCTotal;
@@ -19,15 +20,20 @@ import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.big
 import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualTestUtil;
@@ -47,8 +53,23 @@ import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 @ExtendWith(MockitoExtension.class)
 class EmissionReportSummaryServiceTest {
 
+  @Mock
+  private EmissionsChartDataService emissionsChartDataService;
+
   @InjectMocks
   private EmissionReportSummaryService emissionReportSummaryService;
+
+  private final EmissionsChartData emissionsChartData = new EmissionsChartData(
+      "Example chart title",
+      List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
+      "Month",
+      "Days in month",
+      List.of(new EmissionsChartData.Series(
+          "Days",
+          "highcharts-colour-blue",
+          List.of(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+      ))
+  );
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, mode = EnumSource.Mode.EXCLUDE, names = {"PRODUCTION"})
@@ -182,6 +203,25 @@ class EmissionReportSummaryServiceTest {
         emissionReportSummaryService.getReportTableSummaryCard(flareAnnualMonths, categoryUnit, averageUnit))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("Unexpected report month class: " + flareAnnualMonths.get(0).getClass().getName());
+  }
+
+  @Test
+  void getEmissionsReportChartSummaryCard() {
+    var applicationVersion = new ApplicationVersion();
+
+    when(emissionsChartDataService.getReportChartData(applicationVersion)).thenReturn(Optional.of(emissionsChartData));
+
+    assertThat(emissionReportSummaryService.getEmissionsReportChartSummaryCard(applicationVersion))
+        .contains(SummaryCard.stackedBarChartSummaryCard(emissionsChartData));
+  }
+
+  @Test
+  void getEmissionsReportChartSummaryCard_noChartData() {
+    var applicationVersion = new ApplicationVersion();
+
+    when(emissionsChartDataService.getReportChartData(applicationVersion)).thenReturn(Optional.empty());
+
+    assertThat(emissionReportSummaryService.getEmissionsReportChartSummaryCard(applicationVersion)).isEmpty();
   }
 
   private SummaryTableRow getSummaryTableRowHeading(FlareVentUnit categoryUnit) {

@@ -2,14 +2,11 @@ package uk.co.nstauthority.fieldconsents.application.summary.flare;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType.SHORT_TERM;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
 
 import java.util.List;
@@ -32,19 +29,22 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.annual.FlareAnnual123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereport.FlareReport123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereportgas.FlareReport123GasDataSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.shortterm.FlareShortTerm123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.longterm.FlareLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
+import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
 class FlareInformationSummarySectionServiceTest {
@@ -75,9 +75,6 @@ class FlareInformationSummarySectionServiceTest {
   private FlareSummaryService flareSummaryService;
 
   @Mock
-  private FlareReportService flareReportService;
-
-  @Mock
   private FlareReportGasDataService flareReportGasDataService;
 
   @Mock
@@ -95,10 +92,28 @@ class FlareInformationSummarySectionServiceTest {
   @Mock
   private FlareLongTermSummaryService flareLongTermSummaryService;
 
+  @Mock
+  private EmissionsChartDataService emissionsChartDataService;
+
+  @Mock
+  private FlareReportSummaryService flareReportSummaryService;
+
   @InjectMocks
   private FlareInformationSummarySectionService flareInformationSummarySectionService;
 
-  ApplicationVersion applicationVersion;
+  private ApplicationVersion applicationVersion;
+
+  private final EmissionsChartData emissionsChartData = new EmissionsChartData(
+      "Example chart title",
+      List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
+      "Month",
+      "Days in month",
+      List.of(new EmissionsChartData.Series(
+          "Days",
+          "highcharts-colour-blue",
+          List.of(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+      ))
+  );
 
   @BeforeEach
   void setUp() {
@@ -133,53 +148,35 @@ class FlareInformationSummarySectionServiceTest {
 
     if (ConsentLengthType.SHORT_TERM.equals(consentLengthType)) {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
-      when(flareShortTermService.getFlareShortTermSummaryCard(applicationVersion))
-          .thenReturn(expectedSummaryCard);
+      when(flareShortTermService.getFlareShortTermSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
     } else {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
-      when(flareAnnualService.getFlareAnnualSummaryCard(applicationVersion))
-          .thenReturn(expectedSummaryCard);
+      when(flareAnnualService.getFlareAnnualSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
     }
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_ABC);
-    when(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(flareReportService.getFlareReportSummaryCards(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_ABC);
+    when(flareSummaryService.getSummariesForFlares(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(flareReportSummaryService.getFlareReportSummaryCards(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.of(emissionsChartData));
 
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(4);
-
-    assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), FLARE_REPORT_ITEM, 1);
-    assertSummaryItem(summaryItems.get(2), FLARE_REPORT_GAS_PROPERTIES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(3), consentLengthType.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
+    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(FLARE_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(FLARES_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(FLARE_REPORT_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(FLARE_REPORT_GAS_PROPERTIES_ITEM, expectedSummaryCard),
+            SummaryItem.withCards(consentLengthType.getDisplayName(), List.of(
+                SummaryCard.stackedBarChartSummaryCard(emissionsChartData),
+                expectedSummaryCard
+            ))
+        )));
 
     if (SHORT_TERM.equals(consentLengthType)) {
-      verify(flareShortTermService, times(1)).getFlareShortTermSummaryCard(applicationVersion);
       verifyNoInteractions(flareAnnualService);
     } else {
-      verify(flareAnnualService, times(1)).getFlareAnnualSummaryCard(applicationVersion);
       verifyNoInteractions(flareShortTermService);
     }
-
-    verify(flareSummaryService, times(1)).getSummariesForFlares(applicationVersion);
-    verify(flareReportService, times(1)).getFlareReportSummaryCards(applicationVersion);
-    verify(flareReportGasDataService, times(1)).getFlareReportGasDataSummaryCards(applicationVersion);
 
     verifyNoInteractions(flareReport123SummaryService);
     verifyNoInteractions(flareReport123GasDataSummaryService);
@@ -189,15 +186,13 @@ class FlareInformationSummarySectionServiceTest {
 
   @Test
   void getSummarySection_shortTerm_cat123() {
-    var expectedSummaryCard = SummaryCard.emptySummaryCard();
+    var tableSummaryCard = mock(SummaryCard.class);
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_123);
+    when(flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion)).thenReturn(tableSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.empty());
 
     var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
 
@@ -206,16 +201,7 @@ class FlareInformationSummarySectionServiceTest {
     assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
 
     var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(1);
-
-    assertSummaryItem(summaryItems.get(0), SHORT_TERM.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(flareShortTerm123SummaryService, times(1))
-        .getFlareShortTerm123SummaryCard(applicationVersion);
+    assertThat(summaryItems).contains(SummaryItem.withCard(SHORT_TERM.getDisplayName(), tableSummaryCard));
 
     verifyNoInteractions(flareSummaryService);
     verifyNoInteractions(flareAnnual123SummaryService);
@@ -229,44 +215,21 @@ class FlareInformationSummarySectionServiceTest {
     var expectedSummaryCard = SummaryCard.emptySummaryCard();
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
-    when(flareReport123SummaryService.getFlareReport123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
-    when(flareReport123GasDataSummaryService.getFlareReport123GasDataSummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
-    when(flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_123);
+    when(flareSummaryService.getSummariesForFlares(applicationVersion)).thenReturn(List.of(expectedSummaryCard));
+    when(flareReport123SummaryService.getFlareReport123SummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(flareReport123GasDataSummaryService.getFlareReport123GasDataSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.empty());
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(4);
-
-    assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), FLARE_REPORT_ITEM, 1);
-    assertSummaryItem(summaryItems.get(2), FLARE_REPORT_GAS_PROPERTIES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(3), ConsentLengthType.ANNUAL.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(flareSummaryService, times(1)).getSummariesForFlares(applicationVersion);
-    verify(flareReport123SummaryService, times(1))
-        .getFlareReport123SummaryCard(applicationVersion);
-    verify(flareReport123GasDataSummaryService, times(1))
-        .getFlareReport123GasDataSummaryCard(applicationVersion);
-    verify(flareAnnual123SummaryService, times(1))
-        .getFlareAnnual123SummaryCard(applicationVersion);
+    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(FLARE_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCard(FLARES_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(FLARE_REPORT_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(FLARE_REPORT_GAS_PROPERTIES_ITEM, expectedSummaryCard),
+            SummaryItem.withCard(ConsentLengthType.ANNUAL.getDisplayName(), expectedSummaryCard)
+        )));
 
     verifyNoInteractions(flareShortTerm123SummaryService);
     verifyNoABCInteractions();
@@ -282,7 +245,6 @@ class FlareInformationSummarySectionServiceTest {
   private void verifyNoABCInteractions() {
     verifyNoInteractions(flareShortTermService);
     verifyNoInteractions(flareAnnualService);
-    verifyNoInteractions(flareReportService);
     verifyNoInteractions(flareReportGasDataService);
   }
 
@@ -292,30 +254,18 @@ class FlareInformationSummarySectionServiceTest {
     var expectedSummaryCard = SummaryCard.emptySummaryCard();
     var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(consentLengthDetails));
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
-        .thenReturn(emissionCategoryType);
-    when(flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion))
-        .thenReturn(expectedSummaryCard);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(emissionCategoryType);
+    when(flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion)).thenReturn(expectedSummaryCard);
+    when(emissionsChartDataService.getConsentChartData(applicationVersion)).thenReturn(Optional.of(emissionsChartData));
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion, USER);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(1);
-
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 1);
-
-    for (SummaryItem summaryItem : summaryItems) {
-      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
-    }
-
-    verify(flareLongTermSummaryService, times(1))
-        .getFlareLongTermSummaryCard(applicationVersion);
+    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion, USER))
+        .contains(new SummarySection(FLARE_INFORMATION_DISPLAY_ORDER, List.of(
+            SummaryItem.withCards(ConsentLengthType.LONG_TERM.getDisplayName(), List.of(
+                SummaryCard.stackedBarChartSummaryCard(emissionsChartData),
+                expectedSummaryCard
+            ))
+        )));
 
     verifyNoInteractions(flareSummaryService);
     verifyNo123Interactions();

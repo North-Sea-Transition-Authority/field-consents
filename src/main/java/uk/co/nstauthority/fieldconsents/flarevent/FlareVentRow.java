@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import java.math.BigDecimal;
 import java.time.Month;
+import java.time.YearMonth;
 import java.util.NoSuchElementException;
 import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -115,4 +116,9 @@ public class FlareVentRow {
         .orElseThrow(NoSuchElementException::new);
     this.comments = form.getComments().getInputValue();
   }
+
+  public YearMonth getYearMonth() {
+    return YearMonth.of(year, month);
+  }
+
 }

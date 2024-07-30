@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.summary;
 
 import java.math.BigDecimal;
 import java.util.List;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
 
 public class SummaryTestUtil {
 
@@ -32,4 +33,9 @@ public class SummaryTestUtil {
   public static SummaryCard getSimpleSummaryCard() {
     return SummaryCard.simpleSummaryCard(new SummaryDataView(summaryKeyValues));
   }
+
+  public static SummaryCard getStackedBarChartSummaryCard(EmissionsChartData emissionsChartData) {
+    return SummaryCard.stackedBarChartSummaryCard(emissionsChartData);
+  }
+
 }
