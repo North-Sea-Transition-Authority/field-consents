@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.List;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldFormatter;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
@@ -25,10 +26,12 @@ public class FieldConsentsDocumentTemplateSectionViewService {
   public List<DocumentTemplateSectionSummaryView> getTopLevelDocumentTemplateSectionSummaryViews(
       DocumentTemplateDto documentTemplateDto
   ) {
-    return documentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(
+    return documentTemplateSectionViewService.getDocumentTemplateSectionsSummaryView(
         documentTemplateDto,
-        this::getDocumentTemplateSectionUrls
-    );
+        this::getDocumentTemplateSectionUrls,
+        DocumentMailMergeFieldFormatter.noOp() // TODO: FCS-901
+    )
+        .topLevelDocumentTemplateSectionSummaryViews();
   }
 
   private DocumentTemplateSectionUrls getDocumentTemplateSectionUrls(DocumentTemplateSectionDto documentTemplateSectionDto) {

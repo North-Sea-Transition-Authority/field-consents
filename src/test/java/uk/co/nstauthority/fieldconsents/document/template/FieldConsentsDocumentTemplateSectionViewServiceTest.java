@@ -2,10 +2,12 @@ package uk.co.nstauthority.fieldconsents.document.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,10 +16,12 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldFormatter;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionUrls;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionViewService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionsSummaryView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +40,8 @@ class FieldConsentsDocumentTemplateSectionViewServiceTest {
   void getTopLevelDocumentTemplateSectionSummaryViews() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
+    var documentTemplateSectionsSummaryView = mock(DocumentTemplateSectionsSummaryView.class);
+
     var topLevelDocumentTemplateSectionSummaryViews = List.of(
         new DocumentTemplateSectionSummaryView(
             "1",
@@ -43,17 +49,22 @@ class FieldConsentsDocumentTemplateSectionViewServiceTest {
             "Test content",
             "TEST_CONDITION_TITLE",
             false,
+            List.of(),
+            Map.of(),
             DocumentTemplateSectionUrlsTestUtil.newBuilder().build(),
             List.of()
         )
     );
 
+    when(documentTemplateSectionsSummaryView.topLevelDocumentTemplateSectionSummaryViews()).thenReturn(topLevelDocumentTemplateSectionSummaryViews);
+
     when(
-        documentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(
+        documentTemplateSectionViewService.getDocumentTemplateSectionsSummaryView(
             eq(documentTemplateDto),
-            urlsFunctionCaptor.capture()
+            urlsFunctionCaptor.capture(),
+            eq(DocumentMailMergeFieldFormatter.noOp())
         )
-    ).thenReturn(topLevelDocumentTemplateSectionSummaryViews);
+    ).thenReturn(documentTemplateSectionsSummaryView);
 
     assertThat(
         fieldConsentsDocumentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto)

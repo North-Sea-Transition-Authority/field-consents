@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -97,6 +98,8 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
             "Test content 1",
             "TEST_CONDITION_TITLE_1",
             false,
+            List.of(),
+            Map.of(),
             DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build(),
             List.of()
         ),
@@ -106,6 +109,8 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
             "Test content 2",
             "TEST_CONDITION_TITLE_2",
             false,
+            List.of(),
+            Map.of(),
             DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build(),
             List.of()
         )
