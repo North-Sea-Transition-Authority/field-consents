@@ -8,6 +8,7 @@
 <#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
 <#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
 <#import '_withdrawalRequestedBanner.ftl' as withdrawalRequestedBanner/>
+<#import '_consentBreachedBanner.ftl' as consentBreachedBanner/>
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
@@ -16,6 +17,7 @@
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
   <@withdrawalRequestedBanner.withdrawalRequestedBanner openWithdrawal=openWithdrawal/>
+  <@consentBreachedBanner.consentBreachedBanner consentBreached=isConsentBreached/>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>

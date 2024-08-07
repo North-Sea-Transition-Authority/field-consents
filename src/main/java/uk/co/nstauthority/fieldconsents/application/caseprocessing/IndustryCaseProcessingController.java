@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
@@ -67,6 +68,7 @@ public class IndustryCaseProcessingController {
   private final ConsentTabService consentTabService;
   private final ConsentService consentService;
   private final ApplicationWithdrawalService applicationWithdrawalService;
+  private final ConsentBreachService consentBreachService;
 
   @Autowired
   IndustryCaseProcessingController(
@@ -81,7 +83,8 @@ public class IndustryCaseProcessingController {
       PaymentsTabService paymentsTabService,
       ConsentTabService consentTabService,
       ConsentService consentService,
-      ApplicationWithdrawalService applicationWithdrawalService
+      ApplicationWithdrawalService applicationWithdrawalService,
+      ConsentBreachService consentBreachService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -95,6 +98,7 @@ public class IndustryCaseProcessingController {
     this.consentTabService = consentTabService;
     this.consentService = consentService;
     this.applicationWithdrawalService = applicationWithdrawalService;
+    this.consentBreachService = consentBreachService;
   }
 
   @GetMapping("industry-case-processing")
@@ -129,7 +133,8 @@ public class IndustryCaseProcessingController {
         .addObject("pageTitle", applicationService.generateApplicationReference(latestApplicationVersion))
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
         .addObject("openWithdrawal", applicationWithdrawalService
-            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent());
+            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent())
+        .addObject("isConsentBreached", consentBreachService.findConsentBreachByApplication(application).isPresent());
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {

@@ -34,7 +34,8 @@ public record ApplicationDataItemView(
     Boolean consultationFurtherInformationOpen,
     String licenses,
     Boolean approvedForIssue,
-    ConsentStatus consentStatus
+    ConsentStatus consentStatus,
+    Boolean consentBreachOpen
 ) {
 
   public static Builder newBuilder() {
@@ -69,6 +70,7 @@ public record ApplicationDataItemView(
     private String licenses;
     private Boolean approvedForIssue;
     private ConsentStatus consentStatus;
+    private Boolean consentBreachOpen;
 
     private Builder() {
     }
@@ -206,6 +208,11 @@ public record ApplicationDataItemView(
       return this;
     }
 
+    public Builder withHasConsentBreach(boolean consentBreachOpen) {
+      this.consentBreachOpen = consentBreachOpen;
+      return this;
+    }
+
     public ApplicationDataItemView build() {
       return new ApplicationDataItemView(
           applicationId,
@@ -233,7 +240,8 @@ public record ApplicationDataItemView(
           consultationFurtherInformationOpen,
           licenses,
           approvedForIssue,
-          consentStatus
+          consentStatus,
+          consentBreachOpen
       );
     }
   }

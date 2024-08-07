@@ -47,6 +47,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -78,6 +79,9 @@ class ApplicationDataItemDtoServiceTest {
 
   @Mock
   private ApplicationDataItemViewQueryService applicationDataItemQueryService;
+
+  @Mock
+  private ConsentBreachService consentBreachService;
 
   private ApplicationDataItemDtoService applicationDataItemDtoService;
 
@@ -410,7 +414,8 @@ class ApplicationDataItemDtoServiceTest {
         null,
         "P1, P2, P3",
         null,
-        null
+        null,
+        false
     );
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(

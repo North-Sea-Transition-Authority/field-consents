@@ -43,4 +43,8 @@ public enum CaseStatusFlag {
   // Withdrawal
   WITHDRAWAL_OPEN,
   WITHDRAWAL_NOT_OPEN,
+
+  // Breaches
+  BREACH_INFORMATION_EXISTS,
+  BREACH_INFORMATION_DOES_NOT_EXIST,
 }

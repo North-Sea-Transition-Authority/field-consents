@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
@@ -84,6 +85,7 @@ public class ApplicationCaseProcessingController {
   private final ConsentTabService consentTabService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final ConsentService consentService;
+  private final ConsentBreachService consentBreachService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -103,7 +105,8 @@ public class ApplicationCaseProcessingController {
       PaymentsTabService paymentsTabService,
       ConsentTabService consentTabService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
-      ConsentService consentService
+      ConsentService consentService,
+      ConsentBreachService consentBreachService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -122,6 +125,7 @@ public class ApplicationCaseProcessingController {
     this.consentTabService = consentTabService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.consentService = consentService;
+    this.consentBreachService = consentBreachService;
   }
 
   @GetMapping("case-processing")
@@ -157,8 +161,10 @@ public class ApplicationCaseProcessingController {
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", pageTitle)
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application))
-        .addObject("openWithdrawal", applicationWithdrawalService
-            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent());
+        .addObject("openWithdrawal",  applicationWithdrawalService
+            .findOpenApplicationWithdrawal(latestApplicationVersion).isPresent())
+        .addObject("isConsentBreached", consentBreachService
+            .findConsentBreachByApplication(application).isPresent());
 
     if (ApplicationVersionStatus.SUBMITTED.equals(latestApplicationVersion.getStatus())) {
       modelAndView.addObject("consentIssuingApprovalSummaryView",

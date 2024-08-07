@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeatur
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.BREACH_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
@@ -22,6 +23,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_BREACH_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
@@ -29,7 +31,9 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RECORD_BREACH;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REMOVE_BREACH;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REVISE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
@@ -39,6 +43,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.BREACH_INFORMATION_DOES_NOT_EXIST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.BREACH_INFORMATION_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
@@ -175,7 +181,11 @@ public class CaseProcessingActionService {
               CONSULTATIONS,
               APPLICATION_UPDATES,
               REGULATOR_ADD_CASE_NOTE,
-              REVISE_CONSENT
+              REVISE_CONSENT,
+              BREACH_INFORMATION,
+              RECORD_BREACH,
+              REMOVE_BREACH,
+              EDIT_BREACH_INFORMATION
           ),
           ApplicationVersionStatus.WITHDRAWN,
           EnumSet.of(
@@ -214,6 +224,10 @@ public class CaseProcessingActionService {
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(REVISE_CONSENT, EnumSet.of(EDIT_FCS_APPLICATIONS, PROCESS_FCS_APPLICATIONS)),
+          entry(BREACH_INFORMATION, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
+          entry(RECORD_BREACH, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(REMOVE_BREACH, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(EDIT_BREACH_INFORMATION, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
@@ -279,7 +293,10 @@ public class CaseProcessingActionService {
               MAIL_MERGE_ERROR_NOT_PRESENT
           )),
           entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_APPROVED_FOR_ISSUE)),
-          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
+          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED)),
+          entry(RECORD_BREACH, EnumSet.of(BREACH_INFORMATION_DOES_NOT_EXIST)),
+          entry(REMOVE_BREACH, EnumSet.of(BREACH_INFORMATION_EXISTS)),
+          entry(EDIT_BREACH_INFORMATION, EnumSet.of(BREACH_INFORMATION_EXISTS))
       );
 
   private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =
@@ -320,7 +337,8 @@ public class CaseProcessingActionService {
           CONSENT_ISSUING, CASE_TASKS,
           CHANGE_ACE_STATUS, OPTIONAL_CASE_TASKS,
           APPLICATION_UPDATES, OPTIONAL_CASE_TASKS,
-          REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS
+          REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS,
+          BREACH_INFORMATION, OPTIONAL_CASE_TASKS
       );
 
   // If an action is here it will be displayed only within an action group
@@ -338,7 +356,10 @@ public class CaseProcessingActionService {
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
           entry(ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
-          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING))
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
+          entry(RECORD_BREACH, EnumSet.of(CaseProcessingActionGroup.BREACH_INFORMATION)),
+          entry(REMOVE_BREACH, EnumSet.of(CaseProcessingActionGroup.BREACH_INFORMATION)),
+          entry(EDIT_BREACH_INFORMATION, EnumSet.of(CaseProcessingActionGroup.BREACH_INFORMATION_CARD))
       );
 
   CaseProcessingActionService(

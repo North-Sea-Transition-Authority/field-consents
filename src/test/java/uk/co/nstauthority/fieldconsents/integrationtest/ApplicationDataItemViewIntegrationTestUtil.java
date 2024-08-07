@@ -164,7 +164,8 @@ public class ApplicationDataItemViewIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
-        .withConsentStatus(null);
+        .withConsentStatus(null)
+        .withHasConsentBreach(false);
   }
 
   public static ApplicationDataItemView.Builder getCompleteApplicationDataItemForWorkAreaIndustryBuilder() {
@@ -193,7 +194,8 @@ public class ApplicationDataItemViewIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(null)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(null)
-        .withConsentStatus(null);
+        .withConsentStatus(null)
+        .withHasConsentBreach(false);
   }
 
   public static String getConsentDurationString(ConsentLengthType consentLengthType) {

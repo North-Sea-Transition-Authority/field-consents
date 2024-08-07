@@ -7,6 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFl
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
@@ -79,6 +80,18 @@ public enum CaseProcessingActionItem implements Displayable {
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),
+  BREACH_INFORMATION("Breach information", 100, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentBreachController.class)
+          .breachInformation(applicationId, null))),
+  RECORD_BREACH("Record breach", 1, false, true, null,
+      applicationId -> ReverseRouter.route(on(ConsentBreachController.class)
+          .getConsentBreachForm(applicationId))),
+  REMOVE_BREACH("Remove breach", 1, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentBreachController.class)
+          .getDeleteBreachConfirmation(applicationId))),
+  EDIT_BREACH_INFORMATION("Edit", 1, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentBreachController.class)
+          .getConsentBreachForm(applicationId))),
   // Technical reviewer actions
   TECHNICAL_REVIEWER_SUBMIT_REVIEW("Submit technical review", 1, true, true, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewResponseController.class).getForm(applicationId, null))),

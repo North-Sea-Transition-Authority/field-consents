@@ -54,6 +54,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Conse
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreach;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
@@ -102,6 +104,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE = "consentIssuingApprovalSummaryView";
   private static final String IS_MIGRATED_APPLICATION_ATTRIBUTE = "isMigratedApplication";
   private static final String OPEN_WITHDRAWAL_ATTRIBUTE = "openWithdrawal";
+  private static final String CONSENT_EXCEEDED_ATTRIBUTE = "isConsentBreached";
 
   @MockBean
   private ApplicationService applicationService;
@@ -147,6 +150,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private ConsentService consentService;
+
+  @MockBean
+  private ConsentBreachService consentBreachService;
 
   private ApplicationVersion applicationVersion;
   private Application application;
@@ -538,6 +544,39 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
+  }
+
+  @Test
+  void caseProcessing_exceededBanner() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall(TASKS);
+
+    var consentBreach = new ConsentBreach();
+    when(consentBreachService.findConsentBreachByApplication(application))
+        .thenReturn(Optional.of(consentBreach));
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null,null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(CONSENT_EXCEEDED_ATTRIBUTE, true));
+  }
+
+  @Test
+  void caseProcessing_noExceededBanner() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall(TASKS);
+
+    when(consentBreachService.findConsentBreachByApplication(application))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute(CONSENT_EXCEEDED_ATTRIBUTE, false));
   }
 
   @Test

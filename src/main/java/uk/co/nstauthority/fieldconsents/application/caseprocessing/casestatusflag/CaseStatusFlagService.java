@@ -6,6 +6,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
@@ -31,6 +32,7 @@ public class CaseStatusFlagService {
   private final FurtherInformationService furtherInformationService;
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
   private final ApplicationRevisionService applicationRevisionService;
+  private final ConsentBreachService consentBreachService;
 
   CaseStatusFlagService(
       ApplicationService applicationService,
@@ -44,8 +46,8 @@ public class CaseStatusFlagService {
       ConsentService consentService,
       FurtherInformationService furtherInformationService,
       ApplicationDocumentInstanceService applicationDocumentInstanceService,
-      ApplicationRevisionService applicationRevisionService
-  ) {
+      ApplicationRevisionService applicationRevisionService,
+      ConsentBreachService consentBreachService) {
     this.applicationService = applicationService;
     this.caseAssignmentService = caseAssignmentService;
     this.applicationWithdrawalService = applicationWithdrawalService;
@@ -58,6 +60,7 @@ public class CaseStatusFlagService {
     this.furtherInformationService = furtherInformationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
     this.applicationRevisionService = applicationRevisionService;
+    this.consentBreachService = consentBreachService;
   }
 
   public boolean isCaseStatusFlagApplicable(ApplicationVersion applicationVersion, CaseStatusFlag caseStatusFlag) {
@@ -110,6 +113,10 @@ public class CaseStatusFlagService {
       // Withdrawal
       case WITHDRAWAL_OPEN -> applicationWithdrawalService.openWithdrawalExists(applicationVersion);
       case WITHDRAWAL_NOT_OPEN -> !applicationWithdrawalService.openWithdrawalExists(applicationVersion);
+
+      // Breaches
+      case BREACH_INFORMATION_EXISTS -> consentBreachService.consentBreachExists(application);
+      case BREACH_INFORMATION_DOES_NOT_EXIST -> !consentBreachService.consentBreachExists(application);
     };
   }
 

@@ -47,6 +47,7 @@ public record ApplicationDataItemDto(
     LocalDate consentStartDate,
     LocalDate consentEndDate,
     Boolean consentIssued,
-    Boolean consentSuperseded
+    Boolean consentSuperseded,
+    Boolean consentBreached
 ) {
 }

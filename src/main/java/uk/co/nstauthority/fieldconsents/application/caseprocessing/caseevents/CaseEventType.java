@@ -37,7 +37,9 @@ public enum CaseEventType {
   CASE_OFFICER_REASSIGNED("Case officer reassigned", "Assigned by", "Assigned on", null, "Case officer"),
   CAM_REASSIGNED("CAM reassigned", "Assigned by", "Assigned on", null, "CAM"),
   APPROVED_FOR_ISSUE("Marked as ready to grant and issue", "Marked by", "Marked on", null, null),
-  UNAPPROVED_FOR_ISSUE("Unmarked as ready to grant and issue", "Unmarked by", "Unmarked on", null, null)
+  UNAPPROVED_FOR_ISSUE("Unmarked as ready to grant and issue", "Unmarked by", "Unmarked on", null, null),
+  BREACH_RECORDED("Consent breach recorded", "Recorded by", "Recorded on", null, null),
+  BREACH_REMOVED("Consent breach removed", "Removed by", "Removed on", null, null)
   ;
 
   private final String caseEventHeader;

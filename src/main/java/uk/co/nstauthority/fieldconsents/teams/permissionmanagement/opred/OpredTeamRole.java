@@ -48,7 +48,7 @@ public enum OpredTeamRole implements TeamRole {
     this.displayOrder = displayOrder;
     this.rolePermissions = rolePermissions;
   }
-  
+
   @Override
   public String getDescription() {
     return description;

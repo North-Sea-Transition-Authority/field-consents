@@ -63,7 +63,7 @@ public class ApplicationDataItemDtoService {
   }
 
   public List<OrganisationUnitJson> getOrganisationUnitJsonsFromApplicationDataItemDtos(
-      List<? extends ApplicationDataItemDto> applicationDataItemDtos) {
+      List<ApplicationDataItemDto> applicationDataItemDtos) {
     return organisationUnitService.getOrganisationUnitsByIds(
         applicationDataItemDtos
             .stream()
@@ -73,7 +73,7 @@ public class ApplicationDataItemDtoService {
   }
 
   Map<Integer, FieldJson> getFieldJsonMapFromApplicationDataItemDtos(
-      Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
+      Collection<ApplicationDataItemDto> applicationDataItemDtos
   ) {
     var fieldJsons = fieldService.findFieldsByIds(applicationDataItemDtos
         .stream()
@@ -91,7 +91,7 @@ public class ApplicationDataItemDtoService {
   }
 
   Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
-      Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
+      Collection<ApplicationDataItemDto> applicationDataItemDtos
   ) {
 
     var wuaIds = applicationDataItemDtos
@@ -291,7 +291,8 @@ public class ApplicationDataItemDtoService {
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
         .withLicences(getLicences(dataItemDto))
         .withApprovedForIssue(approvedForIssue)
-        .withConsentStatus(getConsentStatus(dataItemDto));
+        .withConsentStatus(getConsentStatus(dataItemDto))
+        .withHasConsentBreach(dataItemDto.consentBreached());
 
     removeTagsForTeamType(teamType, builder);
 

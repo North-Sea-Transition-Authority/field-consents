@@ -3,31 +3,35 @@
 <#macro applicationResultListItem dataItem>
   <#assign tagContent>
     <#if dataItem.withdrawalOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Withdrawal requested"/>
       <br/>
     </#if>
     <#if dataItem.applicationUpdateOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
       <br/>
     </#if>
     <#if dataItem.technicalReviewOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Technical review due by ${dataItem.technicalReviewDeadline()}"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Technical review due by ${dataItem.technicalReviewDeadline()}"/>
       <br/>
     </#if>
     <#if dataItem.consultationFurtherInformationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Further information requested"/>
       <br/>
     </#if>
     <#if dataItem.consultationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
       <br/>
     </#if>
     <#if dataItem.approvedForIssue()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Ready to grant and issue"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Ready to grant and issue"/>
       <br/>
     </#if>
     <#if dataItem.consentStatus()?has_content>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="${dataItem.consentStatus().getDisplayName()}"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="${dataItem.consentStatus().getDisplayName()}"/>
+      <br/>
+    </#if>
+    <#if dataItem.consentBreachOpen()!false>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--red" tagText="Consent exceeded"/>
       <br/>
     </#if>
   </#assign>

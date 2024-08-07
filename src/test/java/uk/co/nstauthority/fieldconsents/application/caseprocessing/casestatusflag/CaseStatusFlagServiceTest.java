@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.breaches.ConsentBreachService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
@@ -60,6 +61,9 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private ConsentService consentService;
+
+  @Mock
+  private ConsentBreachService consentBreachService;
 
   @Mock
   private FurtherInformationService furtherInformationService;
@@ -336,6 +340,25 @@ class CaseStatusFlagServiceTest {
     when(applicationWithdrawalService.openWithdrawalExists(applicationVersion)).thenReturn(withdrawalOpen);
 
     assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.WITHDRAWAL_NOT_OPEN))
+        .isEqualTo(!withdrawalOpen);
+  }
+
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_BREACH_INFORMATION_EXISTS(boolean withdrawalOpen) {
+    when(consentBreachService.consentBreachExists(application)).thenReturn(withdrawalOpen);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.BREACH_INFORMATION_EXISTS))
+        .isEqualTo(withdrawalOpen);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_BREACH_INFORMATION_DOES_NOT_EXIST(boolean withdrawalOpen) {
+    when(consentBreachService.consentBreachExists(application)).thenReturn(withdrawalOpen);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.BREACH_INFORMATION_DOES_NOT_EXIST))
         .isEqualTo(!withdrawalOpen);
   }
 

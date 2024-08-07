@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationType.VENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.BREACH_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
@@ -32,9 +33,11 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_BREACH_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RECORD_BREACH;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
@@ -47,6 +50,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REMOVE_BREACH;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
@@ -365,7 +369,7 @@ class CaseProcessingActionServiceTest {
                 .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
-                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, BREACH_INFORMATION)
                 .build()
         ),
         arguments(
@@ -478,7 +482,8 @@ class CaseProcessingActionServiceTest {
         CONSENT_ISSUING,
         CHANGE_ACE_STATUS,
         APPLICATION_UPDATES,
-        REGULATOR_ADD_CASE_NOTE
+        REGULATOR_ADD_CASE_NOTE,
+        BREACH_INFORMATION
     );
 
     var groupedActionItems = Set.of(
@@ -493,7 +498,10 @@ class CaseProcessingActionServiceTest {
         RETURN_TO_CASE_OFFICER,
         APPROVE_FOR_ISSUING,
         ISSUE_CONSENT,
-        UNAPPROVE_FOR_ISSUING
+        UNAPPROVE_FOR_ISSUING,
+        RECORD_BREACH,
+        REMOVE_BREACH,
+        EDIT_BREACH_INFORMATION
     );
 
     var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
@@ -575,7 +583,7 @@ class CaseProcessingActionServiceTest {
     assertThat(caseProcessingActionService.groupActionItemsByTaskListSection(EnumSet.allOf(CaseProcessingActionItem.class)))
         .containsExactlyInAnyOrderEntriesOf(Map.of(
             CaseProcessingTaskListSection.CASE_TASKS, Set.of(TECHNICAL_REVIEWS, CONSULTATIONS, CONSENT_PREPARATION, CONSENT_ISSUING),
-            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, Set.of(CHANGE_ACE_STATUS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, Set.of(CHANGE_ACE_STATUS, BREACH_INFORMATION, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
         ));
   }
 

@@ -166,11 +166,11 @@ public class ConsentService {
     return DateUtils.isBeforeOrEqualTo(LocalDate.now(clock), consentEndDate);
   }
 
-  Optional<Consent> findConsent(Application application) {
+  public Optional<Consent> findConsent(Application application) {
     return consentRepository.findByApplicationId(application.getId());
   }
 
-  Consent getConsent(Application application) {
+  public Consent getConsent(Application application) {
     return findConsent(application)
         .orElseThrow(() -> new IllegalStateException("Unable to find consent for application %d".formatted(application.getId())));
   }
