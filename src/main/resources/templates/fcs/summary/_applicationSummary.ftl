@@ -3,13 +3,17 @@
 <#import '../../fds/utilities/utilities.ftl' as fdsUtil>
 
 <#-- @ftlvariable name="summarySections" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummarySection>" -->
-<#-- @ftlvariable name="availableVersions" type="java.util.Map<String, String>" -->
-<#-- @ftlvariable name="currentVersionNumber" type="String" -->
+<#-- @ftlvariable name="selectedApplicationVersionView" type="uk.co.nstauthority.fieldconsents.application.summary.ApplicationVersionView" -->
+<#-- @ftlvariable name="applicationVersionViews" type="java.util.List<uk.co.nstauthority.fieldconsents.application.summary.ApplicationVersionView>" -->
 
 <#macro applicationSummary accordionId selectedTab="">
-  <#if availableVersions?has_content>
-    <h2 class="govuk-heading-l">Version ${currentVersionNumber}</h2>
-    <@applicationVersions availableVersions=availableVersions currentVersionNumber=currentVersionNumber selectedTab=selectedTab/>
+  <#if applicationVersionViews?has_content && applicationVersionViews?size gt 1>
+    <h2 class="govuk-heading-l">${selectedApplicationVersionView.displayText()}</h2>
+    <@applicationVersions
+      selectedApplicationVersionView=selectedApplicationVersionView
+      applicationVersionViews=applicationVersionViews
+      selectedTab=selectedTab
+    />
   </#if>
   <@fdsAccordion.accordion accordionId="summaryaccordion-${accordionId}">
     <#list summarySections as summarySection>
@@ -23,7 +27,7 @@
   </@fdsAccordion.accordion>
 </#macro>
 
-<#macro applicationVersions availableVersions currentVersionNumber selectedTab>
+<#macro applicationVersions selectedApplicationVersionView applicationVersionViews selectedTab>
   <form method="GET" data-module="fds-html-form">
     <#if selectedTab?has_content>
       <input type="hidden" name="tab" value="${selectedTab.anchor}">
@@ -32,10 +36,12 @@
       <#local id="version-number-selector">
       <div class="govuk-form-group">
         <label class="govuk-label" for="${id}">Select version</label>
-        <select class="govuk-select" name="versionNumber" id="${id}" onchange="this.form.submit()">
-          <#list availableVersions as key,value>
-            <#assign isSelected = currentVersionNumber == key>
-            <option value="${key}" <#if isSelected>selected</#if>>${value}</option>
+        <select class="govuk-select" name="version" id="${id}" onchange="this.form.submit()">
+          <#list applicationVersionViews as applicationVersionView>
+            <#assign isSelected = applicationVersionView.id() == selectedApplicationVersionView.id()>
+            <option value="${applicationVersionView.id()}" <#if isSelected>selected</#if>>
+              ${applicationVersionView.displayText()}
+            </option>
           </#list>
         </select>
       </div>

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
@@ -108,79 +107,6 @@ class ApplicationVersionServiceTest {
     assertThatThrownBy(() -> applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .isInstanceOf(EntityNotFoundException.class)
         .hasMessage("Application version not found for application with id %s".formatted(APPLICATION_ID));
-  }
-
-  @Test
-  void getApplicationVersionByApplicationIdAndVersionNumber_whenApplicationVersionsNotFound() {
-    when(applicationVersionRepository.findAllByApplicationIdAndVersion(APPLICATION_ID, APPLICATION_VERSION_NUMBER))
-        .thenReturn(Collections.emptyList());
-
-    assertThatThrownBy(() -> applicationVersionService.getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, APPLICATION_VERSION_NUMBER))
-        .isInstanceOf(EntityNotFoundException.class)
-        .hasMessage("Application version not found for application with id %s and version number %s".formatted(APPLICATION_ID, APPLICATION_VERSION_NUMBER));
-  }
-
-  @Test
-  void getApplicationVersionByApplicationIdAndVersionNumber_whenOneApplicationVersionButWrongVersionNumber() {
-    when(applicationVersionRepository.findAllByApplicationIdAndVersion(APPLICATION_ID, 2))
-        .thenReturn(Collections.emptyList());
-
-    assertThatThrownBy(() -> applicationVersionService.getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, 2))
-        .isInstanceOf(EntityNotFoundException.class)
-        .hasMessage("Application version not found for application with id %s and version number %s".formatted(APPLICATION_ID, 2));
-  }
-
-  @Test
-  void getApplicationVersionByApplicationIdAndVersionNumber_whenOneApplicationVersionAndDeleted() {
-    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersion2.setVersion(2);
-    applicationVersion2.setStatus(ApplicationVersionStatus.DELETED);
-
-    when(applicationVersionRepository.findAllByApplicationIdAndVersion(APPLICATION_ID, 2))
-        .thenReturn(List.of(applicationVersion2));
-
-    assertThatThrownBy(() -> applicationVersionService.getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, 2))
-        .isInstanceOf(EntityNotFoundException.class)
-        .hasMessage("Application version not found for application with id %s and version number %s".formatted(APPLICATION_ID, 2));
-  }
-
-  @Test
-  void getApplicationVersionByApplicationIdAndVersionNumber_whenMultipleApplicationVersionsAndOneDeleted() {
-    var applicationVersion2Deleted = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersion2Deleted.setVersion(2);
-    applicationVersion2Deleted.setStatus(ApplicationVersionStatus.DELETED);
-    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersion2.setVersion(2);
-
-    when(applicationVersionRepository.findAllByApplicationIdAndVersion(APPLICATION_ID, 2))
-        .thenReturn(List.of(applicationVersion2, applicationVersion2Deleted));
-
-    assertThat(applicationVersionService.getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, 2))
-        .isEqualTo(applicationVersion2);
-  }
-
-  @Test
-  void getSelectedApplicationVersionOrCurrent_nullSuppliedVersionNumber() {
-    assertThat(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, null))
-        .isEqualTo(applicationVersion);
-  }
-
-  @Test
-  void getSelectedApplicationVersionOrCurrent_equalSuppliedVersionNumber() {
-    assertThat(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, applicationVersion.getVersion()))
-        .isEqualTo(applicationVersion);
-  }
-
-  @Test
-  void getSelectedApplicationVersionOrCurrent_differentSuppliedVersionNumber() {
-    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersion2.setVersion(2);
-
-    when(applicationVersionRepository.findAllByApplicationIdAndVersion(APPLICATION_ID, APPLICATION_VERSION_NUMBER))
-        .thenReturn(List.of(applicationVersion));
-
-    assertThat(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion2, applicationVersion.getVersion()))
-        .isEqualTo(applicationVersion);
   }
 
   @Test

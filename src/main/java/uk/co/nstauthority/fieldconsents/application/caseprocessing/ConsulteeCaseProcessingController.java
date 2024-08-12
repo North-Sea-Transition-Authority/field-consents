@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeatur
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 
+import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,6 +57,7 @@ public class ConsulteeCaseProcessingController {
   private final ConsultationService consultationService;
   private final CaseProcessingTabService caseProcessingTabService;
   private final ConsultationSummaryService consultationSummaryService;
+  private final CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
   ConsulteeCaseProcessingController(
       ApplicationService applicationService,
@@ -65,7 +67,8 @@ public class ConsulteeCaseProcessingController {
       CaseProcessingActionService caseProcessingActionService,
       ConsultationService consultationService,
       CaseProcessingTabService caseProcessingTabService,
-      ConsultationSummaryService consultationSummaryService
+      ConsultationSummaryService consultationSummaryService,
+      CaseProcessingControllerHelperService caseProcessingControllerHelperService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -75,20 +78,23 @@ public class ConsulteeCaseProcessingController {
     this.consultationService = consultationService;
     this.caseProcessingTabService = caseProcessingTabService;
     this.consultationSummaryService = consultationSummaryService;
+    this.caseProcessingControllerHelperService = caseProcessingControllerHelperService;
   }
 
   @GetMapping
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(required = false) Integer versionNumber,
+      @RequestParam(value = "version", required = false) Integer requestedApplicationVersionId,
       @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
     var latestApplicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationType = latestApplicationVersion.getApplication().getType();
+    var application = latestApplicationVersion.getApplication();
+    var applicationType = application.getType();
 
-    var selectedApplicationVersion = applicationVersionService
-        .getSelectedApplicationVersionOrCurrent(latestApplicationVersion, versionNumber);
+    var selectedApplicationVersion = Optional.ofNullable(requestedApplicationVersionId)
+        .map(avid -> caseProcessingControllerHelperService.getApplicationVersionForApplication(application, avid))
+        .orElse(latestApplicationVersion);
 
     var caseProcessingTabs = caseProcessingTabService.getConsulteeTabsAvailableToUser(user, latestApplicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {

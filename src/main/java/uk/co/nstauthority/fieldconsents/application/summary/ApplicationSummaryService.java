@@ -4,7 +4,6 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeatur
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,10 +11,8 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
-import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Service
 public class ApplicationSummaryService {
@@ -68,38 +65,21 @@ public class ApplicationSummaryService {
   }
 
   public void addSummarySectionsAndVersionOptionsToModelAndView(
-      ApplicationVersion applicationVersion,
+      ApplicationVersion selectedApplicationVersion,
       ModelAndView modelAndView,
       ServiceUserDetail user
   ) {
-    addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
+    addSummarySectionsToModelAndView(selectedApplicationVersion, modelAndView, user);
 
-    var viewableApplicationVersions = applicationVersionService
-        .getAllNonDeletedApplicationVersionsByApplicationId(applicationVersion.getApplication().getId());
+    var applicationVersionViews = applicationVersionService
+        .getAllNonDeletedApplicationVersionsByApplicationId(selectedApplicationVersion.getApplication().getId())
+        .stream()
+        .sorted(Comparator.comparing(ApplicationVersion::getId).reversed())
+        .map(ApplicationVersionView::from)
+        .toList();
 
-    // if more than one application version available allow user to view previous versions
-    if (viewableApplicationVersions.size() > 1) {
-      modelAndView
-          .addObject("currentVersionNumber", applicationVersion.getVersion())
-          .addObject("availableVersions", getApplicationVersionOptions(viewableApplicationVersions));
-    }
-  }
-
-  private Map<Integer, String> getApplicationVersionOptions(List<ApplicationVersion> applicationVersions) {
-    return applicationVersions.stream()
-        .sorted(Comparator.comparing(ApplicationVersion::getVersion).reversed())
-        .collect(StreamUtils.toLinkedHashMap(
-            ApplicationVersion::getVersion,
-            this::getApplicationVersionDisplayText
-        ));
-  }
-
-  String getApplicationVersionDisplayText(ApplicationVersion applicationVersion) {
-    return "%s: %s".formatted(
-        "Version " + applicationVersion.getVersion(),
-        applicationVersion.getSubmittedDateTime() != null
-            ? DateUtils.format(applicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE)
-            : applicationVersion.getStatus().getDisplayName()
-    );
+    modelAndView
+        .addObject("selectedApplicationVersionView", ApplicationVersionView.from(selectedApplicationVersion))
+        .addObject("applicationVersionViews", applicationVersionViews);
   }
 }

@@ -13,7 +13,7 @@ public class CaseProcessingTabConverter implements Converter<String, CaseProcess
   public CaseProcessingTab convert(String tab) {
     return EnumSet
         .allOf(CaseProcessingTab.class).stream()
-        .filter(caseProcessingTab -> caseProcessingTab.getAnchor().equals(tab))
+        .filter(caseProcessingTab -> caseProcessingTab.getAnchor().equals(tab) || caseProcessingTab.name().equals(tab))
         .findFirst()
         .orElse(DEFAULT_TAB);
   }

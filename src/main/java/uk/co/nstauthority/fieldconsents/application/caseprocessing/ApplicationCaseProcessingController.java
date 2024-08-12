@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -86,6 +87,7 @@ public class ApplicationCaseProcessingController {
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final ConsentService consentService;
   private final ConsentBreachService consentBreachService;
+  private final CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -106,7 +108,8 @@ public class ApplicationCaseProcessingController {
       ConsentTabService consentTabService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
       ConsentService consentService,
-      ConsentBreachService consentBreachService
+      ConsentBreachService consentBreachService,
+      CaseProcessingControllerHelperService caseProcessingControllerHelperService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -126,12 +129,13 @@ public class ApplicationCaseProcessingController {
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.consentService = consentService;
     this.consentBreachService = consentBreachService;
+    this.caseProcessingControllerHelperService = caseProcessingControllerHelperService;
   }
 
   @GetMapping("case-processing")
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(required = false) Integer versionNumber,
+      @RequestParam(value = "version", required = false) Integer requestedApplicationVersionId,
       @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
@@ -139,8 +143,9 @@ public class ApplicationCaseProcessingController {
     var application = latestApplicationVersion.getApplication();
     var applicationType = application.getType();
 
-    var selectedApplicationVersion = applicationVersionService
-        .getSelectedApplicationVersionOrCurrent(latestApplicationVersion, versionNumber);
+    var selectedApplicationVersion = Optional.ofNullable(requestedApplicationVersionId)
+        .map(avid -> caseProcessingControllerHelperService.getApplicationVersionForApplication(application, avid))
+        .orElse(latestApplicationVersion);
 
     var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, latestApplicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {

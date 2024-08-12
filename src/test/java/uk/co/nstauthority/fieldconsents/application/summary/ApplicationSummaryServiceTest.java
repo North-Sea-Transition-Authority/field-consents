@@ -31,7 +31,6 @@ import uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInf
 import uk.co.nstauthority.fieldconsents.application.summary.shared.ConsentDetailsSummarySectionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
@@ -133,7 +132,7 @@ class ApplicationSummaryServiceTest {
 
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
-  void addSummarySectionsAndVersionOptionsToModelAndView_withOneSubmittedApplication(ApplicationType applicationType) {
+  void addSummarySectionsAndVersionOptionsToModelAndView_withMultipleSubmittedApplications(ApplicationType applicationType) {
     // it doesn't actually matter what the sections here are...
     var consentDetailSection = getConsentDetailsSummarySection(null);
     when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
@@ -150,52 +149,25 @@ class ApplicationSummaryServiceTest {
     var latestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     latestApplicationVersion.setVersion(2);
 
-    var modelAndView = new ModelAndView();
+    var applicationVersion1 = new ApplicationVersion();
+    applicationVersion1.setId(1);
+    applicationVersion1.setVersion(1);
 
-    applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(latestApplicationVersion, modelAndView, null);
+    var applicationVersion2 = new ApplicationVersion();
+    applicationVersion2.setId(2);
+    applicationVersion2.setVersion(2);
 
-    var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
+    var applicationVersion3 = new ApplicationVersion();
+    applicationVersion3.setId(3);
+    applicationVersion3.setVersion(3);
 
-    assertThat(modelAndView.getModel())
-        .containsExactlyInAnyOrderEntriesOf(Map.of(
-            "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
-            "accordionId", latestApplicationVersion.getId(),
-            "wideSummaryDisplay", wideSummaryDisplay
-        ));
-  }
-
-  @ParameterizedTest
-  @EnumSource(ApplicationType.class)
-  void addSummarySectionsAndVersionOptionsToModelAndView_withMultipleSubmittedApplications(ApplicationType applicationType) {
-    // it doesn't actually matter what the sections here are...
-    var consentDetailSection = getConsentDetailsSummarySection(null);
-    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion, null))
-        .thenReturn(Optional.of(consentDetailSection));
-
-    var productionDetailSection = getProductionInformationSummarySection(null);
-    when(productionInformationSummarySectionService.getSummarySection(applicationVersion, null))
-        .thenReturn(Optional.of(productionDetailSection));
-
-    var additionalDetailSection = getAdditionalInformationSummarySection(null);
-    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion, null))
-        .thenReturn(Optional.of(additionalDetailSection));
-
-    var latestApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationType);
-    latestApplicationVersion.setVersion(2);
-
-    when(applicationVersionService.getAllNonDeletedApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
-        .thenReturn(List.of(applicationVersion, latestApplicationVersion));
+    var applicationVersions = List.of(applicationVersion2, applicationVersion3, applicationVersion1);
+    when(applicationVersionService.getAllNonDeletedApplicationVersionsByApplicationId(latestApplicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersions);
 
     var modelAndView = new ModelAndView();
 
     applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(latestApplicationVersion, modelAndView, null);
-
-    var expectedApplicationVersions = Map.of(
-        latestApplicationVersion.getVersion(), "Version %s: %s".formatted(latestApplicationVersion.getVersion(),
-            DateUtils.format(latestApplicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE)),
-        applicationVersion.getVersion(), "Version %s: %s".formatted(applicationVersion.getVersion(),
-            DateUtils.format(applicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE))
-    );
 
     var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
 
@@ -204,25 +176,12 @@ class ApplicationSummaryServiceTest {
             "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
             "accordionId", latestApplicationVersion.getId(),
             "wideSummaryDisplay", wideSummaryDisplay,
-            "currentVersionNumber", latestApplicationVersion.getVersion(),
-            "availableVersions", expectedApplicationVersions
+            "selectedApplicationVersionView", ApplicationVersionView.from(latestApplicationVersion),
+            "applicationVersionViews", List.of(
+                ApplicationVersionView.from(applicationVersion3),
+                ApplicationVersionView.from(applicationVersion2),
+                ApplicationVersionView.from(applicationVersion1)
+            )
         ));
-  }
-
-  @Test
-  void getApplicationVersionDisplayText_whenInProgressApplicationVersion() {
-    var inProgressApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    assertThat(applicationSummaryService.getApplicationVersionDisplayText(inProgressApplicationVersion))
-        .isEqualTo("Version %s: %s".formatted(
-            applicationVersion.getVersion(),
-                inProgressApplicationVersion.getStatus().getDisplayName()));
-  }
-
-  @Test
-  void getApplicationVersionDisplayText_whenNotInProgressApplicationVersion() {
-    assertThat(applicationSummaryService.getApplicationVersionDisplayText(applicationVersion))
-        .isEqualTo("Version %s: %s".formatted(
-            applicationVersion.getVersion(),
-            DateUtils.format(applicationVersion.getSubmittedDateTime(), DateUtils.SHORT_DATE)));
   }
 }

@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collection;
 import java.util.Comparator;
@@ -24,31 +23,6 @@ public class ApplicationVersionService {
         .orElseThrow(() ->
             new EntityNotFoundException("Application version with id %s not found".formatted(applicationVersionId))
         );
-  }
-
-  public ApplicationVersion getApplicationVersionByApplicationIdAndVersionNumber(Integer applicationId, Integer versionNumber) {
-    return applicationVersionRepository.findAllByApplicationIdAndVersion(applicationId, versionNumber).stream()
-        .filter(applicationVersion -> !ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus()))
-        .findFirst()
-        .orElseThrow(() ->
-            new EntityNotFoundException("Application version not found for application with id %s and version number %s"
-                .formatted(applicationId, versionNumber))
-        );
-  }
-
-  public ApplicationVersion getSelectedApplicationVersionOrCurrent(
-      ApplicationVersion applicationVersion,
-      @Nullable Integer versionNumber
-  ) {
-    // if no version number is supplied, or it's the same as the supplied application version's number
-    // then return the supplied application version
-    if (versionNumber == null || applicationVersion.getVersion().equals(versionNumber)) {
-      return applicationVersion;
-    } else {
-      // if the supplied version number is different to the supplied application version's number then get the
-      // application version for the supplied version number
-      return getApplicationVersionByApplicationIdAndVersionNumber(applicationVersion.getApplication().getId(), versionNumber);
-    }
   }
 
   public ApplicationVersion getLatestApplicationVersionByApplicationId(Integer applicationId) {

@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
@@ -22,6 +22,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import jakarta.annotation.Nullable;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -46,6 +48,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ContextConfiguration(classes = ConsulteeCaseProcessingController.class)
@@ -73,6 +76,10 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   @MockBean
   private ConsultationSummaryService consultationSummaryService;
 
+  @MockBean
+  private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
+
+  private Application application;
   private ApplicationVersion applicationVersion;
 
   private List<CaseProcessingActionView> caseProcessingActionViews;
@@ -84,6 +91,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
+    application = applicationVersion.getApplication();
     caseProcessingActionViews = List.of(
         mock(CaseProcessingActionView.class),
         mock(CaseProcessingActionView.class),
@@ -108,6 +116,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   @Test
   void caseProcessing_noTabSelected_withoutConsultation() throws Exception {
     setUpMocksWithConsultation(null);
+    stubSummaryServiceCall(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null, null)))
@@ -124,6 +133,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     consultation.setRequestDeadline(Instant.now());
 
     setUpMocksWithConsultation(consultation);
+    stubSummaryServiceCall(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null, null)))
@@ -138,11 +148,10 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   @Test
   void caseProcessing_viewApplication_withoutConsultation() throws Exception {
     setUpMocksWithConsultation(null);
-
-    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+    stubSummaryServiceCall(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -158,11 +167,10 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     consultation.setRequestDeadline(Instant.now());
 
     setUpMocksWithConsultation(consultation);
-
-    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+    stubSummaryServiceCall(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -174,18 +182,36 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   }
 
   @Test
-  void caseProcessing_viewApplication_withVersionNumber() throws Exception {
-    setUpMocksWithConsultationAndVersionNumber(null, APPLICATION_VERSION_NUMBER);
+  void caseProcessing_viewApplication_withVersion() throws Exception {
+    var requestedApplicationVersionId = 123;
+    var requestedApplicationVersion = new ApplicationVersion();
+    requestedApplicationVersion.setId(requestedApplicationVersionId);
+    requestedApplicationVersion.setApplication(application);
 
-    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
-    var versionNumberParam = "&versionNumber=%d".formatted(APPLICATION_VERSION_NUMBER);
+    setUpMocksWithConsultation(null);
+    stubSummaryServiceCall(requestedApplicationVersion);
 
-    when(applicationVersionService
-        .getApplicationVersionByApplicationIdAndVersionNumber(APPLICATION_ID, APPLICATION_VERSION_NUMBER))
-        .thenReturn(applicationVersion);
+    when(caseProcessingControllerHelperService
+        .getApplicationVersionForApplication(applicationVersion.getApplication(), requestedApplicationVersionId))
+        .thenReturn(requestedApplicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam + versionNumberParam)
+            .caseProcessing(APPLICATION_ID, requestedApplicationVersionId, VIEW_APPLICATION, null)))
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
+        .andExpect(model().attribute("summarySections", summarySections))
+        .andExpect(model().attribute("accordionId", requestedApplicationVersionId));
+
+    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion), any(), eq(user));
+  }
+
+  @Test
+  void caseProcessing_viewApplication_withoutVersion() throws Exception {
+    setUpMocksWithConsultation(null);
+    stubSummaryServiceCall(applicationVersion);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
         .andExpect(model().attribute("summarySections", summarySections))
@@ -200,10 +226,8 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication())).thenReturn(Collections.emptyList());
 
-    var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
-
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, CONSULTATIONS, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(CONSULTATIONS));
@@ -219,15 +243,18 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     var consultations = List.of(consultation);
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication())).thenReturn(consultations);
 
-    var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
+    List<SummaryItem> consultationSummaryItems = new ArrayList<>();
+    when(consultationSummaryService.getConsultationSummaryItemsForUser(applicationVersion.getApplication(), user)).thenReturn(consultationSummaryItems);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .caseProcessing(APPLICATION_ID, null, CONSULTATIONS, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(CONSULTATIONS))
-        .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)));
+        .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)))
+        .andExpect(model().attribute("consultationSummaryItems", consultationSummaryItems));
   }
+
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab) {
     var applicationType = applicationVersion.getApplication().getType();
@@ -243,19 +270,8 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     };
   }
 
-  private void setUpMocksWithConsultation(
-      @Nullable Consultation consultation
-  ) {
-    setUpMocksWithConsultationAndVersionNumber(consultation, null);
-  }
-
-  private void setUpMocksWithConsultationAndVersionNumber(
-      @Nullable Consultation consultation,
-      @Nullable Integer versionNumber
-  ) {
+  private void setUpMocksWithConsultation(@Nullable Consultation consultation) {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.getSelectedApplicationVersionOrCurrent(applicationVersion, versionNumber))
-        .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(PAGE_TITLE);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)
@@ -265,9 +281,10 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.ofNullable(consultation));
     when(caseProcessingTabService.getConsulteeTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
+  }
 
+  private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
-
     doAnswer(invocation -> {
       invocation.getArgument(1, ModelAndView.class)
           .addObject("summarySections", summarySections)
