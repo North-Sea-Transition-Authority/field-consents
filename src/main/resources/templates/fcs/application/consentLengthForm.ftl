@@ -4,9 +4,17 @@
 
 <#assign pageTitle = "Consent duration"/>
 
-<@defaultPage htmlTitle=pageTitle pageHeading="" errorItems=errorList>
+<#if applicationIsRevision>
+  <#assign pageHeading=pageTitle>
+<#else>
+  <#assign pageHeading="">
+</#if>
+
+<@defaultPage htmlTitle=pageTitle pageHeading=pageHeading errorItems=errorList>
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
-    <@fdsRadio.radioGroup path="form.consentLengthType" hiddenContent=true labelText="Select the period of the consent you are applying for" fieldsetHeadingSize="h1" fieldsetHeadingClass="govuk-fieldset__legend--l">
+    <#if !applicationIsRevision>
+
+      <@fdsRadio.radioGroup path="form.consentLengthType" hiddenContent=true labelText="Select the period of the consent you are applying for" fieldsetHeadingSize="h1" fieldsetHeadingClass="govuk-fieldset__legend--l">
       <@fdsInsetText.insetText>
         The consent length will determine the data you need to provide in the following sections of the application
       </@fdsInsetText.insetText>
@@ -37,7 +45,45 @@
         </@fdsRadio.radioItem>
         <#assign isFirstItem = false/>
       </#list>
-    </@fdsRadio.radioGroup>
+      </@fdsRadio.radioGroup>
+
+    <#else>
+
+      <#if consentLengthView.consentLengthType() == "SHORT_TERM">
+        <@fdsInsetText.insetText>
+          You cannot change the start date when revising a short term consent.
+        </@fdsInsetText.insetText>
+
+        <@fdsDataItems.dataItem>
+          <@fdsDataItems.dataValues key="Start date" value=consentLengthView.formattedShortTermStartDate() />
+        </@fdsDataItems.dataItem>
+
+        <@fdsDateInput.dateInput
+          labelText="End date"
+          dayPath="form.shortTermEndDate.dayInput.inputValue" monthPath="form.shortTermEndDate.monthInput.inputValue" yearPath="form.shortTermEndDate.yearInput.inputValue"
+          formId="form.shortTermEndDate"
+        />
+      <#elseif consentLengthView.consentLengthType() == "ANNUAL">
+        <@fdsInsetText.insetText>
+          You cannot change the year when revising an annual consent.
+        </@fdsInsetText.insetText>
+
+        <@fdsDataItems.dataItem>
+          <@fdsDataItems.dataValues key="Year" value=consentLengthView.annualConsentYear() />
+        </@fdsDataItems.dataItem>
+      <#elseif consentLengthView.consentLengthType() == "LONG_TERM">
+        <@fdsInsetText.insetText>
+          You cannot change the start year when revising a long term consent.
+        </@fdsInsetText.insetText>
+
+        <@fdsDataItems.dataItem>
+          <@fdsDataItems.dataValues key="Start year" value=consentLengthView.longTermStartYear() />
+        </@fdsDataItems.dataItem>
+
+        <@fdsTextInput.textInput path="form.longTermEndYear.inputValue" labelText="End year" labelClass="govuk-label--s" inputClass="govuk-input--width-5"/>
+      </#if>
+    </#if>
+
     <@fdsAction.submitButtons linkSecondaryAction=true linkSecondaryActionUrl="${springUrl(cancelUrl)}" primaryButtonText="Save and complete" secondaryLinkText="Cancel"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.consentlength;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,7 +40,7 @@ public class ConsentLengthService {
         case SHORT_TERM -> populateShortTermOnForm(form, consentLengthDetails);
         case ANNUAL -> form.getAnnualConsentYear().setInteger(consentLengthDetails.getAnnualConsentYear());
         case LONG_TERM -> populateLongTermOnForm(form, consentLengthDetails);
-        default -> throw new RuntimeException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
+        default -> throw new IllegalStateException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
       }
     }
     return form;
@@ -70,43 +69,64 @@ public class ConsentLengthService {
   }
 
   @Transactional
-  public void saveConsentLengthDetails(ApplicationVersion currentVersion, ConsentLengthForm form) {
-    ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
-    Optional<ConsentLengthDetails> consentLengthDetailsOptional =
-        consentLengthRepository.findByApplicationVersion(currentVersion);
+  public void saveConsentLengthDetails(ApplicationVersion applicationVersion, ConsentLengthForm form) {
+    if (!applicationVersion.getApplication().isRevision()) {
+      var consentLengthDetails = findConsentLengthDetails(applicationVersion)
+          .orElseGet(ConsentLengthDetails::new);
 
-    ConsentLengthType consentLengthType = form.getConsentLengthType();
-    consentLengthDetails.setConsentLength(consentLengthType);
+      consentLengthDetails.setApplicationVersion(applicationVersion);
 
-    if (consentLengthDetailsOptional.isPresent()) {
-      consentLengthRepository.deleteByApplicationVersion(currentVersion);
+      ConsentLengthType consentLengthType = form.getConsentLengthType();
+      consentLengthDetails.setConsentLength(consentLengthType);
+
+      switch (consentLengthType) {
+        case SHORT_TERM -> {
+          consentLengthDetails.setShortTermStartDate(form.getShortTermStartDate().getAsLocalDate().orElseThrow());
+          consentLengthDetails.setShortTermEndDate(form.getShortTermEndDate().getAsLocalDate().orElseThrow());
+          consentLengthDetails.setAnnualConsentYear(null);
+          consentLengthDetails.setLongTermStartYear(null);
+          consentLengthDetails.setLongTermEndYear(null);
+        }
+        case ANNUAL -> {
+          consentLengthDetails.setShortTermStartDate(null);
+          consentLengthDetails.setShortTermEndDate(null);
+          consentLengthDetails.setAnnualConsentYear(form.getAnnualConsentYear().getAsInteger().orElseThrow());
+          consentLengthDetails.setLongTermStartYear(null);
+          consentLengthDetails.setLongTermEndYear(null);
+        }
+        case LONG_TERM -> {
+          consentLengthDetails.setShortTermStartDate(null);
+          consentLengthDetails.setShortTermEndDate(null);
+          consentLengthDetails.setAnnualConsentYear(null);
+          consentLengthDetails.setLongTermStartYear(form.getLongTermStartYear().getAsInteger().orElseThrow());
+          consentLengthDetails.setLongTermEndYear(form.getLongTermEndYear().getAsInteger().orElseThrow());
+        }
+
+        default -> throw new IllegalStateException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
+      }
+
+      consentLengthRepository.save(consentLengthDetails);
+    } else {
+      // Only the short term end date and long term end year are editable for revisions.
+      var consentLengthDetails = getConsentLengthDetails(applicationVersion);
+
+      var consentLengthType = consentLengthDetails.getConsentLength();
+      switch (consentLengthType) {
+        case SHORT_TERM ->
+            consentLengthDetails.setShortTermEndDate(form.getShortTermEndDate().getAsLocalDate().orElseThrow());
+        case ANNUAL -> {
+          return;
+        }
+        case LONG_TERM ->
+            consentLengthDetails.setLongTermEndYear(form.getLongTermEndYear().getAsInteger().orElseThrow());
+
+        default -> throw new IllegalStateException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
+      }
+
+      consentLengthRepository.save(consentLengthDetails);
     }
 
-    consentLengthDetails.setApplicationVersion(currentVersion);
-
-    switch (consentLengthType) {
-      case SHORT_TERM -> {
-        consentLengthDetails.setShortTermStartDate(
-            form.getShortTermStartDate().getAsLocalDate().orElseThrow());
-        consentLengthDetails.setShortTermEndDate(
-            form.getShortTermEndDate().getAsLocalDate().orElseThrow());
-      }
-      case ANNUAL -> consentLengthDetails.setAnnualConsentYear(
-          form.getAnnualConsentYear().getAsInteger().orElseThrow(NoSuchElementException::new)
-      );
-      case LONG_TERM -> {
-        consentLengthDetails.setLongTermStartYear(
-            form.getLongTermStartYear().getAsInteger().orElseThrow(NoSuchElementException::new)
-        );
-        consentLengthDetails.setLongTermEndYear(
-            form.getLongTermEndYear().getAsInteger().orElseThrow(NoSuchElementException::new)
-        );
-      }
-
-      default -> throw new RuntimeException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
-    }
-    consentLengthRepository.save(consentLengthDetails);
-    applicationEventPublisher.publishEvent(new ConsentLengthChangeEvent(this, currentVersion.getId()));
+    applicationEventPublisher.publishEvent(new ConsentLengthChangeEvent(this, applicationVersion.getId()));
   }
 
   public Optional<ConsentLengthDetails> findConsentLengthDetails(ApplicationVersion applicationVersion) {

@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -28,19 +26,18 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class ConsentLengthController {
 
-  private final ApplicationService applicationService;
   private final ConsentLengthService consentLengthService;
   private final ApplicationVersionService applicationVersionService;
   private final ConsentLengthFormValidator consentLengthFormValidator;
   private final ConsentLengthControllerHelperService consentLengthHelperService;
 
   @Autowired
-  public ConsentLengthController(ApplicationService applicationService,
-                                 ConsentLengthService consentLengthService,
-                                 ApplicationVersionService applicationVersionService,
-                                 ConsentLengthFormValidator consentLengthFormValidator,
-                                 ConsentLengthControllerHelperService consentLengthHelperService) {
-    this.applicationService = applicationService;
+  public ConsentLengthController(
+      ConsentLengthService consentLengthService,
+      ApplicationVersionService applicationVersionService,
+      ConsentLengthFormValidator consentLengthFormValidator,
+      ConsentLengthControllerHelperService consentLengthHelperService
+  ) {
     this.consentLengthService = consentLengthService;
     this.applicationVersionService = applicationVersionService;
     this.consentLengthFormValidator = consentLengthFormValidator;
@@ -58,8 +55,19 @@ public class ConsentLengthController {
   }
 
   private ModelAndView getConsentLengthFormModelAndView(Integer applicationId) {
-    ModelAndView modelAndView = new ModelAndView("fcs/application/consentLengthForm");
-    Application application = applicationService.getApplicationById(applicationId);
+    var modelAndView = new ModelAndView("fcs/application/consentLengthForm");
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = applicationVersion.getApplication();
+
+    var isRevision = application.isRevision();
+    modelAndView.addObject("applicationIsRevision", isRevision);
+
+    if (isRevision) {
+      var consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+
+      modelAndView.addObject("consentLengthView", ConsentLengthView.from(consentLengthDetails));
+    }
+
     modelAndView.addObject("consentTypes", consentLengthHelperService.getConsentTypesMap(application));
     modelAndView.addObject("annualConsentYears", consentLengthHelperService.getAnnualConsentYearsMap());
     modelAndView.addObject("longTermStartYears", consentLengthHelperService.getLongTermConsentYearsMap());
@@ -79,13 +87,14 @@ public class ConsentLengthController {
   public ModelAndView saveConsentLengthDetails(@PathVariable Integer applicationId,
                                                @ModelAttribute("form") ConsentLengthForm form,
                                                BindingResult bindingResult) {
-    consentLengthFormValidator.validate(form, bindingResult);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    consentLengthFormValidator.validate(form, bindingResult, applicationVersion);
 
     if (bindingResult.hasErrors()) {
       return getConsentLengthFormModelAndView(applicationId);
     } else {
-      ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-      consentLengthService.saveConsentLengthDetails(currentVersion, form);
+      consentLengthService.saveConsentLengthDetails(applicationVersion, form);
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
   }

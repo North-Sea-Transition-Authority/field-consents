@@ -12,6 +12,4 @@ public interface ConsentLengthRepository extends CrudRepository<ConsentLengthDet
 
   @DuplicateThisOnUpdate
   Optional<ConsentLengthDetails> findByApplicationVersion(ApplicationVersion applicationVersion);
-
-  void deleteByApplicationVersion(ApplicationVersion applicationVersion);
 }

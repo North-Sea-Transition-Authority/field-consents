@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.consentlength;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
@@ -24,7 +24,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -40,9 +39,6 @@ class ConsentLengthServiceTest {
 
   @Mock
   private ConsentLengthRepository consentLengthRepository;
-
-  @Mock
-  private ApplicationService applicationService;
 
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
@@ -136,36 +132,28 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void saveConsentLengthDetails_withAnnualConsentLength() {
-    consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthForm();
-    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
-
-    ConsentLengthDetails consentLengthDetails = getEntityFromArgumentCaptor();
-
-    assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.ANNUAL);
-    assertThat(consentLengthDetails.getAnnualConsentYear()).isEqualTo(ANNUAL_CONSENT_YEAR);
-
-    assertNull(consentLengthDetails.getShortTermStartDate());
-    assertNull(consentLengthDetails.getShortTermEndDate());
-
-    assertNull(consentLengthDetails.getLongTermStartYear());
-    assertNull(consentLengthDetails.getLongTermEndYear());
-
-    assertConsentLengthChangeEvent();
-  }
-
-  @Test
-  void saveConsentLengthDetails_withShortTermConsentLength() {
+  void saveConsentLengthDetails_applicationIsNotRevision_withShortTermConsentLength() {
     consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
     consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
 
-    ConsentLengthDetails consentLengthDetails = getEntityFromArgumentCaptor();
+    verify(consentLengthRepository).save(consentLengthDetails);
+
+    assertThat(consentLengthDetails.getApplicationVersion()).isEqualTo(applicationVersion);
 
     assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.SHORT_TERM);
-    assertNull(consentLengthDetails.getAnnualConsentYear());
 
-    assertThat(consentLengthDetails.getShortTermStartDate()).isEqualTo(ConsentLengthTestUtil.SHORT_TERM_START_DATE);
-    assertThat(consentLengthDetails.getShortTermEndDate()).isEqualTo(ConsentLengthTestUtil.SHORT_TERM_END_DATE);
+    assertThat(consentLengthDetails.getShortTermStartDate())
+        .isEqualTo(consentLengthForm.getShortTermStartDate().getAsLocalDate().orElseThrow());
+    assertThat(consentLengthDetails.getShortTermEndDate())
+        .isEqualTo(consentLengthForm.getShortTermEndDate().getAsLocalDate().orElseThrow());
+
+    assertNull(consentLengthDetails.getAnnualConsentYear());
 
     assertNull(consentLengthDetails.getLongTermStartYear());
     assertNull(consentLengthDetails.getLongTermEndYear());
@@ -174,22 +162,133 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void saveConsentLengthDetails_withLongTermConsentLength() {
-    consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
+  void saveConsentLengthDetails_applicationIsNotRevision_withAnnualConsentLength() {
+    consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
     consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
 
-    ConsentLengthDetails consentLengthDetails = getEntityFromArgumentCaptor();
+    verify(consentLengthRepository).save(consentLengthDetails);
 
-    assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.LONG_TERM);
-    assertNull(consentLengthDetails.getAnnualConsentYear());
+    assertThat(consentLengthDetails.getApplicationVersion()).isEqualTo(applicationVersion);
+
+    assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.ANNUAL);
 
     assertNull(consentLengthDetails.getShortTermStartDate());
     assertNull(consentLengthDetails.getShortTermEndDate());
 
-    assertThat(consentLengthDetails.getLongTermStartYear()).isEqualTo(LONG_TERM_START_YEAR);
-    assertThat(consentLengthDetails.getLongTermEndYear()).isEqualTo(ConsentLengthTestUtil.LONG_TERM_END_YEAR);
+    assertThat(consentLengthDetails.getAnnualConsentYear())
+        .isEqualTo(consentLengthForm.getAnnualConsentYear().getAsInteger().orElseThrow());
+
+    assertNull(consentLengthDetails.getLongTermStartYear());
+    assertNull(consentLengthDetails.getLongTermEndYear());
 
     assertConsentLengthChangeEvent();
+  }
+
+  @Test
+  void saveConsentLengthDetails_applicationIsNotRevision_withLongTermConsentLength() {
+    consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    verify(consentLengthRepository).save(consentLengthDetails);
+
+    assertThat(consentLengthDetails.getApplicationVersion()).isEqualTo(applicationVersion);
+
+    assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.LONG_TERM);
+
+    assertNull(consentLengthDetails.getShortTermStartDate());
+    assertNull(consentLengthDetails.getShortTermEndDate());
+
+    assertNull(consentLengthDetails.getAnnualConsentYear());
+
+    assertThat(consentLengthDetails.getLongTermStartYear())
+        .isEqualTo(consentLengthForm.getLongTermStartYear().getAsInteger().orElseThrow());
+    assertThat(consentLengthDetails.getLongTermEndYear())
+        .isEqualTo(consentLengthForm.getLongTermEndYear().getAsInteger().orElseThrow());
+
+    assertConsentLengthChangeEvent();
+  }
+
+  @Test
+  void saveConsentLengthDetails_applicationIsRevision_withShortTermConsentLength() {
+    applicationVersion.getApplication().setVariationNo(1);
+
+    consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    verify(consentLengthRepository).save(consentLengthDetails);
+
+    assertThat(consentLengthDetails.getShortTermEndDate())
+        .isEqualTo(consentLengthForm.getShortTermEndDate().getAsLocalDate().orElseThrow());
+
+    assertConsentLengthChangeEvent();
+  }
+
+  @Test
+  void saveConsentLengthDetails_applicationIsRevision_withAnnualConsentLength() {
+    applicationVersion.getApplication().setVariationNo(1);
+
+    consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    verify(consentLengthRepository, never()).save(consentLengthDetails);
+  }
+
+  @Test
+  void saveConsentLengthDetails_applicationIsRevision_withLongTermConsentLength() {
+    applicationVersion.getApplication().setVariationNo(1);
+
+    consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
+
+    var consentLengthDetails = newConsentLengthDetailsWithAllDatesAndYears();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    verify(consentLengthRepository).save(consentLengthDetails);
+
+    assertThat(consentLengthDetails.getLongTermEndYear())
+        .isEqualTo(consentLengthForm.getLongTermEndYear().getAsInteger().orElseThrow());
+
+    assertConsentLengthChangeEvent();
+  }
+
+  private ConsentLengthDetails newConsentLengthDetailsWithAllDatesAndYears() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setShortTermStartDate(LocalDate.of(2024, 8, 9));
+    consentLengthDetails.setShortTermEndDate(LocalDate.of(2024, 8, 10));
+    consentLengthDetails.setAnnualConsentYear(2024);
+    consentLengthDetails.setLongTermStartYear(2024);
+    consentLengthDetails.setLongTermEndYear(2025);
+    return consentLengthDetails;
   }
 
   private void assertConsentLengthChangeEvent() {
@@ -197,13 +296,6 @@ class ConsentLengthServiceTest {
     assertThat(captor.getValue().getApplicationVersionId()).isEqualTo(applicationVersion.getId());
     assertThat(captor.getValue().getClass()).isEqualTo(ConsentLengthChangeEvent.class);
     assertThat(captor.getValue().getSource().getClass()).isEqualTo(ConsentLengthService.class);
-  }
-
-  private ConsentLengthDetails getEntityFromArgumentCaptor() {
-    ArgumentCaptor<ConsentLengthDetails> consentLengthDetailsArgumentCaptor = ArgumentCaptor.forClass(ConsentLengthDetails.class);
-    verify(consentLengthRepository, times(1)).save(consentLengthDetailsArgumentCaptor.capture());
-
-    return consentLengthDetailsArgumentCaptor.getValue();
   }
 
   @Test
