@@ -60,11 +60,19 @@ public class FieldService {
 
   static final FieldProjectionRoot fieldWithOperatorLicencesProjectionRoot =
       fieldWithOperatorProjectionRoot
-          .licences().id().licenceRef().root();
+          .licences().id().licenceRef()
+          .licenceNo()
+          .licenceType()
+          .scheduleExpiryDate()
+          .getRoot();
 
   static final FieldsProjectionRoot fieldsWithOperatorsAndLicensesProjectionRoot =
       fieldsWithOperatorsProjectionRoot
-          .licences().id().licenceRef().root();
+          .licences().id().licenceRef()
+          .licenceNo()
+          .licenceType()
+          .scheduleExpiryDate()
+          .root();
 
   private final FieldApi fieldApi;
 

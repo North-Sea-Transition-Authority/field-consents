@@ -75,9 +75,11 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
@@ -155,7 +157,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @MockBean
   private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
+  @MockBean
+  private LicenceExpiryService licenceExpiryService;
+
   private ApplicationVersion applicationVersion;
+
   private Application application;
 
   private TechnicalReview technicalReview;
@@ -282,6 +288,67 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
             .with(user(user)))
         .andExpect(model().attribute("warning", checkResult.getWarning()));
   }
+
+  @Test
+  void getIndustryCaseProcessing_withLicenceExpiringWithinDuration() throws Exception {
+    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var expiringLicences = List.of(licenceView);
+
+    stubBaseServiceCalls();
+    stubConsentServiceCall();
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .usingRecursiveComparison()
+        .isEqualTo(expiringLicences);
+  }
+
+  @Test
+  void getIndustryCaseProcessing_withoutLicenceExpiringWithinDuration() throws Exception {
+    List<LicenceView> expiringLicences = List.of();
+
+    stubBaseServiceCalls();
+    stubConsentServiceCall();
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .isEqualTo(List.of());
+  }
+
 
   @ParameterizedTest
   @EnumSource(

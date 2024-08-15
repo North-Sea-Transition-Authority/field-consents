@@ -6,7 +6,7 @@ import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.FieldGeographicArea;
 import uk.co.fivium.energyportalapi.generated.types.FieldShore;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
-import uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil;
+import uk.co.nstauthority.fieldconsents.licences.LicenceJsonTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
@@ -73,7 +73,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_1_SHORE.name()))
       .shoreDisplayName(FIELD_1_SHORE.getDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
-      .licences(LicenceTestUtil.licences3)
+      .licences(LicenceJsonTestUtil.licences3)
       .build();
 
   public static Field field1WithOperatorButEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
@@ -97,7 +97,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_1_SHORE.name()))
       .shoreDisplayName(FIELD_1_SHORE.getDisplayName())
       .fieldOperator(null)
-      .licences(LicenceTestUtil.licences3)
+      .licences(LicenceJsonTestUtil.licences3)
       .build();
 
   public static FieldJson field1Json = new FieldJson(
@@ -163,7 +163,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_2_SHORE.name()))
       .shoreDisplayName(FIELD_2_SHORE.getDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit2)
-      .licences(LicenceTestUtil.licences2)
+      .licences(LicenceJsonTestUtil.licences2)
       .build();
 
   public static FieldJson field2Json = new FieldJson(
@@ -193,7 +193,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_3_SHORE.name()))
       .shoreDisplayName(FIELD_3_SHORE.getDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit3)
-      .licences(LicenceTestUtil.licences3)
+      .licences(LicenceJsonTestUtil.licences3)
       .build();
 
   public static FieldWithOperatorAndLicencesJson field3JsonWithOperatorAndLicences =
@@ -242,7 +242,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_4_SHORE.name()))
       .shoreDisplayName(FIELD_4_SHORE.getDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
-      .licences(LicenceTestUtil.licences3)
+      .licences(LicenceJsonTestUtil.licences3)
       .build();
 
   public static FieldWithOperatorAndLicencesJson field4JsonWithOperatorAndLicences =
@@ -256,7 +256,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_5_SHORE.name()))
       .shoreDisplayName(FIELD_5_SHORE.getDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
-      .licences(LicenceTestUtil.licences3)
+      .licences(LicenceJsonTestUtil.licences3)
       .build();
 
   public static FieldWithOperatorAndLicencesJson field5JsonWithOperatorAndLicences =

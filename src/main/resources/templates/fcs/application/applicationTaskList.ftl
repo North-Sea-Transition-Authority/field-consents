@@ -1,5 +1,6 @@
 <#include '../layout/layout.ftl'>
 <#import './_applicationContext.ftl' as applicationContextInfo>
+<#import '_expiringLicencesBanner.ftl' as expiringLicencesBanner>
 <#import 'update/_applicationUpdateRequestHiddenSummary.ftl' as applicationUpdateRequestHiddenSummary>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
@@ -16,12 +17,12 @@
     </@fdsNotificationBanner.notificationBannerSuccess>
   </#assign>
 </#if>
-
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
   caption=applicationReference!""
   notificationBannerContentOverride=deleteBanner>
+  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>

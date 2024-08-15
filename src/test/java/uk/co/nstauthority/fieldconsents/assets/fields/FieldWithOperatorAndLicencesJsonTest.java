@@ -83,7 +83,13 @@ class FieldWithOperatorAndLicencesJsonTest {
                 new OrganisationUnitJson(field1WithOperatorAndLicences.getFieldOperator().getOrganisationUnitId(),
                     field1WithOperatorAndLicences.getFieldOperator().getName()),
                 field1WithOperatorAndLicences.getLicences().stream().map(
-                    licence -> new LicenceJson(licence.getId(), licence.getLicenceRef())
+                    licence -> new LicenceJson(
+                        licence.getId(),
+                        licence.getLicenceType(),
+                        licence.getLicenceNo(),
+                        licence.getLicenceRef(),
+                        licence.getScheduleExpiryDate()
+                    )
                 ).toList()
             )
         );

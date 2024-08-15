@@ -9,6 +9,7 @@
 <#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
 <#import '_withdrawalRequestedBanner.ftl' as withdrawalRequestedBanner/>
 <#import '_consentBreachedBanner.ftl' as consentBreachedBanner/>
+<#import '_expiringLicencesBanner.ftl' as expiringLicencesBanner>
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
@@ -19,6 +20,7 @@
   <@withdrawalRequestedBanner.withdrawalRequestedBanner openWithdrawal=openWithdrawal/>
   <@consentBreachedBanner.consentBreachedBanner consentBreached=isConsentBreached/>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
+  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>

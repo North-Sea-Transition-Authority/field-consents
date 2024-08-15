@@ -23,8 +23,8 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
-import static uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil.LICENCE_ID_3;
-import static uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil.LICENCE_REF_3;
+import static uk.co.nstauthority.fieldconsents.licences.LicenceJsonTestUtil.LICENCE_ID_3;
+import static uk.co.nstauthority.fieldconsents.licences.LicenceJsonTestUtil.LICENCE_REF_3;
 
 import java.util.Collections;
 import java.util.List;

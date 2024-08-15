@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import java.util.UUID;
+import uk.co.fivium.energyportalapi.generated.types.AccountStatus;
 import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationException;
 
@@ -27,6 +28,7 @@ class EpaUserTestUtil {
     private String telephoneNumber = "telephone number";
     private boolean canLogin = true;
     private boolean isAccountShared = false;
+    private AccountStatus accountStatus = AccountStatus.NEW;
     private Builder() {}
 
     Builder withWebUserAccountId(int webUserAccountId) {
@@ -84,6 +86,11 @@ class EpaUserTestUtil {
       return this;
     }
 
+    Builder withAccountStatus(AccountStatus accountStatus) {
+      this.accountStatus = accountStatus;
+      return this;
+    }
+
     User build() {
       return new User(
           webUserAccountId,
@@ -96,7 +103,8 @@ class EpaUserTestUtil {
           primaryEmailAddress,
           telephoneNumber,
           canLogin,
-          isAccountShared
+          isAccountShared,
+          accountStatus
       );
     }
 

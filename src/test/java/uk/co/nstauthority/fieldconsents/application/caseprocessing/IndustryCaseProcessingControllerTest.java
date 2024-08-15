@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -65,10 +66,13 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawal;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationVersionView;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListService;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
@@ -118,6 +122,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   @MockBean
   private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
+
+  @MockBean
+  private ApplicationTaskListService applicationTaskListService;
+
+  @MockBean
+  private LicenceExpiryService licenceExpiryService;
 
   private List<CaseProcessingActionView> caseProcessingActionViews;
 
@@ -514,6 +524,72 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .getIndustryCaseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
             .with(user(user)))
         .andExpect(model().attribute("warning", ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT.getWarning()));
+  }
+
+  @Test
+  void getIndustryCaseProcessing_withLicenceExpiringWithinDuration() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+
+    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var expiringLicences = List.of(licenceView);
+
+    stubBaseServiceCalls(applicationVersion);
+    stubConsentServiceCall(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/industryCaseProcessing"))
+        .andReturn().getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .usingRecursiveComparison()
+        .isEqualTo(expiringLicences);
+  }
+
+  @Test
+  void getIndustryCaseProcessing_withoutLicenceExpiringWithinDuration() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+
+    List<LicenceView> expiringLicences = List.of();
+
+    stubBaseServiceCalls(applicationVersion);
+    stubConsentServiceCall(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/industryCaseProcessing"))
+        .andReturn().getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .isEqualTo(List.of());
   }
 
   private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {

@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Produ
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -37,6 +38,7 @@ public class ApplicationTaskListController {
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
   private final ApplicationAccessService applicationAccessService;
   private final ConsentService consentService;
+  private final LicenceExpiryService licenceExpiryService;
 
   ApplicationTaskListController(
       ApplicationService applicationService,
@@ -46,7 +48,8 @@ public class ApplicationTaskListController {
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       ApplicationAccessService applicationAccessService,
-      ConsentService consentService
+      ConsentService consentService,
+      LicenceExpiryService licenceExpiryService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -56,6 +59,7 @@ public class ApplicationTaskListController {
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
     this.applicationAccessService = applicationAccessService;
     this.consentService = consentService;
+    this.licenceExpiryService = licenceExpiryService;
   }
 
   @GetMapping
@@ -88,6 +92,9 @@ public class ApplicationTaskListController {
       modelAndView.addObject("applicationUpdateRequestView",
           applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion));
     }
+
+    modelAndView.addObject("expiringLicences",
+        licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion));
 
     return modelAndView;
   }

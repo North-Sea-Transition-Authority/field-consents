@@ -32,8 +32,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Conse
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil;
@@ -59,6 +61,9 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @MockBean
   private ConsentService consentService;
+
+  @MockBean
+  private LicenceExpiryService licenceExpiryService;
 
   private List<TaskListSection> flareTaskListSections;
 
@@ -204,5 +209,72 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         )
         .containsEntry("applicationUpdateRequestView", applicationUpdateRequestView)
         .containsKey("taskListSections");
+  }
+
+  @Test
+  void getTaskList_withLicenceExpiringWithinDuration() throws Exception {
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var expiringLicences = List.of(licenceView);
+
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(false);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .usingRecursiveComparison()
+        .isEqualTo(expiringLicences);
+  }
+
+  @Test
+  void getTaskList_withoutLicenceExpiringWithinDuration() throws Exception {
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    List<LicenceView> expiringLicences = List.of();
+
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(false);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andReturn().getModelAndView();
+
+    var model = modelAndView.getModel();
+
+    assertThat(model.get("expiringLicences"))
+        .isEqualTo(List.of());
   }
 }

@@ -23,11 +23,11 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil;
+import uk.co.nstauthority.fieldconsents.licences.LicenceJsonTestUtil;
 
 public class ApplicationAssetTestUtil {
 
-  public static String BASE_ASSETS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/additional-assets";
+  public static final String BASE_ASSETS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/additional-assets";
   public static final ApplicationAsset fieldAsset1 = newBuilder()
       .withId(1)
       .withApplicationVersion(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT))
@@ -48,16 +48,16 @@ public class ApplicationAssetTestUtil {
       new ApplicationAssetLicence(
           fieldAsset1.getApplicationVersion(),
           fieldAsset1,
-          LicenceTestUtil.LICENCE_ID_1,
-          LicenceTestUtil.LICENCE_REF_1
+          LicenceJsonTestUtil.LICENCE_ID_1,
+          LicenceJsonTestUtil.LICENCE_REF_1
       );
 
   public static final ApplicationAssetLicence fieldAsset1Licence2 =
       new ApplicationAssetLicence(
           fieldAsset1.getApplicationVersion(),
           fieldAsset1,
-          LicenceTestUtil.LICENCE_ID_2,
-          LicenceTestUtil.LICENCE_REF_2
+          LicenceJsonTestUtil.LICENCE_ID_2,
+          LicenceJsonTestUtil.LICENCE_REF_2
       );
 
   public static final List<ApplicationAssetLicence> fieldAsset1Licences =
@@ -83,16 +83,16 @@ public class ApplicationAssetTestUtil {
       new ApplicationAssetLicence(
           fieldAsset2.getApplicationVersion(),
           fieldAsset2,
-          LicenceTestUtil.LICENCE_ID_1,
-          LicenceTestUtil.LICENCE_REF_1
+          LicenceJsonTestUtil.LICENCE_ID_1,
+          LicenceJsonTestUtil.LICENCE_REF_1
       );
 
   public static final ApplicationAssetLicence fieldAsset2Licence2 =
       new ApplicationAssetLicence(
           fieldAsset2.getApplicationVersion(),
           fieldAsset2,
-          LicenceTestUtil.LICENCE_ID_2,
-          LicenceTestUtil.LICENCE_REF_2
+          LicenceJsonTestUtil.LICENCE_ID_2,
+          LicenceJsonTestUtil.LICENCE_REF_2
       );
 
   public static final List<ApplicationAssetLicence> fieldAsset2Licences =
@@ -114,16 +114,16 @@ public class ApplicationAssetTestUtil {
       new ApplicationAssetLicence(
           fieldAsset3.getApplicationVersion(),
           fieldAsset3,
-          LicenceTestUtil.LICENCE_ID_1,
-          LicenceTestUtil.LICENCE_REF_1
+          LicenceJsonTestUtil.LICENCE_ID_1,
+          LicenceJsonTestUtil.LICENCE_REF_1
       );
 
   public static final ApplicationAssetLicence fieldAsset3Licence2 =
       new ApplicationAssetLicence(
           fieldAsset3.getApplicationVersion(),
           fieldAsset3,
-          LicenceTestUtil.LICENCE_ID_2,
-          LicenceTestUtil.LICENCE_REF_2
+          LicenceJsonTestUtil.LICENCE_ID_2,
+          LicenceJsonTestUtil.LICENCE_REF_2
       );
 
   public static final List<ApplicationAssetLicence> fieldAsset3Licences =

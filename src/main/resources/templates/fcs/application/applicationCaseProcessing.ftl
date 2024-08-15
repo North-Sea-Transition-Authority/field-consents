@@ -12,6 +12,7 @@
 <#import 'consent/_approvedForIssue.ftl' as approvedForIssue/>
 <#import '_withdrawalRequestedBanner.ftl' as withdrawalRequestedBanner/>
 <#import '_consentBreachedBanner.ftl' as consentBreachedBanner/>
+<#import '_expiringLicencesBanner.ftl' as expiringLicencesBanner>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
@@ -31,6 +32,7 @@
   <#if furtherInformationView?has_content>
     <@furtherInformation.requestNotificationBanner furtherInformationView=furtherInformationView/>
   </#if>
+  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>

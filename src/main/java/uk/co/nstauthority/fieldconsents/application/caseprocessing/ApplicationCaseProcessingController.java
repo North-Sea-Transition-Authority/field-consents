@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.Case
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -88,6 +89,7 @@ public class ApplicationCaseProcessingController {
   private final ConsentService consentService;
   private final ConsentBreachService consentBreachService;
   private final CaseProcessingControllerHelperService caseProcessingControllerHelperService;
+  private final LicenceExpiryService licenceExpiryService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -109,7 +111,8 @@ public class ApplicationCaseProcessingController {
       ConsentIssuingApprovalService consentIssuingApprovalService,
       ConsentService consentService,
       ConsentBreachService consentBreachService,
-      CaseProcessingControllerHelperService caseProcessingControllerHelperService
+      CaseProcessingControllerHelperService caseProcessingControllerHelperService,
+      LicenceExpiryService licenceExpiryService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -130,6 +133,7 @@ public class ApplicationCaseProcessingController {
     this.consentService = consentService;
     this.consentBreachService = consentBreachService;
     this.caseProcessingControllerHelperService = caseProcessingControllerHelperService;
+    this.licenceExpiryService = licenceExpiryService;
   }
 
   @GetMapping("case-processing")
@@ -212,6 +216,9 @@ public class ApplicationCaseProcessingController {
         modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
       }
     }
+
+    modelAndView.addObject("expiringLicences",
+        licenceExpiryService.getLicencesExpiringDuringConsentPeriod(latestApplicationVersion));
 
     return modelAndView;
   }
