@@ -8,11 +8,16 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_REF_1;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.latestAndApprovedPetsApplications;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.latestPetsApplications;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication1Json;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication2Json;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication3Json;
-import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplications;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication4;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication4Json;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.latestAndLatestAndApprovedPetsApplications;
+import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication5Json;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -47,7 +52,7 @@ class PetsApplicationServiceTest {
   private PetsApplicationService petsApplicationService;
 
   @Test
-  void searchEiaDirections_onePetsApp() {
+  void searchEiaDirections_oneIsLatestAndApprovedVariationPetsApp() {
     when(petsApplicationApi.searchPetsApplications(eq("111"), any(), any(), any(), any(), any()))
         .thenReturn(List.of(petsApplication1));
 
@@ -57,25 +62,125 @@ class PetsApplicationServiceTest {
   }
 
   @Test
-  void searchEiaDirections_manyPetsApps() {
+  void searchEiaDirections_oneIsLatestVariationPetsApp() {
+    when(petsApplicationApi.searchPetsApplications(eq("111"), any(), any(), any(), any(), any()))
+        .thenReturn(List.of(petsApplication4));
+
+    List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("111",
+        PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsons).containsExactly(petsApplication4Json);
+  }
+
+  @Test
+  void searchEiaDirections_manyIsLatestAndApprovedVariationPetsApps() {
     when(petsApplicationApi.searchPetsApplications(eq("I"), any(), any(), any(), any(), any()))
-        .thenReturn(petsApplications);
+        .thenReturn(latestAndApprovedPetsApplications);
 
     List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("I",
         PETS_SERVICE_PURPOSE);
-    assertThat(petsApplicationJsons).containsExactly(petsApplication1Json, petsApplication2Json, petsApplication3Json);
+    assertThat(petsApplicationJsons).containsExactly(
+        petsApplication1Json,
+        petsApplication2Json,
+        petsApplication3Json
+    );
+  }
+
+  @Test
+  void searchEiaDirections_manyIsLatestVariationPetsApps() {
+    when(petsApplicationApi.searchPetsApplications(eq("I"), any(), any(), any(), any(), any()))
+        .thenReturn(latestPetsApplications);
+
+    List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("I",
+        PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsons).containsExactly(
+        petsApplication4Json,
+        petsApplication5Json
+    );
+  }
+
+  @Test
+  void searchEiaDirections_manyIsLatestVariationAndIsLatestAndApprovedVariationPetsApps() {
+    when(petsApplicationApi.searchPetsApplications(eq("I"), any(), any(), any(), any(), any()))
+        .thenReturn(latestAndLatestAndApprovedPetsApplications);
+
+    List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("I",
+        PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsons).containsExactly(
+        petsApplication1Json,
+        petsApplication2Json,
+        petsApplication3Json,
+        petsApplication4Json,
+        petsApplication5Json
+    );
   }
 
   @ParameterizedTest
   @MethodSource("getFalseAndNullBooleanArguments")
-  void searchEiaDirections_petsApplicationWithFalseOrNullIsLatestApprovedVariationNotIncluded(Boolean isLatestApprovedVariation) {
+  void searchEiaDirections_petsApplicationWithTrueIsLatestApprovedVariationAndFalseOrNullIsLatestVariationIncluded(Boolean isLatestApprovedVariation) {
     var petsApplication = PetsApplication.newBuilder()
         .satId(SAT_ID_1)
         .satRef(SAT_REF_1)
         .satType(SatType.EIA_DIRECTION)
         .status(SatStatus.COMPLETED)
         .decision(SatDecision.APPROVE)
-        .isLatestApprovedVariation(isLatestApprovedVariation)
+        .isLatestApprovedVariation(true)
+        .isLatestVariation(isLatestApprovedVariation)
+        .build();
+
+    var petsApplicationJson = new PetsApplicationJson(
+        petsApplication.getSatId(),
+        petsApplication.getSatRef(),
+        petsApplication.getSatType(),
+        petsApplication.getStatus(),
+        petsApplication.getDecision()
+    );
+
+    when(petsApplicationApi.searchPetsApplications(eq("111"), any(), any(), any(), any(), any()))
+        .thenReturn(List.of(petsApplication, petsApplication1));
+
+    List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("111",
+        PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsons).containsExactly(petsApplicationJson, petsApplication1Json);
+  }
+
+  @Test
+  void searchEiaDirections_petsApplicationWithFalseIsLatestApprovedVariationAndTrueIsLatestVariationIncluded() {
+    var petsApplication = PetsApplication.newBuilder()
+        .satId(SAT_ID_1)
+        .satRef(SAT_REF_1)
+        .satType(SatType.EIA_DIRECTION)
+        .status(SatStatus.COMPLETED)
+        .decision(SatDecision.APPROVE)
+        .isLatestApprovedVariation(false)
+        .isLatestVariation(true)
+        .build();
+
+    var petsApplicationJson = new PetsApplicationJson(
+        petsApplication.getSatId(),
+        petsApplication.getSatRef(),
+        petsApplication.getSatType(),
+        petsApplication.getStatus(),
+        petsApplication.getDecision()
+    );
+
+    when(petsApplicationApi.searchPetsApplications(eq("111"), any(), any(), any(), any(), any()))
+        .thenReturn(List.of(petsApplication, petsApplication1));
+
+    List<PetsApplicationJson> petsApplicationJsons = petsApplicationService.searchEiaDirections("111",
+        PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsons).containsExactly(petsApplicationJson, petsApplication1Json);
+  }
+
+  @Test
+  void searchEiaDirections_petsApplicationWithFalseIsLatestApprovedVariationAndIsLatestVariationNotIncluded() {
+    var petsApplication = PetsApplication.newBuilder()
+        .satId(SAT_ID_1)
+        .satRef(SAT_REF_1)
+        .satType(SatType.EIA_DIRECTION)
+        .status(SatStatus.COMPLETED)
+        .decision(SatDecision.APPROVE)
+        .isLatestApprovedVariation(false)
+        .isLatestVariation(false)
         .build();
 
     when(petsApplicationApi.searchPetsApplications(eq("111"), any(), any(), any(), any(), any()))
@@ -115,7 +220,7 @@ class PetsApplicationServiceTest {
         .satType(satType)
         .status(SatStatus.COMPLETED)
         .decision(SatDecision.APPROVE)
-        .isLatestApprovedVariation(null)
+        .isLatestApprovedVariation(true)
         .build();
 
     when(petsApplicationApi.findPetsApplicationById(eq(petsApplication.getSatId()), any(), any()))
@@ -126,16 +231,72 @@ class PetsApplicationServiceTest {
     assertThat(petsApplicationJsonOptional).isEmpty();
   }
 
-  @ParameterizedTest
-  @MethodSource("getFalseAndNullBooleanArguments")
-  void findEiaDirectionById_isLatestApprovedVariationFalseOrNull(Boolean isLatestApprovedVariation) {
+  @Test
+  void findEiaDirectionById_isLatestApprovedVariationFalseAndIsLatestVariationTrue() {
     var petsApplication = PetsApplication.newBuilder()
         .satId(SAT_ID_1)
         .satRef(SAT_REF_1)
         .satType(SatType.EIA_DIRECTION)
         .status(SatStatus.COMPLETED)
         .decision(SatDecision.APPROVE)
-        .isLatestApprovedVariation(isLatestApprovedVariation)
+        .isLatestApprovedVariation(false)
+        .isLatestVariation(true)
+        .build();
+
+    var petsApplicationJson = new PetsApplicationJson(
+        petsApplication.getSatId(),
+        petsApplication.getSatRef(),
+        petsApplication.getSatType(),
+        petsApplication.getStatus(),
+        petsApplication.getDecision()
+    );
+
+    when(petsApplicationApi.findPetsApplicationById(eq(petsApplication.getSatId()), any(), any()))
+        .thenReturn(Optional.of(petsApplication));
+
+    var petsApplicationJsonOptional = petsApplicationService
+        .findEiaDirectionById(petsApplication.getSatId(), PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsonOptional).contains(petsApplicationJson);
+  }
+
+  @Test
+  void findEiaDirectionById_isLatestApprovedVariationTrueAndIsLatestVariationFalse() {
+    var petsApplication = PetsApplication.newBuilder()
+        .satId(SAT_ID_1)
+        .satRef(SAT_REF_1)
+        .satType(SatType.EIA_DIRECTION)
+        .status(SatStatus.COMPLETED)
+        .decision(SatDecision.APPROVE)
+        .isLatestApprovedVariation(true)
+        .isLatestVariation(false)
+        .build();
+
+    var petsApplicationJson = new PetsApplicationJson(
+        petsApplication.getSatId(),
+        petsApplication.getSatRef(),
+        petsApplication.getSatType(),
+        petsApplication.getStatus(),
+        petsApplication.getDecision()
+    );
+
+    when(petsApplicationApi.findPetsApplicationById(eq(petsApplication.getSatId()), any(), any()))
+        .thenReturn(Optional.of(petsApplication));
+
+    var petsApplicationJsonOptional = petsApplicationService
+        .findEiaDirectionById(petsApplication.getSatId(), PETS_SERVICE_PURPOSE);
+    assertThat(petsApplicationJsonOptional).contains(petsApplicationJson);
+  }
+
+  @Test
+  void findEiaDirectionById_isLatestApprovedVariationAndIsLatestVariationFalse() {
+    var petsApplication = PetsApplication.newBuilder()
+        .satId(SAT_ID_1)
+        .satRef(SAT_REF_1)
+        .satType(SatType.EIA_DIRECTION)
+        .status(SatStatus.COMPLETED)
+        .decision(SatDecision.APPROVE)
+        .isLatestApprovedVariation(false)
+        .isLatestVariation(false)
         .build();
 
     when(petsApplicationApi.findPetsApplicationById(eq(petsApplication.getSatId()), any(), any()))

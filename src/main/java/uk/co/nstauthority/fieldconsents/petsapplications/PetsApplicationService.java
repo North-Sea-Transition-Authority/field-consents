@@ -8,6 +8,7 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.pets.PetsApplicationApi;
 import uk.co.fivium.energyportalapi.generated.client.PetsApplicationProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.PetsApplicationsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.PetsApplication;
 import uk.co.fivium.energyportalapi.generated.types.SatType;
 
 @Service
@@ -22,7 +23,8 @@ public class PetsApplicationService {
           .satType().root()
           .status().root()
           .decision().root()
-          .isLatestApprovedVariation();
+          .isLatestApprovedVariation()
+          .isLatestVariation();
 
   static final PetsApplicationProjectionRoot petsApplicationProjectionRoot =
       new PetsApplicationProjectionRoot()
@@ -31,7 +33,8 @@ public class PetsApplicationService {
           .satType().root()
           .status().root()
           .decision().root()
-          .isLatestApprovedVariation();
+          .isLatestApprovedVariation()
+          .isLatestVariation();
 
   private final PetsApplicationApi petsApplicationApi;
 
@@ -40,6 +43,7 @@ public class PetsApplicationService {
   }
 
   public List<PetsApplicationJson> searchEiaDirections(String searchTerm, String purpose) {
+
     return petsApplicationApi.searchPetsApplications(searchTerm,
             EIA_DIRECTION_SAT_TYPES,
             null,
@@ -47,7 +51,7 @@ public class PetsApplicationService {
             petsApplicationsProjectionRoot,
             new RequestPurpose(purpose))
         .stream()
-        .filter(petsApplication -> Boolean.TRUE.equals(petsApplication.getIsLatestApprovedVariation()))
+        .filter(this::isLatestApprovedOrLatestVariation)
         .map(PetsApplicationJson::from)
         .toList();
   }
@@ -55,7 +59,7 @@ public class PetsApplicationService {
   public Optional<PetsApplicationJson> findEiaDirectionById(Integer satId, String purpose) {
     return petsApplicationApi.findPetsApplicationById(satId, petsApplicationProjectionRoot, new RequestPurpose(purpose))
         .filter(petsApplication -> EIA_DIRECTION_SAT_TYPES.contains(petsApplication.getSatType()))
-        .filter(petsApplication -> Boolean.TRUE.equals(petsApplication.getIsLatestApprovedVariation()))
+        .filter(petsApplication -> Boolean.TRUE.equals(isLatestApprovedOrLatestVariation(petsApplication)))
         .map(PetsApplicationJson::from);
   }
 
@@ -67,5 +71,10 @@ public class PetsApplicationService {
   public PetsApplicationJson getEiaDirectionByIdOrFallback(Integer satId, String purpose, String cachedSatRef) {
     return findEiaDirectionById(satId, purpose)
         .orElseGet(() -> PetsApplicationJson.fromCachedInformation(satId, cachedSatRef));
+  }
+
+  private boolean isLatestApprovedOrLatestVariation(PetsApplication petsApplication) {
+    return petsApplication.getIsLatestApprovedVariation()
+        || petsApplication.getIsLatestVariation();
   }
 }

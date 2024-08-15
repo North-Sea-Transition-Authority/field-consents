@@ -11,9 +11,13 @@ public class PetsApplicationTestUtil {
   public static final Integer SAT_ID_1 = 1;
   public static final Integer SAT_ID_2 = 2;
   public static final Integer SAT_ID_3 = 3;
+  public static final Integer SAT_ID_4 = 4;
+  public static final Integer SAT_ID_5 = 5;
   public static final String SAT_REF_1 = "EIA/111/1";
   public static final String SAT_REF_2 = "EIA/222/2";
   public static final String SAT_REF_3 = "EIA/333/3";
+  public static final String SAT_REF_4 = "EIA/444/4";
+  public static final String SAT_REF_5 = "EIA/555/5";
 
   public static PetsApplication petsApplication1 =
       PetsApplication.newBuilder()
@@ -23,6 +27,7 @@ public class PetsApplicationTestUtil {
           .status(SatStatus.COMPLETED)
           .decision(SatDecision.APPROVE)
           .isLatestApprovedVariation(true)
+          .isLatestVariation(false)
           .build();
 
   public static PetsApplicationJson petsApplication1Json =
@@ -42,6 +47,7 @@ public class PetsApplicationTestUtil {
           .status(SatStatus.DECISION)
           .decision(SatDecision.UNKNOWN)
           .isLatestApprovedVariation(true)
+          .isLatestVariation(false)
           .build();
 
   public static PetsApplicationJson petsApplication2Json =
@@ -61,6 +67,7 @@ public class PetsApplicationTestUtil {
           .status(SatStatus.COMPLETED)
           .decision(SatDecision.REJECT)
           .isLatestApprovedVariation(true)
+          .isLatestVariation(false)
           .build();
 
   public static PetsApplicationJson petsApplication3Json =
@@ -72,7 +79,66 @@ public class PetsApplicationTestUtil {
           petsApplication3.getDecision()
       );
 
-  public static List<PetsApplication> petsApplications =
-      List.of(petsApplication1, petsApplication2, petsApplication3);
+  public static PetsApplication petsApplication4 =
+      PetsApplication.newBuilder()
+          .satId(SAT_ID_4)
+          .satRef(SAT_REF_4)
+          .satType(SatType.EIA_DIRECTION)
+          .status(SatStatus.COMPLETED)
+          .decision(SatDecision.REJECT)
+          .isLatestApprovedVariation(false)
+          .isLatestVariation(true)
+          .build();
+
+  public static PetsApplicationJson petsApplication4Json =
+      new PetsApplicationJson(
+          petsApplication4.getSatId(),
+          petsApplication4.getSatRef(),
+          petsApplication4.getSatType(),
+          petsApplication4.getStatus(),
+          petsApplication4.getDecision()
+      );
+
+  public static PetsApplication petsApplication5 =
+      PetsApplication.newBuilder()
+          .satId(SAT_ID_5)
+          .satRef(SAT_REF_5)
+          .satType(SatType.EIA_DIRECTION)
+          .status(SatStatus.COMPLETED)
+          .decision(SatDecision.REJECT)
+          .isLatestApprovedVariation(false)
+          .isLatestVariation(true)
+          .build();
+
+  public static PetsApplicationJson petsApplication5Json =
+      new PetsApplicationJson(
+          petsApplication5.getSatId(),
+          petsApplication5.getSatRef(),
+          petsApplication5.getSatType(),
+          petsApplication5.getStatus(),
+          petsApplication5.getDecision()
+      );
+
+  public static List<PetsApplication> latestAndLatestAndApprovedPetsApplications =
+      List.of(
+          petsApplication1,
+          petsApplication2,
+          petsApplication3,
+          petsApplication4,
+          petsApplication5
+      );
+
+  public static List<PetsApplication> latestAndApprovedPetsApplications =
+      List.of(
+          petsApplication1,
+          petsApplication2,
+          petsApplication3
+      );
+
+  public static List<PetsApplication> latestPetsApplications =
+      List.of(
+          petsApplication4,
+          petsApplication5
+      );
 
 }
