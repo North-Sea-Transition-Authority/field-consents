@@ -2,13 +2,12 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseo
 
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Component
-class BulkAssignCaseOfficerFormValidator implements Validator {
+class BulkAssignCaseOfficerFormValidator {
 
   private static final String REQUIRED = "required";
 
@@ -29,15 +28,7 @@ class BulkAssignCaseOfficerFormValidator implements Validator {
     this.energyPortalUserService = energyPortalUserService;
   }
 
-  @Override
-  public boolean supports(Class<?> clazz) {
-    return BulkAssignCaseOfficerForm.class.equals(clazz);
-  }
-
-  @Override
-  public void validate(Object target, Errors errors) {
-    var form = (BulkAssignCaseOfficerForm) target;
-
+  void validate(BulkAssignCaseOfficerForm form, Errors errors) {
     validateCaseOfficerWuaId(form, errors);
     validateSelectedApplicationIds(form, errors);
   }

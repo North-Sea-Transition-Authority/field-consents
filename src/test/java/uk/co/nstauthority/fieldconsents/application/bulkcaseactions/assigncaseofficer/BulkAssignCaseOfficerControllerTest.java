@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
@@ -34,8 +35,6 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -54,15 +53,13 @@ import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   private static final Class<BulkAssignCaseOfficerController> CONTROLLER_CLASS = BulkAssignCaseOfficerController.class;
+  private static final String SESSION_ATTRIBUTE = "bulkCaseActions-assignCaseOfficer";
 
   @MockBean
   private BulkAssignCaseOfficerFormValidator validator;
 
   @MockBean
   private BulkAssignCaseOfficerService bulkAssignCaseOfficerService;
-
-  @MockBean
-  private BulkCaseActionControllerHelperService controllerHelperService;
 
   @MockBean
   private BulkCaseActionService bulkCaseActionService;
@@ -72,9 +69,13 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   private MockHttpSession session;
 
+  @Mock
+  private BulkAssignCaseOfficerSessionContext sessionContext;
+
   @BeforeEach
   void setUp() {
     session = new MockHttpSession();
+    session.setAttribute(SESSION_ATTRIBUTE, sessionContext);
   }
 
   @SecurityTest
@@ -99,14 +100,14 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
     var availableCaseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2);
     when(bulkAssignCaseOfficerService.getAvailableCaseOfficers()).thenReturn(availableCaseOfficers);
 
-    var form = BulkCaseActionSelectedApplicationsForm.empty();
-    when(controllerHelperService.getSelectedApplicationsForm(session)).thenReturn(form);
+    var form = new BulkCaseActionSelectedApplicationsForm();
+    when(sessionContext.getSelectedApplicationsForm()).thenReturn(form);
 
     var applicationDataItemWithoutCaseOfficer = applicationDataItemBuilderWithDefaults(1).build();
     var applicationDataItemWithCaseOfficer = applicationDataItemBuilderWithDefaults(2).withCaseOfficer("unit test").build();
 
     var applicationDataItemViews = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
-    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).thenReturn(applicationDataItemViews);
+    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form.getSelectedApplicationIds(), user)).thenReturn(applicationDataItemViews);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).assignCaseOfficer(null, null)))
         .session(session)
@@ -143,7 +144,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
         .param("selectedApplicationIds", "11")
         .param("selectedApplicationIds", "12"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(BulkAssignCaseOfficerSearchController.class).getSearchResults(null, null))))
         .andExpect(notificationBanner(NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
             .withHeadingContent(bannerMessage)
@@ -151,7 +152,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
     verify(validator).validate(eq(new BulkAssignCaseOfficerForm(caseOfficerWuaId, Set.of("10", "11", "12"))), any(BindingResult.class));
     verify(bulkAssignCaseOfficerService).assignCaseOfficer(applicationVersions, ServiceUserDetail.from(caseOfficer), user);
-    verify(controllerHelperService).clearSelectedApplicationsForm(session);
+    verify(sessionContext).clearSelectedApplications();
   }
 
   @Test
@@ -161,14 +162,14 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
     var availableCaseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2);
     when(bulkAssignCaseOfficerService.getAvailableCaseOfficers()).thenReturn(availableCaseOfficers);
 
-    var form = BulkCaseActionSelectedApplicationsForm.empty();
-    when(controllerHelperService.getSelectedApplicationsForm(session)).thenReturn(form);
+    var form = new BulkCaseActionSelectedApplicationsForm();
+    when(sessionContext.getSelectedApplicationsForm()).thenReturn(form);
 
     var applicationDataItemWithoutCaseOfficer = applicationDataItemBuilderWithDefaults(1).build();
     var applicationDataItemWithCaseOfficer = applicationDataItemBuilderWithDefaults(2).withCaseOfficer("unit test").build();
 
     var applicationDataItemViews = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
-    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).thenReturn(applicationDataItemViews);
+    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form.getSelectedApplicationIds(), user)).thenReturn(applicationDataItemViews);
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
@@ -185,7 +186,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
         .andExpectAll(modelAndViewResultMatchers(applicationDataItemViews, availableCaseOfficers));
 
     verify(bulkAssignCaseOfficerService, never()).assignCaseOfficer(any(), any(), any());
-    verify(controllerHelperService, never()).clearSelectedApplicationsForm(any());
+    verify(sessionContext, never()).clearSelectedApplications();
   }
 
   private ResultMatcher[] modelAndViewResultMatchers(
@@ -203,7 +204,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
         status().isOk(),
         view().name("fcs/application/bulk-case-actions/assignCaseOfficer"),
         model().attribute("pageTitle", "Assign case officer"),
-        model().attribute("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null))),
+        model().attribute("backLinkUrl", ReverseRouter.route(on(BulkAssignCaseOfficerSearchController.class).getSearchResults(null, null))),
         model().attribute("applicationDataItemViews", applicationDataItemViews),
         model().attributeExists("captionHeadingFunction"),
         model().attribute("caseOfficerOptions", caseOfficerOptions)

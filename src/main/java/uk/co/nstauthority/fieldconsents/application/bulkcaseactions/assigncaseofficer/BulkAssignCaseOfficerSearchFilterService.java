@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.UNASSIGNED;
@@ -20,7 +20,7 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
-class BulkCaseActionSearchFilterService {
+class BulkAssignCaseOfficerSearchFilterService {
 
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for bulk action application data";
   public static final String ORGANISATION_UNIT_LOOKUP_PURPOSE = "Lookup organisation unit for bulk action application data";
@@ -30,7 +30,7 @@ class BulkCaseActionSearchFilterService {
   private final TeamService teamService;
   private final CaseAssignmentService caseAssignmentService;
 
-  BulkCaseActionSearchFilterService(
+  BulkAssignCaseOfficerSearchFilterService(
       ApplicationDataFilterFormService filterFormService,
       ApplicationDataFilterService applicationDataFilterService,
       TeamService teamService,
@@ -42,15 +42,15 @@ class BulkCaseActionSearchFilterService {
     this.caseAssignmentService = caseAssignmentService;
   }
 
-  public RestSearchItem getPrefilledOrganisation(Integer operatorId) {
+  RestSearchItem getPrefilledOrganisation(Integer operatorId) {
     return filterFormService.getPrefilledOrganisation(operatorId, ORGANISATION_UNIT_LOOKUP_PURPOSE);
   }
 
-  public RestSearchItem getPrefilledAsset(String assetKey) {
+  RestSearchItem getPrefilledAsset(String assetKey) {
     return filterFormService.getPrefilledAsset(assetKey);
   }
 
-  public Map<String, String> getCaseOfficerDisplayOptions() {
+  Map<String, String> getCaseOfficerDisplayOptions() {
     var caseOfficerDisplayOptions = new LinkedHashMap<String, String>();
     caseOfficerDisplayOptions.put(UNASSIGNED, "Unassigned");
 
@@ -61,7 +61,7 @@ class BulkCaseActionSearchFilterService {
     return caseOfficerDisplayOptions;
   }
 
-  public List<Condition> getConditions(BulkCaseActionSearchFiltersForm filtersForm, ServiceUserDetail user) {
+  List<Condition> getConditions(BulkAssignCaseOfficerSearchFiltersForm filtersForm, ServiceUserDetail user) {
     var conditions = new ArrayList<Condition>();
 
     Optional.ofNullable(filtersForm.operatorId())
@@ -109,7 +109,7 @@ class BulkCaseActionSearchFilterService {
         .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(CASE_OFFICER.name()));
   }
 
-  Optional<Condition> getUserCondition(ServiceUserDetail user) {
+  private Optional<Condition> getUserCondition(ServiceUserDetail user) {
     if (!teamService.isRegulatorUser(user)) {
       return Optional.empty();
     }

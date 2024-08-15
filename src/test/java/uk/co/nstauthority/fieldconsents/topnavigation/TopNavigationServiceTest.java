@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.topnavigation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_DOCUMENT_TEMPLATES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_FEE_PERIODS;
@@ -40,7 +41,7 @@ class TopNavigationServiceTest {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -56,7 +57,7 @@ class TopNavigationServiceTest {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -76,7 +77,7 @@ class TopNavigationServiceTest {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(true);
     when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -96,7 +97,7 @@ class TopNavigationServiceTest {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -116,7 +117,7 @@ class TopNavigationServiceTest {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS))).thenReturn(true);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 

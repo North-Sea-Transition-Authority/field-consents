@@ -2,12 +2,13 @@ package uk.co.nstauthority.fieldconsents.fds.navigation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_DOCUMENT_TEMPLATES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_FEE_PERIODS;
 
 import java.util.Collections;
 import java.util.Set;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateController;
 import uk.co.nstauthority.fieldconsents.fee.FeePeriodController;
@@ -44,8 +45,8 @@ public enum TopNavigationItem {
       Set.of(MANAGE_DOCUMENT_TEMPLATES)
   ),
   BULK_ACTIONS("Bulk actions",
-      ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null)),
-      Set.of(ASSIGN_FCS_APPLICATIONS)
+      ReverseRouter.route(on(BulkCaseActionController.class).getBulkCaseActions(null)),
+      Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)
   );
 
   private final String displayName;

@@ -11,9 +11,15 @@
   errorItems=errorList>
   <@fdsForm.htmlForm>
     <div data-module="fcs-selectable-results-and-actions-container">
-      <#list actions as action>
-        <@fdsAction.button buttonText=action />
-      </#list>
+      <#if consentsPendingIssue?has_content && consentsPendingIssue gt 0>
+        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Consents are being issued in the background">
+          <@fdsNotificationBanner.notificationBannerContent>
+            ${consentsPendingIssue} consents queued for issue. You can refresh this page to update the status
+          </@fdsNotificationBanner.notificationBannerContent>
+        </@fdsNotificationBanner.notificationBannerInfo>
+      </#if>
+
+      <@fdsAction.button buttonText=action />
 
       <@fdsSearch.searchPage>
         <@fdsSearch.searchFilter oneThirdWidth=true>
@@ -54,12 +60,14 @@
               prefilledTerminal=prefilledTerminal
               terminalAssetSearchRestUrl=terminalAssetSearchRestUrl
             />
-            <@dataItemFilter.caseOfficerFilter
-              path="filtersForm.caseOfficerWuaId"
-              form=filtersForm
-              expanded=filtersForm.caseOfficerWuaId()?has_content
-              caseOfficerOptions=caseOfficerOptions
-            />
+            <#if caseOfficerOptions?has_content>
+              <@dataItemFilter.caseOfficerFilter
+                path="filtersForm.caseOfficerWuaId"
+                form=filtersForm
+                expanded=filtersForm.caseOfficerWuaId()?has_content
+                caseOfficerOptions=caseOfficerOptions
+              />
+            </#if>
           </@fdsSearch.searchFilterList>
         </@fdsSearch.searchFilter>
         <@fdsSearch.searchPageContent twoThirdsWidth=true>

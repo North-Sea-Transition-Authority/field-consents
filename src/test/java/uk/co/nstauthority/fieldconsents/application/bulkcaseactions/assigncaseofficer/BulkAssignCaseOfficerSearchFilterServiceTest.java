@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -42,7 +42,7 @@ import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
-class BulkCaseActionSearchFilterServiceTest {
+class BulkAssignCaseOfficerSearchFilterServiceTest {
 
   private static final Condition CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION =
       APPLICATION_VERSIONS.CURRENT_CASE_OWNER.isNull()
@@ -62,7 +62,7 @@ class BulkCaseActionSearchFilterServiceTest {
 
   @Spy
   @InjectMocks
-  private BulkCaseActionSearchFilterService bulkCaseActionSearchFilterService;
+  private BulkAssignCaseOfficerSearchFilterService bulkAssignCaseOfficerSearchFilterService;
 
   private ServiceUserDetail caseManagerUser;
 
@@ -75,20 +75,20 @@ class BulkCaseActionSearchFilterServiceTest {
   void getPrefilledOrganisation() {
     var restSearchItem = mock(RestSearchItem.class);
     when(filterFormService.getPrefilledOrganisation(eq(1), anyString())).thenReturn(restSearchItem);
-    assertThat(bulkCaseActionSearchFilterService.getPrefilledOrganisation(1)).isEqualTo(restSearchItem);
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getPrefilledOrganisation(1)).isEqualTo(restSearchItem);
   }
 
   @Test
   void getPrefilledAsset() {
     var restSearchItem = mock(RestSearchItem.class);
     when(filterFormService.getPrefilledAsset("1")).thenReturn(restSearchItem);
-    assertThat(bulkCaseActionSearchFilterService.getPrefilledAsset("1")).isEqualTo(restSearchItem);
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getPrefilledAsset("1")).isEqualTo(restSearchItem);
   }
 
   @Test
   void getCaseOfficerDisplayOptions() {
     when(caseAssignmentService.getCurrentCaseOfficers()).thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3));
-    assertThat(bulkCaseActionSearchFilterService.getCaseOfficerDisplayOptions())
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getCaseOfficerDisplayOptions())
         .containsExactly(
             entry("unassigned", "Unassigned"),
             entry(ENERGY_PORTAL_USER_1.webUserAccountId().toString(), ENERGY_PORTAL_USER_1.displayName()),
@@ -101,7 +101,7 @@ class BulkCaseActionSearchFilterServiceTest {
   void getConditions_emptyForm_isNotRegulator() {
     when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(false);
 
-    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser))
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(BulkAssignCaseOfficerSearchFiltersForm.empty(), caseManagerUser))
         .containsExactly(CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION);
   }
 
@@ -111,13 +111,13 @@ class BulkCaseActionSearchFilterServiceTest {
     when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(condition);
 
-    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser))
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(BulkAssignCaseOfficerSearchFiltersForm.empty(), caseManagerUser))
         .containsExactly(condition, CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION);
   }
 
   @Test
   void getConditions_operatorId() {
-    var form = new BulkCaseActionSearchFiltersForm(
+    var form = new BulkAssignCaseOfficerSearchFiltersForm(
         1,
         "1FIELD",
         "1TERMINAL",
@@ -146,13 +146,13 @@ class BulkCaseActionSearchFilterServiceTest {
     when(applicationDataFilterService.getTerminalCondition(AssetKey.from(form.terminalAssetKey()))).thenReturn(terminalAssetKeyCondition);
 
     var caseOfficerCondition = mock(Condition.class);
-    doReturn(Optional.of(caseOfficerCondition)).when(bulkCaseActionSearchFilterService).getCaseOfficerCondition(form.caseOfficerWuaId());
+    doReturn(Optional.of(caseOfficerCondition)).when(bulkAssignCaseOfficerSearchFilterService).getCaseOfficerCondition(form.caseOfficerWuaId());
 
     var userCondition = mock(Condition.class);
     when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(userCondition);
 
-    assertThat(bulkCaseActionSearchFilterService.getConditions(form, caseManagerUser)).containsExactly(
+    assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(form, caseManagerUser)).containsExactly(
         operatorCondition,
         geographicAreasCondition,
         aceFlagStatusesCondition,
@@ -171,7 +171,7 @@ class BulkCaseActionSearchFilterServiceTest {
       String caseOfficerWuaId,
       Optional<Condition> expectedCondition
   ) {
-    var actualCondition = bulkCaseActionSearchFilterService.getCaseOfficerCondition(caseOfficerWuaId);
+    var actualCondition = bulkAssignCaseOfficerSearchFilterService.getCaseOfficerCondition(caseOfficerWuaId);
     assertThat(actualCondition).isEqualTo(expectedCondition);
   }
 

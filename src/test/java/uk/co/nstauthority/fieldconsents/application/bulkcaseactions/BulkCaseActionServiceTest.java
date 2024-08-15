@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -27,13 +26,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -70,25 +68,13 @@ class BulkCaseActionServiceTest {
   @Test
   void getSelectedApplicationDataItemViews() {
     var selectedIds = Set.of(1, 2, 3);
-    var form = new BulkCaseActionSelectedApplicationsForm(Set.of("1", "2", "3"));
 
     var applicationDataItemViews = List.of(ApplicationDataItemView.newBuilder().build());
     doReturn(applicationDataItemViews).when(bulkCaseActionService).getApplicationDataItemViews(any(ServiceUserDetail.class), anyList());
 
-    assertThat(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).containsExactlyElementsOf(applicationDataItemViews);
+    assertThat(bulkCaseActionService.getSelectedApplicationDataItemViews(selectedIds, user)).containsExactlyElementsOf(applicationDataItemViews);
 
     verify(bulkCaseActionService).getApplicationDataItemViews(user, List.of(APPLICATIONS.ID.in(selectedIds)));
-  }
-
-  @Test
-  void getApplicationDataItemViews_withoutConditions() {
-    var applicationDataItemViews = List.of(ApplicationDataItemView.newBuilder().build());
-
-    doReturn(applicationDataItemViews).when(bulkCaseActionService).getApplicationDataItemViews(any(ServiceUserDetail.class), anyList());
-
-    assertThat(bulkCaseActionService.getApplicationDataItemViews(user)).containsExactlyElementsOf(applicationDataItemViews);
-
-    verify(bulkCaseActionService).getApplicationDataItemViews(user, Collections.emptyList());
   }
 
   @Test
@@ -111,12 +97,5 @@ class BulkCaseActionServiceTest {
     verify(selectQuery).addOrderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc());
 
     assertThat(conditionsCaptor.getValue()).containsExactlyElementsOf(conditions);
-  }
-
-  @Test
-  void getBulkActions() {
-    assertThat(bulkCaseActionService.getBulkActions()).containsExactly(
-        BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER
-    );
   }
 }

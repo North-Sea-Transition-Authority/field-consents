@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
@@ -38,7 +36,6 @@ public class BulkAssignCaseOfficerController {
   private final ApplicationVersionService applicationVersionService;
   private final BulkAssignCaseOfficerFormValidator validator;
   private final BulkAssignCaseOfficerService bulkAssignCaseOfficerService;
-  private final BulkCaseActionControllerHelperService controllerHelperService;
   private final BulkCaseActionService bulkCaseActionService;
   private final EnergyPortalUserService energyPortalUserService;
 
@@ -46,21 +43,20 @@ public class BulkAssignCaseOfficerController {
       ApplicationVersionService applicationVersionService,
       BulkAssignCaseOfficerFormValidator validator,
       BulkAssignCaseOfficerService bulkAssignCaseOfficerService,
-      BulkCaseActionControllerHelperService controllerHelperService,
       BulkCaseActionService bulkCaseActionService,
       EnergyPortalUserService energyPortalUserService
   ) {
     this.applicationVersionService = applicationVersionService;
     this.validator = validator;
     this.bulkAssignCaseOfficerService = bulkAssignCaseOfficerService;
-    this.controllerHelperService = controllerHelperService;
     this.bulkCaseActionService = bulkCaseActionService;
     this.energyPortalUserService = energyPortalUserService;
   }
 
   @GetMapping
-  public ModelAndView assignCaseOfficer(HttpSession session, ServiceUserDetail user) {
-    return assignCaseOfficerModelAndView(session, user, BulkAssignCaseOfficerForm.empty());
+  ModelAndView assignCaseOfficer(HttpSession session, ServiceUserDetail user) {
+    var sessionContext = BulkAssignCaseOfficerSessionContext.fromSession(session);
+    return getModelAndView(sessionContext, user, BulkAssignCaseOfficerForm.empty());
   }
 
   @PostMapping
@@ -71,10 +67,11 @@ public class BulkAssignCaseOfficerController {
       BindingResult bindingResult,
       ServiceUserDetail user
   ) {
-    validator.validate(form, bindingResult);
+    var sessionContext = BulkAssignCaseOfficerSessionContext.fromSession(session);
 
+    validator.validate(form, bindingResult);
     if (bindingResult.hasErrors()) {
-      return assignCaseOfficerModelAndView(session, user, form);
+      return getModelAndView(sessionContext, user, form);
     }
 
     var caseOfficer = energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(form.caseOfficerWuaId()));
@@ -82,21 +79,22 @@ public class BulkAssignCaseOfficerController {
     var applicationVersions = applicationVersionService.getLatestApplicationVersions(applicationIds);
 
     bulkAssignCaseOfficerService.assignCaseOfficer(applicationVersions, ServiceUserDetail.from(caseOfficer), user);
-    controllerHelperService.clearSelectedApplicationsForm(session);
+
+    sessionContext.clearSelectedApplications();
 
     var bannerMessage = bulkAssignCaseOfficerService.getNotificationBannerSuccessMessage(applicationIds.size(), caseOfficer);
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, bannerMessage);
 
-    return ReverseRouter.redirect(on(BulkCaseActionSearchController.class).getSearchResults(null, null));
+    return ReverseRouter.redirect(on(BulkAssignCaseOfficerSearchController.class).getSearchResults(null, null));
   }
 
-  private ModelAndView assignCaseOfficerModelAndView(
-      HttpSession session,
+  private ModelAndView getModelAndView(
+      BulkAssignCaseOfficerSessionContext sessionContext,
       ServiceUserDetail user,
       BulkAssignCaseOfficerForm form
   ) {
-    var selectedApplicationsForm = controllerHelperService.getSelectedApplicationsForm(session);
-    var applicationDataItemViews = bulkCaseActionService.getSelectedApplicationDataItemViews(selectedApplicationsForm, user);
+    var selectedApplicationIds = sessionContext.getSelectedApplicationsForm().getSelectedApplicationIds();
+    var applicationDataItemViews = bulkCaseActionService.getSelectedApplicationDataItemViews(selectedApplicationIds, user);
 
     var caseOfficerOptions = bulkAssignCaseOfficerService.getAvailableCaseOfficers()
         .stream()
@@ -108,7 +106,10 @@ public class BulkAssignCaseOfficerController {
     return new ModelAndView("fcs/application/bulk-case-actions/assignCaseOfficer")
         .addObject("form", form)
         .addObject("pageTitle", ASSIGN_CASE_OFFICER)
-        .addObject("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null)))
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(BulkAssignCaseOfficerSearchController.class).getSearchResults(null, null))
+        )
         .addObject("applicationDataItemViews", applicationDataItemViews)
         .addObject("captionHeadingFunction", (Function<ApplicationDataItemView, String>) this::captionHeadingFunction)
         .addObject("caseOfficerOptions", caseOfficerOptions);

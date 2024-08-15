@@ -3,12 +3,12 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseo
 import java.util.Collections;
 import java.util.Set;
 
-public record BulkAssignCaseOfficerForm(
+record BulkAssignCaseOfficerForm(
     String caseOfficerWuaId,
     Set<String> selectedApplicationIds
 ) {
 
-  public static BulkAssignCaseOfficerForm empty() {
+  static BulkAssignCaseOfficerForm empty() {
     return new BulkAssignCaseOfficerForm(null, Collections.emptySet());
   }
 

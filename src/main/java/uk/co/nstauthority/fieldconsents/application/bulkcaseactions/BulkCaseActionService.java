@@ -5,11 +5,10 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
 import io.micrometer.observation.annotation.Observed;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
@@ -35,15 +34,10 @@ public class BulkCaseActionService {
   }
 
   public List<ApplicationDataItemView> getSelectedApplicationDataItemViews(
-      BulkCaseActionSelectedApplicationsForm form,
+      Collection<Integer> selectedApplicationIds,
       ServiceUserDetail user
   ) {
-    var selectedApplicationIds = form.selectedApplicationIds();
     return getApplicationDataItemViews(user, List.of(APPLICATIONS.ID.in(selectedApplicationIds)));
-  }
-
-  public List<ApplicationDataItemView> getApplicationDataItemViews(ServiceUserDetail user) {
-    return getApplicationDataItemViews(user, Collections.emptyList());
   }
 
   @Observed(name = "fcs.database.bulk-case-actions-query", contextualName = "bulk case actions query executed")
@@ -57,12 +51,6 @@ public class BulkCaseActionService {
     var organisationUnitJsons = applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(dtos);
 
     return applicationDataItemService.getItemViewsFromDtos(dtos, organisationUnitJsons, TeamType.REGULATOR, user);
-  }
-
-  List<String> getBulkActions() {
-    return List.of(
-        BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER
-    );
   }
 
 }

@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WITHDRAWALS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.BULK_ISSUE_CONSENTS_TASKS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
 
@@ -77,6 +78,10 @@ public class ApplicationDataItemViewQueryService {
         .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
         .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
         .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
+
+    var applicationVersionsPendingConsentIssueQuery = context.select(BULK_ISSUE_CONSENTS_TASKS.APPLICATION_VERSION_ID)
+        .from(BULK_ISSUE_CONSENTS_TASKS)
+        .where(BULK_ISSUE_CONSENTS_TASKS.FINISHED_AT.isNull());
 
     var applicationDataItemViewsSelectStatement = context.select(
             APPLICATIONS.ID,
@@ -156,7 +161,8 @@ public class ApplicationDataItemViewQueryService {
             .onKey(APPLICATION_CONSENT_DATA.APPLICATION_ID)
         .leftJoin(APPLICATION_CONSENT_BREACHES)
             .onKey(APPLICATION_CONSENT_BREACHES.CONSENT_ID)
-        .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
+        .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
+        .and(APPLICATION_VERSIONS.ID.notIn(applicationVersionsPendingConsentIssueQuery));
     return applicationDataItemViewsSelectStatement.getQuery();
   }
 

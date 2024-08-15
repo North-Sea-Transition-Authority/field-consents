@@ -264,4 +264,9 @@ public class ApplicationDataFilterService {
                 .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
                 .and(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF.equalIgnoreCase(licenceReference))));
   }
+
+  public Condition getReadyToGrantAndIssueApplicationsCondition() {
+    return APPLICATION_CONSENT_ISSUING_APPROVALS.APPROVED_BY_WUA_ID.isNotNull();
+  }
+
 }

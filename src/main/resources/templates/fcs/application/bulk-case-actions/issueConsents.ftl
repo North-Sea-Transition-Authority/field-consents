@@ -10,12 +10,7 @@
     <#list applicationDataItemViews as applicationDataItemView>
       <input type="hidden" name="selectedApplicationIds" value="${applicationDataItemView.applicationId()}">
     </#list>
-    <@fdsSearchSelector.searchSelectorEnhanced
-      path="form.caseOfficerWuaId"
-      options=caseOfficerOptions
-      labelText="Select a case officer"
-      />
-    <@fdsAction.button buttonText="Assign case officer"/>
+    <@fdsAction.button buttonText="Issue consents"/>
   </@fdsForm.htmlForm>
   <@selectedApplicationsFtl.summaryList
     applicationDataItemViews=applicationDataItemViews

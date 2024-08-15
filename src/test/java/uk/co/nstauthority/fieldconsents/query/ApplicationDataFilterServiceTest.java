@@ -354,4 +354,9 @@ class ApplicationDataFilterServiceTest {
     assertThat(applicationDataFilterService.getApprovedForIssueCondition()).isEqualTo(APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
   }
 
+  @Test
+  void getReadyToGrantAndIssueApplicationsCondition() {
+    assertThat(applicationDataFilterService.getReadyToGrantAndIssueApplicationsCondition())
+        .isEqualTo(APPLICATION_CONSENT_ISSUING_APPROVALS.APPROVED_BY_WUA_ID.isNotNull());
+  }
 }

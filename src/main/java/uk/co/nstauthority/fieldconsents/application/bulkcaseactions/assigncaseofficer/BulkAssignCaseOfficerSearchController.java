@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER;
@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -26,34 +27,34 @@ import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("bulk-case-actions/search")
+@RequestMapping("bulk-case-actions/assign-case-officer/search")
 @HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
-public class BulkCaseActionSearchController {
-
-  public static final String PAGE_TITLE = "Bulk case actions";
+public class BulkAssignCaseOfficerSearchController {
 
   private final BulkCaseActionService bulkCaseActionService;
-  private final BulkCaseActionControllerHelperService controllerHelperService;
-  private final BulkCaseActionSearchFilterService searchFilterService;
+  private final BulkAssignCaseOfficerSearchFilterService searchFilterService;
 
-  BulkCaseActionSearchController(
+  BulkAssignCaseOfficerSearchController(
       BulkCaseActionService bulkCaseActionService,
-      BulkCaseActionControllerHelperService controllerHelperService,
-      BulkCaseActionSearchFilterService searchFilterService
+      BulkAssignCaseOfficerSearchFilterService searchFilterService
   ) {
     this.bulkCaseActionService = bulkCaseActionService;
-    this.controllerHelperService = controllerHelperService;
     this.searchFilterService = searchFilterService;
   }
 
   @GetMapping
   public ModelAndView getSearchResults(HttpSession session, ServiceUserDetail user) {
-    var filtersForm = controllerHelperService.getSearchFiltersForm(session);
+    var sessionContext = BulkAssignCaseOfficerSessionContext.fromSession(session);
+
+    var filtersForm = sessionContext.getSearchFiltersForm();
     var searchConditions = searchFilterService.getConditions(filtersForm, user);
     var applicationDataItemViews = bulkCaseActionService.getApplicationDataItemViews(user, searchConditions);
-    var form = controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews);
 
-    var modelAndView = searchResultsModelAndView(applicationDataItemViews, form);
+    var selectedApplicationsForm = sessionContext.getSelectedApplicationsForm();
+    selectedApplicationsForm.removeUnavailableApplications(applicationDataItemViews);
+    sessionContext.setSelectedApplicationsForm(selectedApplicationsForm);
+
+    var modelAndView = searchResultsModelAndView(applicationDataItemViews, selectedApplicationsForm);
     addSearchFiltersToModelAndView(modelAndView, filtersForm);
 
     return modelAndView;
@@ -64,13 +65,13 @@ public class BulkCaseActionSearchController {
       BulkCaseActionSelectedApplicationsForm form
   ) {
     return new ModelAndView("fcs/application/bulk-case-actions/search")
-        .addObject("pageTitle", PAGE_TITLE)
-        .addObject("actions", bulkCaseActionService.getBulkActions())
+        .addObject("pageTitle", ASSIGN_CASE_OFFICER)
+        .addObject("action", ASSIGN_CASE_OFFICER)
         .addObject("applicationDataItemViews", applicationDataItemViews)
         .addObject("form", form);
   }
 
-  private void addSearchFiltersToModelAndView(ModelAndView modelAndView, BulkCaseActionSearchFiltersForm filtersForm) {
+  private void addSearchFiltersToModelAndView(ModelAndView modelAndView, BulkAssignCaseOfficerSearchFiltersForm filtersForm) {
     var prefilledOperator = searchFilterService.getPrefilledOrganisation(filtersForm.operatorId());
     var prefilledField = searchFilterService.getPrefilledAsset(filtersForm.fieldAssetKey());
     var prefilledTerminal = searchFilterService.getPrefilledAsset(filtersForm.terminalAssetKey());
@@ -99,13 +100,13 @@ public class BulkCaseActionSearchController {
 
   @GetMapping("clear-filters")
   ModelAndView clearSearchFilters(HttpSession session) {
-    controllerHelperService.clearSearchFilters(session);
+    BulkAssignCaseOfficerSessionContext.fromSession(session).clearFilters();
     return ReverseRouter.redirect(on(this.getClass()).getSearchResults(null, null));
   }
 
   @PostMapping(params = "Filter results")
-  ModelAndView filterSearchResults(@ModelAttribute("form") BulkCaseActionSearchFiltersForm form, HttpSession session) {
-    controllerHelperService.updateSearchFilters(session, form);
+  ModelAndView filterSearchResults(@ModelAttribute("form") BulkAssignCaseOfficerSearchFiltersForm form, HttpSession session) {
+    BulkAssignCaseOfficerSessionContext.fromSession(session).setFilters(form);
     return ReverseRouter.redirect(on(this.getClass()).getSearchResults(null, null));
   }
 
@@ -116,20 +117,15 @@ public class BulkCaseActionSearchController {
       HttpSession session,
       ServiceUserDetail user
   ) {
+    ModelAndView modelAndView;
+
     if (bindingResult.hasErrors()) {
-      var filtersForm = controllerHelperService.getSearchFiltersForm(session);
-      var searchConditions = searchFilterService.getConditions(filtersForm, user);
-      var applicationDataItemViews = bulkCaseActionService.getApplicationDataItemViews(user, searchConditions);
-
-      var modelAndView = searchResultsModelAndView(applicationDataItemViews, form);
-      addSearchFiltersToModelAndView(modelAndView, filtersForm);
-
-      return modelAndView;
+      modelAndView = getSearchResults(session, user).addObject("form", form);
+    } else {
+      modelAndView = ReverseRouter.redirect(on(BulkAssignCaseOfficerController.class).assignCaseOfficer(null, null));
     }
 
-    controllerHelperService.updateSelectedApplicationsForm(session, form);
-
-    return ReverseRouter.redirect(on(BulkAssignCaseOfficerController.class).assignCaseOfficer(null, null));
+    BulkAssignCaseOfficerSessionContext.fromSession(session).setSelectedApplicationsForm(form);
+    return modelAndView;
   }
-
 }

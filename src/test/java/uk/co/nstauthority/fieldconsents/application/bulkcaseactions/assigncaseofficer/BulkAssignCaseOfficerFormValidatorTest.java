@@ -44,11 +44,6 @@ class BulkAssignCaseOfficerFormValidatorTest {
   private BulkAssignCaseOfficerFormValidator validator;
 
   @Test
-  void supports() {
-    assertThat(validator.supports(BulkAssignCaseOfficerForm.class)).isTrue();
-  }
-
-  @Test
   void validate() {
     var form = BulkAssignCaseOfficerForm.empty();
     var bindingResult = getBindingResult(form);
