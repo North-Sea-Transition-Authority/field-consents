@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -34,6 +36,8 @@ public class ApplicationDataItemViewService {
   private final PermissionService permissionService;
   private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
   private final DSLContext dslContext;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationDataItemViewService.class);
 
   ApplicationDataItemViewService(
       ApplicationDataItemDtoService applicationDataItemDtoService,
@@ -61,6 +65,8 @@ public class ApplicationDataItemViewService {
       return Collections.emptyList();
     }
 
+    LOGGER.info("Stitching together ApplicationDataItems");
+
     var organisationUnitNamesById = organisationUnitJsons.stream()
         .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
 
@@ -73,7 +79,7 @@ public class ApplicationDataItemViewService {
     // TODO: FCS-879 Display appropriate action per application for users on search pages
     var userAction = getApplicationDataItemUserActionFromUser(user);
 
-    return applicationDataItemDtos.stream()
+    List<ApplicationDataItemView> results = applicationDataItemDtos.stream()
         .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItemView(
             dataItemDto,
             userAction,
@@ -83,6 +89,14 @@ public class ApplicationDataItemViewService {
             portalUserDtoByWuaId
         ))
         .toList();
+
+    LOGGER.info("Stitched together ApplicationDataItems, items: {}, orgs: {}, fields: {}, users: {}",
+        applicationDataItemDtos.size(),
+        organisationUnitJsons.size(),
+        fieldJsonById.size(),
+        portalUserDtoByWuaId.size());
+
+    return results;
   }
 
   public ApplicationDataItemUserAction getApplicationDataItemUserActionFromUser(ServiceUserDetail user) {

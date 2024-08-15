@@ -3,6 +3,8 @@ package uk.co.nstauthority.fieldconsents.search;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 
 public class SearchFilterForm extends ApplicationDataFilterForm implements Serializable {
@@ -54,5 +56,18 @@ public class SearchFilterForm extends ApplicationDataFilterForm implements Seria
 
   public void setConsentEndYear(String consentEndYear) {
     this.consentEndYear = consentEndYear;
+  }
+
+  public String prettyPrint() {
+    String prettyString = "{\n";
+    prettyString += CollectionUtils.isEmpty(aceFlagStatuses) ? "" :
+        " aceFlagStatuses: " + aceFlagStatuses.toString() + "\n";
+    prettyString += StringUtils.isEmpty(fieldAssetKey) ? "" : " fieldAssetKey: " + fieldAssetKey + "\n";
+    prettyString += StringUtils.isEmpty(terminalAssetKey) ? "" : " terminalAssetKey: " + terminalAssetKey + "\n";
+    prettyString += StringUtils.isEmpty(consentStartYear) ? "" : " consentStartYear: " + consentStartYear + "\n";
+    prettyString += StringUtils.isEmpty(consentEndYear) ? "" : " consentEndYear: " + consentEndYear + "\n";
+    prettyString += "applicationDataFilterForm: " + super.prettyPrint();
+    prettyString += "}\n";
+    return prettyString;
   }
 }

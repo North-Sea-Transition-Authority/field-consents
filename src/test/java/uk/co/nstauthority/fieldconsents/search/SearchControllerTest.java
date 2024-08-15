@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -20,6 +21,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -37,8 +39,8 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 
 @ContextConfiguration(classes = SearchController.class)
 class SearchControllerTest extends AbstractControllerTest {
@@ -49,6 +51,7 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private SearchService searchService;
+
   @MockBean
   private ApplicationDataFilterFormService applicationDataFilterFormService;
 
@@ -136,6 +139,46 @@ class SearchControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void getSearch_IndustryUser_10Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 10)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
+        .andExpect(model().attribute("searchResultsLimited", false));
+  }
+
+  @Test
+  void getSearch_IndustryUser_over300Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 350)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
+        .andExpect(model().attribute("searchResultsLimited", true));
+  }
+
+  @Test
   void getSearch_RegulatorUser() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
@@ -156,6 +199,46 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
+  }
+
+  @Test
+  void getSearch_RegulatorUser_10Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 10)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
+        .andExpect(model().attribute("searchResultsLimited", false));
+  }
+
+  @Test
+  void getSearch_RegulatorUser_over300Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 350)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
+        .andExpect(model().attribute("searchResultsLimited", true));
   }
 
   @Test
@@ -181,6 +264,46 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
+  }
+
+  @Test
+  void getSearch_ConsulteeUser_10Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 10)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
+        .andExpect(model().attribute("searchResultsLimited", false));
+  }
+
+  @Test
+  void getSearch_ConsulteeUser_over300Results() throws Exception {
+    var applicationDataItemViews = IntStream.range(0, 350)
+        .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
+        .toList();
+
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
+    searchSession.update(form);
+
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
+        .andExpect(model().attribute("searchResultsLimited", true));
   }
 
   @Test

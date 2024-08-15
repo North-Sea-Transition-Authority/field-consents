@@ -41,6 +41,11 @@
             <@applicationDataItem.applicationResultListItem dataItem=searchResultItem/>
           </#list>
         </@fdsResultList.resultList>
+        <#if searchResultsLimited>
+          <@fdsInsetText.insetText>
+            Only showing first ${searchResultItems?size} results.
+          </@fdsInsetText.insetText>
+        </#if>
       <#else>
         <@noResultsFound.noResultsFoundMessageWithHints>
           <li>clearing filters</li>

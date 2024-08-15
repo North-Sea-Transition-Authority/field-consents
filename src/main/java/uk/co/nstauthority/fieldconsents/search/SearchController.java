@@ -3,9 +3,11 @@ package uk.co.nstauthority.fieldconsents.search;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm.APPROVED_FOR_ISSUE_FILTER_OPTION;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -43,6 +45,10 @@ public class SearchController {
 
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
+
+  private static final int SEARCH_RESULT_RENDER_LIMIT = 300;
+
   SearchController(TeamService teamService,
                    SearchService searchService,
                    ApplicationDataFilterFormService applicationDataFilterFormService) {
@@ -55,8 +61,11 @@ public class SearchController {
   public ModelAndView getSearch(@ModelAttribute("searchSession") SearchSession searchSession,
                                 ServiceUserDetail user) {
     if (searchSession.hasSearchBeenInvoked()) {
+      List<ApplicationDataItemView> results = getApplicationDataItemViews(searchSession, user);
+
       return getSearchModelAndView(searchSession, user)
-          .addObject(SEARCH_RESULT_ITEMS, getApplicationDataItemViews(searchSession, user));
+          .addObject(SEARCH_RESULT_ITEMS, results.stream().limit(SEARCH_RESULT_RENDER_LIMIT).toList())
+          .addObject("searchResultsLimited", results.size() > SEARCH_RESULT_RENDER_LIMIT);
     }
     return getSearchModelAndView(searchSession, user);
   }
@@ -112,19 +121,26 @@ public class SearchController {
   }
 
   private List<ApplicationDataItemView> getApplicationDataItemViews(SearchSession searchSession, ServiceUserDetail user) {
+    List<ApplicationDataItemView> results = new ArrayList<>();
+
     if (teamService.isRegulatorUser(user)) {
-      return searchService.getRegulatorApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
+      LOGGER.info("Starting Search [Regulator] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
+      results = searchService.getRegulatorApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isIndustryUser(user)) {
-      return searchService.getIndustryApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
+      LOGGER.info("Starting Search [Industry] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
+      results = searchService.getIndustryApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isConsulteeUser(user)) {
-      return searchService.getConsulteeApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
+      LOGGER.info("Starting Search [Consultee] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
+      results = searchService.getConsulteeApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
-    return Collections.emptyList();
+    LOGGER.info("Search completed with {} items", results.size());
+
+    return results;
   }
 
   @GetMapping("/clear-filters")

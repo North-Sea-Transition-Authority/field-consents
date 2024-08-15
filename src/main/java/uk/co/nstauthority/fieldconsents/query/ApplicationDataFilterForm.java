@@ -3,6 +3,8 @@ package uk.co.nstauthority.fieldconsents.query;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
@@ -131,5 +133,22 @@ public class ApplicationDataFilterForm implements Serializable {
     setSubmittedYear(form.getSubmittedYear());
     setLicenceReference(form.getLicenceReference());
     setApprovedForIssue(form.getApprovedForIssue());
+  }
+
+  public String prettyPrint() {
+    String prettyString = "{\n";
+    prettyString += StringUtils.isEmpty(referenceNumber) ? "" : "referenceNumber: " + referenceNumber + "\n";
+    prettyString += CollectionUtils.isEmpty(statuses) ? "" : "statuses: " + statuses + "\n";
+    prettyString += CollectionUtils.isEmpty(applicationTypes) ? "" : "applicationTypes: " + applicationTypes + "\n";
+    prettyString += CollectionUtils.isEmpty(durationTypes) ? "" : "durationTypes: " + durationTypes + "\n";
+    prettyString += operatorId == null ? "" : "operatorId: " + operatorId + "\n";
+    prettyString += CollectionUtils.isEmpty(geographicAreas) ? "" : "geographicAreas: " + geographicAreas + "\n";
+    prettyString += CollectionUtils.isEmpty(assetTypesWithShore) ? "" :
+        "assetTypesWithShore: " + assetTypesWithShore + "\n";
+    prettyString += StringUtils.isEmpty(submittedYear) ? "" : "submittedYear: " + submittedYear + "\n";
+    prettyString += StringUtils.isEmpty(licenceReference) ? "" : "licenceReference: " + licenceReference + "\n";
+    prettyString += approvedForIssue == null ? "" : "approvedForIssue: " + approvedForIssue + "\n";
+    prettyString += "}\n";
+    return prettyString;
   }
 }
