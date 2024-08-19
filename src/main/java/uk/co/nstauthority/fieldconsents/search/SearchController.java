@@ -126,14 +126,10 @@ public class SearchController {
     if (teamService.isRegulatorUser(user)) {
       LOGGER.info("Starting Search [Regulator] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getRegulatorApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
-    }
-
-    if (teamService.isIndustryUser(user)) {
+    } else if (teamService.isIndustryUser(user)) {
       LOGGER.info("Starting Search [Industry] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getIndustryApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
-    }
-
-    if (teamService.isConsulteeUser(user)) {
+    } else if (teamService.isConsulteeUser(user)) {
       LOGGER.info("Starting Search [Consultee] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getConsulteeApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
