@@ -33,6 +33,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirection;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionBuilder;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingController;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -145,7 +146,7 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
   }
 
   @Test
-  void saveForm() throws Exception {
+  void saveForm_haveSubmittedEiaDirectionTrue() throws Exception {
     var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, "ref");
     when(petsApplicationService.getEiaDirectionById(eq(SAT_ID), anyString()))
         .thenReturn(petsApplication);
@@ -166,6 +167,26 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
         any(BindingResult.class)
     );
     verify(eiaDirectionService).updateEiaDirection(applicationVersion, true, petsApplication);
+  }
+
+  @Test
+  void saveForm_haveSubmittedEiaDirectionFalse() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(HaveSubmittedController.class)
+            .saveForm(applicationId, null, null)))
+            .param("haveSubmittedEiaDirection", "false")
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(
+            redirectedUrl(ReverseRouter.route(on(NeedsSubmittingController.class).getForm(applicationId))));
+
+    verify(validator).validate(
+        eq(new HaveSubmittedForm(false, null)),
+        any(BindingResult.class)
+    );
+    verify(petsApplicationService, never()).getEiaDirectionById(any(), anyString());
+    verify(eiaDirectionService).updateEiaDirection(applicationVersion, false, null);
   }
 
   @Test

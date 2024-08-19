@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Objects;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -76,7 +78,10 @@ public class HaveSubmittedController {
       return getModelAndView(applicationId, form);
     }
 
-    var petsApplicationJson = petsApplicationService.getEiaDirectionById(form.satId(), PREFILL_FORM_PETS_REQUEST_PURPOSE);
+    PetsApplicationJson petsApplicationJson = null;
+    if (Objects.nonNull(form.satId())) {
+      petsApplicationJson = petsApplicationService.getEiaDirectionById(form.satId(), PREFILL_FORM_PETS_REQUEST_PURPOSE);
+    }
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     eiaDirectionService.updateEiaDirection(
