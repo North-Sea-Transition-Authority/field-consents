@@ -1,32 +1,35 @@
 <#include '../layout/layout.ftl'>
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
+<#import '_expiringLicencesBanner.ftl' as expiringLicencesBanner>
 <#import 'update/_applicationUpdateRequestHiddenSummary.ftl' as applicationUpdateRequestHiddenSummary>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
-<#if !isSubmittable || !userHasPayAndSubmitPermission>
+<#if !isSubmittable || !userHasPayAndSubmitPermission || expiringLicences?has_content>
   <#assign warningBanner>
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information or permissions">
-      <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
-        <#assign missingInformationExplanation="Not all mandatory sections in the application have been completed"/>
-        <#assign missingPermissionsExplanation="Your account does not have permission to submit applications for the primary operator"/>
-        <#if !isSubmittable && !userHasPayAndSubmitPermission>
-          <ul>
-            <li>${missingInformationExplanation}</li>
-            <li>${missingPermissionsExplanation}</li>
-          </ul>
-        <#elseif !isSubmittable>
-          ${missingInformationExplanation}
-        <#elseif !userHasPayAndSubmitPermission>
-          ${missingPermissionsExplanation}
-        </#if>
-      </@fdsNotificationBanner.notificationBannerContent>
-    </@fdsNotificationBanner.notificationBannerInfo>
+    <#if !isSubmittable || !userHasPayAndSubmitPermission>
+      <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information or permissions">
+        <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
+          <#assign missingInformationExplanation="Not all mandatory sections in the application have been completed"/>
+          <#assign missingPermissionsExplanation="Your account does not have permission to submit applications for the primary operator"/>
+          <#if !isSubmittable && !userHasPayAndSubmitPermission>
+            <ul>
+              <li>${missingInformationExplanation}</li>
+              <li>${missingPermissionsExplanation}</li>
+            </ul>
+          <#elseif !isSubmittable>
+            ${missingInformationExplanation}
+          <#elseif !userHasPayAndSubmitPermission>
+            ${missingPermissionsExplanation}
+          </#if>
+        </@fdsNotificationBanner.notificationBannerContent>
+      </@fdsNotificationBanner.notificationBannerInfo>
+    </#if>
+    <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   </#assign>
 </#if>
-
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle

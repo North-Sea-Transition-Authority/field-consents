@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,12 +40,14 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.Applic
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
@@ -76,6 +79,9 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
   @MockBean
   private ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
+
+  @MockBean
+  private LicenceExpiryService licenceExpiryService;
 
   private ApplicationVersion applicationVersion;
 
@@ -347,6 +353,51 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   }
 
   @Test
+  void getReviewAndSubmit_withLicenceExpiringWithinDuration() throws Exception {
+    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var expiringLicences = List.of(licenceView);
+
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+        .getReviewAndSubmit(APPLICATION_ID, null)))
+        .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("expiringLicences", expiringLicences));
+  }
+
+  @Test
+  void getReviewAndSubmit_withLicenceNotExpiringWithinDuration() throws Exception {
+    List<LicenceView> expiringLicences = List.of();
+
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", Collections.emptyList())
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", true))
+        .when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any(), eq(user));
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("expiringLicences", List.of()));
+  }
+
+  @Test
   void submitApplication_paymentAmountPenceGreaterThanZero() throws Exception {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(false);
@@ -410,6 +461,9 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @ParameterizedTest
   @MethodSource("getInProgressV2ApplicationVersions")
   void submitApplication_whenAppUpdate_formInvalid(ApplicationVersion applicationVersion) throws Exception {
+    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var expiringLicences = List.of(licenceView);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
@@ -428,6 +482,8 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
         .thenReturn(applicationUpdateRequestView);
+    when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
+        .thenReturn(expiringLicences);
     doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
         .addObject("summarySections", Collections.emptyList())
         .addObject("accordionId", applicationVersion.getId())
@@ -452,6 +508,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView))
         .andExpect(model().attribute("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY))
         .andExpect(model().attribute("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES))
+        .andExpect(model().attribute("expiringLicences", expiringLicences))
         .andExpect(model().attributeExists(
             "summarySections", "wideSummaryDisplay", "form"));
   }

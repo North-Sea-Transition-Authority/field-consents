@@ -17,10 +17,10 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
+  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@withdrawalRequestedBanner.withdrawalRequestedBanner openWithdrawal=openWithdrawal/>
   <@consentBreachedBanner.consentBreachedBanner consentBreached=isConsentBreached/>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
-  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>

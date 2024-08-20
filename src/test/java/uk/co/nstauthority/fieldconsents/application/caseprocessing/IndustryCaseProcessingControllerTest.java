@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -544,20 +543,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/industryCaseProcessing"))
-        .andReturn().getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .usingRecursiveComparison()
-        .isEqualTo(expiringLicences);
+        .andExpect(model().attribute("expiringLicences", expiringLicences));
   }
 
   @Test
@@ -577,19 +568,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/industryCaseProcessing"))
-        .andReturn().getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .isEqualTo(List.of());
+        .andExpect(model().attribute("expiringLicences", List.of()));
   }
 
   private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {

@@ -230,20 +230,13 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .usingRecursiveComparison()
-        .isEqualTo(expiringLicences);
+        .andExpect(model().attribute("expiringLicences", expiringLicences));
   }
 
   @Test
@@ -264,17 +257,12 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
-        .andReturn().getModelAndView();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .isEqualTo(List.of());
+        .andExpect(model().attribute("expiringLicences", List.of()));
   }
 }

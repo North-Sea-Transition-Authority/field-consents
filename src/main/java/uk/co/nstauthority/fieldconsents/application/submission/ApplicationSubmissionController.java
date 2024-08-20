@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseForm;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -53,6 +54,7 @@ public class ApplicationSubmissionController {
   private final ApplicationPaymentService applicationPaymentService;
   private final ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
+  private final LicenceExpiryService licenceExpiryService;
 
   @Autowired
   ApplicationSubmissionController(
@@ -65,8 +67,8 @@ public class ApplicationSubmissionController {
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       ApplicationPaymentService applicationPaymentService,
       ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator,
-      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
-  ) {
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
+      LicenceExpiryService licenceExpiryService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSubmissionService = applicationSubmissionService;
@@ -77,6 +79,7 @@ public class ApplicationSubmissionController {
     this.applicationPaymentService = applicationPaymentService;
     this.applicationUpdateResponseFormValidator = applicationUpdateResponseFormValidator;
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
+    this.licenceExpiryService = licenceExpiryService;
   }
 
   @GetMapping("/review-and-submit")
@@ -127,6 +130,9 @@ public class ApplicationSubmissionController {
 
       modelAndView.addObject("paymentRequired", paymentRequired);
     }
+
+    modelAndView.addObject("expiringLicences",
+        licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion));
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
 

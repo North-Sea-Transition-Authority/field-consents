@@ -304,20 +304,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
-        .andReturn().getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .usingRecursiveComparison()
-        .isEqualTo(expiringLicences);
+        .andExpect(model().attribute("expiringLicences", expiringLicences));
   }
 
   @Test
@@ -334,19 +326,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
-        .andReturn().getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model.get("expiringLicences"))
-        .isEqualTo(List.of());
+        .andExpect(model().attribute("expiringLicences", List.of()));
   }
 
 

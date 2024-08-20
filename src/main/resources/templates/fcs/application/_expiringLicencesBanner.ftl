@@ -6,7 +6,7 @@
   <#if expiringLicences?has_content>
     <#if expiringLicences?size == 1>
       <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Information">
-        <@fdsNotificationBanner.notificationBannerContent headingText="The following licence is due to expire before the consent period">
+        <@fdsNotificationBanner.notificationBannerContent headingText="The following licence is due to expire during the consent period">
           <#list expiringLicences as expiringLicence>
             ${expiringLicence.licenceRef()} expires on ${expiringLicence.scheduleExpiryDate()}
           </#list>
@@ -14,7 +14,7 @@
       </@fdsNotificationBanner.notificationBannerInfo>
     <#else>
       <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Information">
-        <@fdsNotificationBanner.notificationBannerContent headingText="The following licences are due to expire before the consent period">
+        <@fdsNotificationBanner.notificationBannerContent headingText="The following licences are due to expire during the consent period">
           <ul class="govuk-list govuk-list--bullet">
             <#list expiringLicences as expiringLicence>
               <li class="govuk-list__item">${expiringLicence.licenceRef()} expires on ${expiringLicence.scheduleExpiryDate()}</li>

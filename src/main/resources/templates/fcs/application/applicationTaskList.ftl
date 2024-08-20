@@ -8,13 +8,16 @@
 <#-- @ftlvariable name="applicationContext" type="java.util.List<uk.co.nstauthority.fieldconsents.application.ApplicationContext>" -->
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
-<#if successfulDeleteBanner?has_content>
+<#if successfulDeleteBanner?has_content || expiringLicences?has_content>
   <#assign deleteBanner>
-    <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText="Success">
-      <@fdsNotificationBanner.notificationBannerContent>
-        ${successfulDeleteBanner}
-      </@fdsNotificationBanner.notificationBannerContent>
-    </@fdsNotificationBanner.notificationBannerSuccess>
+    <#if successfulDeleteBanner?has_content>
+      <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText="Success">
+        <@fdsNotificationBanner.notificationBannerContent>
+          ${successfulDeleteBanner}
+        </@fdsNotificationBanner.notificationBannerContent>
+      </@fdsNotificationBanner.notificationBannerSuccess>
+    </#if>
+    <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   </#assign>
 </#if>
 <@defaultPage
@@ -22,7 +25,6 @@
   pageHeading=pageTitle
   caption=applicationReference!""
   notificationBannerContentOverride=deleteBanner>
-  <@expiringLicencesBanner.expiringLicencesBanner expiringLicences=expiringLicences/>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <#if warning?has_content>
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>
