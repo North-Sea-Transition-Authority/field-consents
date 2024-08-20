@@ -29,6 +29,14 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class SupportingInformationController {
 
+  private static final String ADDITIONAL_INFORMATION_HINT_TEXT =
+      "Add additional information to support the application in the box provided below.";
+  private static final String CAT_SPLIT_HINT_TEXT =
+      "Describe the method used to split Cat A, Cat B and Cat C in the application here.";
+  private static final String FILE_ATTACHMENT_HINT_TEXT =
+      "There is also an option to attach files to the application towards the bottom of this page if more detailed " +
+          "supporting information is required.";
+
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final SupportingInformationService supportingInformationService;
@@ -93,10 +101,20 @@ public class SupportingInformationController {
       case FLARE -> "flaring";
       case PRODUCTION -> "production";
     };
+    var hintText = switch (applicationType) {
+      case FLARE, VENT -> "%s %s %s".formatted(
+          ADDITIONAL_INFORMATION_HINT_TEXT,
+          CAT_SPLIT_HINT_TEXT,
+          FILE_ATTACHMENT_HINT_TEXT);
+      case PRODUCTION -> "%s %s".formatted(
+          ADDITIONAL_INFORMATION_HINT_TEXT,
+          FILE_ATTACHMENT_HINT_TEXT);
+    };
 
     return new ModelAndView("fcs/application/supportingInformationForm")
         .addObject("form", form)
         .addObject("erapInformationAllowed", ERAP_SUPPORTING_INFORMATION.allowed(applicationType))
+        .addObject("notesHintText", hintText)
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
         .addObject("fileUploadAttributes", fileUploadAttributes)
         .addObject("applicationType", applicationTypeString);

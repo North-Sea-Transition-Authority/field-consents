@@ -13,13 +13,13 @@ pageSize=PageSize.TWO_THIRDS_COLUMN>
     <@fdsTextarea.textarea
       path="form.notes.inputValue"
       labelText="Notes"
-      hintText="Please add additional information to support the application in the box provided below. There is also an option to attach files to the application towards the bottom of this page if more detailed supporting information is required."
+      hintText=notesHintText
     />
     <#if erapInformationAllowed>
       <@fdsTextarea.textarea
         path="form.erapNotes.inputValue"
         labelText="ERAP alignment studies and projects"
-        hintText="Please provide an outline of ERAP activities related to ${applicationType} completed in the year and will be completed for the consent year.
+        hintText="Provide an outline of ERAP activities related to ${applicationType} completed in the year and will be completed for the consent year.
                   Also provide explanation if the requested consent figures are not aligned with the emissions profiles in the asset ERAP/UKSS forecast."/>
     </#if>
     <@fdsFieldset.fieldset

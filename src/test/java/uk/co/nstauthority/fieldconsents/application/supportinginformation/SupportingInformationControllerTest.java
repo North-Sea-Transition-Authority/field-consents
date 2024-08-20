@@ -79,7 +79,8 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
   void getSupportingInformationForm_withValidUserAndApplication(
       ApplicationType applicationType,
       String applicationTypeString,
-      boolean erapInformationAllowed
+      boolean erapInformationAllowed,
+      String expectedHintText
   ) throws Exception {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
@@ -109,14 +110,38 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
         .containsEntry("form", form)
         .containsEntry("applicationType", applicationTypeString)
         .containsEntry("erapInformationAllowed", erapInformationAllowed)
+        .containsEntry("notesHintText", expectedHintText)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
   }
 
   private static Stream<Arguments> getSupportingInformationForm_withValidUserAndApplication_arguments() {
     return Stream.of(
-        Arguments.of(ApplicationType.FLARE, "flaring", true),
-        Arguments.of(ApplicationType.VENT, "venting", true),
-        Arguments.of(ApplicationType.PRODUCTION, "production", false)
+        Arguments.of(
+            ApplicationType.FLARE,
+            "flaring",
+            true,
+            "Add additional information to support the application in the box provided below. Describe the method " +
+                "used to split Cat A, Cat B and Cat C in the application here. There is also an option to attach " +
+                "files to the application towards the bottom of this page if more detailed supporting information " +
+                "is required."
+        ),
+        Arguments.of(
+            ApplicationType.VENT,
+            "venting",
+            true,
+            "Add additional information to support the application in the box provided below. Describe the method " +
+                "used to split Cat A, Cat B and Cat C in the application here. There is also an option to attach " +
+                "files to the application towards the bottom of this page if more detailed supporting information " +
+                "is required."
+        ),
+        Arguments.of(
+            ApplicationType.PRODUCTION,
+            "production",
+            false,
+            "Add additional information to support the application in the box provided below. There is also an " +
+                "option to attach files to the application towards the bottom of this page if more detailed " +
+                "supporting information is required."
+        )
     );
   }
 
