@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task.BulkIssueConsentsTaskService;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -34,16 +33,16 @@ public class BulkIssueConsentsSearchController {
 
   private final BulkCaseActionService bulkCaseActionService;
   private final BulkIssueConsentsSearchFilterService searchFilterService;
-  private final BulkIssueConsentsTaskService bulkIssueConsentsTaskService;
+  private final BulkIssueConsentsService bulkIssueConsentsService;
 
   BulkIssueConsentsSearchController(
       BulkCaseActionService bulkCaseActionService,
       BulkIssueConsentsSearchFilterService searchFilterService,
-      BulkIssueConsentsTaskService bulkIssueConsentsTaskService
+      BulkIssueConsentsService bulkIssueConsentsService
   ) {
     this.bulkCaseActionService = bulkCaseActionService;
     this.searchFilterService = searchFilterService;
-    this.bulkIssueConsentsTaskService = bulkIssueConsentsTaskService;
+    this.bulkIssueConsentsService = bulkIssueConsentsService;
   }
 
   @GetMapping
@@ -73,7 +72,7 @@ public class BulkIssueConsentsSearchController {
         .addObject("action", BULK_ISSUE_CONSENTS)
         .addObject("applicationDataItemViews", applicationDataItemViews)
         .addObject("form", form)
-        .addObject("consentsPendingIssue", bulkIssueConsentsTaskService.getConsentsPendingIssue());
+        .addObject("consentsPendingIssue", bulkIssueConsentsService.getCountOfConsentsNotYetIssued());
   }
 
   private void addSearchFiltersToModelAndView(ModelAndView modelAndView, BulkIssueConsentsSearchFiltersForm filtersForm) {

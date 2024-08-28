@@ -1,8 +1,9 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -14,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 @Audited
 @Entity
 @Table(name = "bulk_issue_consents_tasks")
-class BulkIssueConsentsTask {
+public class BulkIssueConsentsTask {
 
   @Id
   @UuidGenerator
@@ -24,9 +25,11 @@ class BulkIssueConsentsTask {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
-  private Instant createdAt;
+  @ManyToOne
+  @JoinColumn(name = "bulk_issue_consent_run_id")
+  private BulkIssueConsentRun bulkIssueConsentRun;
 
-  private Long createdByWuaId;
+  private Instant createdAt;
 
   private Instant startedAt;
 
@@ -53,20 +56,21 @@ class BulkIssueConsentsTask {
     this.applicationVersion = applicationVersion;
   }
 
+  public BulkIssueConsentRun getBulkIssueConsentRun() {
+    return bulkIssueConsentRun;
+  }
+
+  public void setBulkIssueConsentRun(
+      BulkIssueConsentRun bulkIssueConsentRun) {
+    this.bulkIssueConsentRun = bulkIssueConsentRun;
+  }
+
   Instant getCreatedAt() {
     return createdAt;
   }
 
   void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
-  }
-
-  Long getCreatedByWuaId() {
-    return createdByWuaId;
-  }
-
-  void setCreatedByWuaId(Long createdByWuaId) {
-    this.createdByWuaId = createdByWuaId;
   }
 
   Instant getStartedAt() {
@@ -77,7 +81,7 @@ class BulkIssueConsentsTask {
     this.startedAt = startedAt;
   }
 
-  Instant getFinishedAt() {
+  public Instant getFinishedAt() {
     return finishedAt;
   }
 

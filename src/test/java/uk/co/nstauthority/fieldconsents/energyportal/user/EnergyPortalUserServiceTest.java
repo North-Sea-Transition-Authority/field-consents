@@ -20,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @ExtendWith(MockitoExtension.class)
@@ -311,5 +313,40 @@ class EnergyPortalUserServiceTest {
         .isInstanceOf(EntityNotFoundException.class)
         .hasMessage("Energy portal user with wua id %s not found"
             .formatted(webUserAccountId.toString()));
+  }
+
+  @Test
+  void getServiceUserByWuaId() {
+    var expectedPortalUser = EpaUserTestUtil.Builder().build();
+    var expectedUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(expectedPortalUser.getWebUserAccountId().longValue())
+        .withForename(expectedPortalUser.getForename())
+        .withSurname(expectedPortalUser.getSurname())
+        .withEmailAddress(expectedPortalUser.getPrimaryEmailAddress())
+        .build();
+    var webUserAccountId = new WebUserAccountId(expectedPortalUser.getWebUserAccountId());
+    var userProjectionRoot = EnergyPortalUserService.USER_PROJECT_ROOT;
+
+    when(userApi.findUserById(
+        eq(webUserAccountId.toInt()),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class)
+    )).thenReturn(Optional.of(expectedPortalUser));
+
+    var resultingUser = energyPortalUserService.getServiceUserByWuaId(webUserAccountId);
+
+    assertThat(resultingUser)
+        .extracting(
+            ServiceUserDetail::wuaId,
+            ServiceUserDetail::forename,
+            ServiceUserDetail::surname,
+            ServiceUserDetail::emailAddress
+        )
+        .containsExactly(
+            expectedUser.wuaId(),
+            expectedUser.forename(),
+            expectedUser.surname(),
+            expectedUser.emailAddress()
+        );
   }
 }

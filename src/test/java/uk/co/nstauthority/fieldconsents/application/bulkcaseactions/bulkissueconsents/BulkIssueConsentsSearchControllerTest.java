@@ -25,7 +25,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task.BulkIssueConsentsTaskService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -52,7 +51,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
   private BulkIssueConsentsSearchFilterService searchFilterService;
 
   @MockBean
-  private BulkIssueConsentsTaskService bulkIssueConsentsTaskService;
+  private BulkIssueConsentsService bulkIssueConsentsTaskService;
 
   private MockHttpSession httpSession;
 
@@ -111,7 +110,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
     when(bulkCaseActionService.getApplicationDataItemViews(user, jooqConditions)).thenReturn(applicationDataItemViews);
 
     var consentsPendingIssue = 12L;
-    when(bulkIssueConsentsTaskService.getConsentsPendingIssue()).thenReturn(consentsPendingIssue);
+    when(bulkIssueConsentsTaskService.getCountOfConsentsNotYetIssued()).thenReturn(consentsPendingIssue);
 
     mockAddSearchFiltersToModelAndView();
 

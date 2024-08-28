@@ -1,9 +1,11 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents;
 
 import static net.javacrumbs.shedlock.core.LockAssert.assertLocked;
 
 import java.time.Clock;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
@@ -18,52 +20,56 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 
 @Service
-public class BulkIssueConsentsTaskService {
+public class BulkIssueConsentsService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(BulkIssueConsentsTaskService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(BulkIssueConsentsService.class);
 
   private final Clock clock;
   private final BulkIssueConsentTaskRepository bulkIssueConsentTaskRepository;
+  private final BulkIssueConsentRunRepository bulkIssueConsentRunRepository;
   private final EnergyPortalUserService energyPortalUserService;
   private final ConsentIssuingService consentIssuingService;
 
-  BulkIssueConsentsTaskService(
+  BulkIssueConsentsService(
       Clock clock,
       BulkIssueConsentTaskRepository bulkIssueConsentTaskRepository,
+      BulkIssueConsentRunRepository bulkIssueConsentRunRepository,
       EnergyPortalUserService energyPortalUserService,
       ConsentIssuingService consentIssuingService
   ) {
     this.clock = clock;
     this.bulkIssueConsentTaskRepository = bulkIssueConsentTaskRepository;
+    this.bulkIssueConsentRunRepository = bulkIssueConsentRunRepository;
     this.energyPortalUserService = energyPortalUserService;
     this.consentIssuingService = consentIssuingService;
   }
 
-  public long getConsentsPendingIssue() {
+  public long getCountOfConsentsNotYetIssued() {
     return bulkIssueConsentTaskRepository.countAllByFinishedAtIsNull();
   }
 
   @Transactional
-  public void queueApplicationsForConsentIssue(
+  public void queueApplicationsForIssue(
       Collection<ApplicationVersion> applicationVersions,
       ServiceUserDetail user
   ) {
-    var now = clock.instant();
-    var wuaId = user.wuaId();
+    var run = new BulkIssueConsentRun(user.wuaId());
+    var taskCreatedAt = clock.instant();
     var tasks = applicationVersions.stream()
         .map(applicationVersion -> {
           var task = new BulkIssueConsentsTask();
           task.setApplicationVersion(applicationVersion);
-          task.setCreatedAt(now);
-          task.setCreatedByWuaId(wuaId);
+          task.setCreatedAt(taskCreatedAt);
+          task.setBulkIssueConsentRun(run);
           return task;
         })
         .toList();
 
+    bulkIssueConsentRunRepository.save(run);
     bulkIssueConsentTaskRepository.saveAll(tasks);
   }
 
-  @Scheduled(fixedRate = 5, timeUnit = TimeUnit.SECONDS)
+  @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
   @SchedulerLock(name = "BulkIssueConsentsTaskService_bulkIssueConsents", lockAtMostFor = "PT1H")
   void bulkIssueConsents() {
     assertLocked();
@@ -74,25 +80,41 @@ public class BulkIssueConsentsTaskService {
     }
 
     LOGGER.info("Found {} non-finished bulk consent issue tasks", nonFinishedTasks.size());
-    nonFinishedTasks.forEach(this::issueConsent);
+
+    Map<BulkIssueConsentRun, ServiceUserDetail> runToUser = new HashMap<>();
+
+    nonFinishedTasks.forEach(task -> {
+      var bulkIssueConsentRun = task.getBulkIssueConsentRun();
+
+      var user = runToUser.computeIfAbsent(
+          bulkIssueConsentRun,
+          run -> energyPortalUserService.getServiceUserByWuaId(WebUserAccountId.from(bulkIssueConsentRun.getIssuedByWuaId())));
+
+      issueConsent(task, user);
+    });
   }
 
-  void issueConsent(BulkIssueConsentsTask task) {
+  void issueConsent(BulkIssueConsentsTask task, ServiceUserDetail user) {
     task.setStartedAt(clock.instant());
 
-    var applicationVersion = task.getApplicationVersion();
     try {
-      var energyPortalUser = energyPortalUserService.getByWuaId(WebUserAccountId.from(task.getCreatedByWuaId()));
-      var serviceUserDetail = ServiceUserDetail.from(energyPortalUser);
-      consentIssuingService.issueConsent(applicationVersion, serviceUserDetail);
+      consentIssuingService.issueConsent(task.getApplicationVersion(), user);
     } catch (RuntimeException e) {
       task.setErrorDetails(e.getMessage());
-      LOGGER.error("Error running bulk issue consent task for application version {}", applicationVersion.getId(), e);
+      LOGGER.error("Error running bulk issue consent task for application version {}", task.getApplicationVersion().getId(), e);
     }
-
     task.setFinishedAt(clock.instant());
-
     bulkIssueConsentTaskRepository.save(task);
+    sendEmailIfAllIssued(task.getBulkIssueConsentRun());
+  }
+
+  private void sendEmailIfAllIssued(BulkIssueConsentRun run) {
+    var consentRunFinished = bulkIssueConsentTaskRepository.countAllByFinishedAtIsNullAndBulkIssueConsentRun(run) == 0;
+
+    if (consentRunFinished) {
+      // TODO: FCS-924 - Send bulk email
+      LOGGER.info("Send bulk email");
+    }
   }
 
 }

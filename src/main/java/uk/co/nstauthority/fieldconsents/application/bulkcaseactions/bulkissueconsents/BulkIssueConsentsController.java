@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task.BulkIssueConsentsTaskService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -31,18 +30,18 @@ public class BulkIssueConsentsController {
 
   private final ApplicationVersionService applicationVersionService;
   private final BulkIssueConsentsFormValidator validator;
-  private final BulkIssueConsentsTaskService bulkIssueConsentsTaskService;
+  private final BulkIssueConsentsService bulkIssueConsentsService;
   private final BulkCaseActionService bulkCaseActionService;
 
   BulkIssueConsentsController(
       ApplicationVersionService applicationVersionService,
       BulkIssueConsentsFormValidator validator,
-      BulkIssueConsentsTaskService bulkIssueConsentsTaskService,
+      BulkIssueConsentsService bulkIssueConsentsService,
       BulkCaseActionService bulkCaseActionService
   ) {
     this.applicationVersionService = applicationVersionService;
     this.validator = validator;
-    this.bulkIssueConsentsTaskService = bulkIssueConsentsTaskService;
+    this.bulkIssueConsentsService = bulkIssueConsentsService;
     this.bulkCaseActionService = bulkCaseActionService;
   }
 
@@ -69,7 +68,7 @@ public class BulkIssueConsentsController {
     var applicationIds = form.selectedApplicationIds().stream().map(Integer::parseInt).collect(Collectors.toSet());
     var applicationVersions = applicationVersionService.getLatestApplicationVersions(applicationIds);
 
-    bulkIssueConsentsTaskService.queueApplicationsForConsentIssue(applicationVersions, user);
+    bulkIssueConsentsService.queueApplicationsForIssue(applicationVersions, user);
     sessionContext.clearSelectedApplications();
 
     return ReverseRouter.redirect(on(BulkIssueConsentsSearchController.class).getSearchResults(null, null));

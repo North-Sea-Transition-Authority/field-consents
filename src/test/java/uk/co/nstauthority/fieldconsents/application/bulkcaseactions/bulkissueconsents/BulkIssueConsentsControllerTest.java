@@ -32,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
-import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task.BulkIssueConsentsTaskService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
@@ -49,7 +48,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
   private BulkIssueConsentsFormValidator validator;
 
   @MockBean
-  private BulkIssueConsentsTaskService bulkIssueConsentsTaskService;
+  private BulkIssueConsentsService bulkIssueConsentsTaskService;
 
   @MockBean
   private BulkCaseActionService bulkCaseActionService;
@@ -125,7 +124,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
 
     verify(validator).validate(eq(bulkIssueConsentsForm), any(BindingResult.class));
 
-    verify(bulkIssueConsentsTaskService).queueApplicationsForConsentIssue(applicationVersions, user);
+    verify(bulkIssueConsentsTaskService).queueApplicationsForIssue(applicationVersions, user);
     assertThat(this.bulkIssueConsentsSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).isEmpty();
   }
 
@@ -153,7 +152,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/bulk-case-actions/issueConsents"));
 
-    verify(bulkIssueConsentsTaskService, never()).queueApplicationsForConsentIssue(any(), any());
+    verify(bulkIssueConsentsTaskService, never()).queueApplicationsForIssue(any(), any());
   }
 
   @Test

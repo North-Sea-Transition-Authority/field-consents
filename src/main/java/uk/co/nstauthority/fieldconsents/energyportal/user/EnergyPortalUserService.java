@@ -14,6 +14,7 @@ import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.UsersProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.User;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @Service
@@ -107,5 +108,9 @@ public class EnergyPortalUserService {
         .orElseThrow(() ->
             new EntityNotFoundException("Energy portal user with wua id %s not found"
                 .formatted(webUserAccountId.toString())));
+  }
+
+  public ServiceUserDetail getServiceUserByWuaId(WebUserAccountId webUserAccountId) {
+    return ServiceUserDetail.from(getByWuaId(webUserAccountId));
   }
 }

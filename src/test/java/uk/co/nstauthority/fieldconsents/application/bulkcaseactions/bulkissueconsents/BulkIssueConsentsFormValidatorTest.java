@@ -15,7 +15,6 @@ import org.springframework.validation.FieldError;
 @ExtendWith(MockitoExtension.class)
 class BulkIssueConsentsFormValidatorTest {
 
-  private static final String REQUIRED = "required";
   private static final String SELECTED_APPLICATION_IDS = "selectedApplicationIds";
   private static final String SELECT_AT_LEAST_ONE_APPLICATION = "Select at least one application";
 

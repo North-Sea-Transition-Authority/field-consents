@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.task;
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,13 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 
 @ExtendWith(MockitoExtension.class)
-class BulkIssueConsentsTaskServiceTest {
+class BulkIssueConsentsServiceTest {
 
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
@@ -37,36 +37,49 @@ class BulkIssueConsentsTaskServiceTest {
   private BulkIssueConsentTaskRepository bulkIssueConsentTaskRepository;
 
   @Mock
+  private BulkIssueConsentRunRepository bulkIssueConsentRunRepository;
+
+  @Mock
   private EnergyPortalUserService energyPortalUserService;
 
   @Mock
   private ConsentIssuingService consentIssuingService;
 
-  private BulkIssueConsentsTaskService bulkIssueConsentsTaskService;
+  private BulkIssueConsentsService bulkIssueConsentsService;
+
+  private EnergyPortalUserDto energyPortalUser;
+  private ServiceUserDetail user;
+  private Long userWuaId;
+  private BulkIssueConsentRun bulkIssueConsentRun;
 
   @BeforeEach
   void setUp() {
-    this.bulkIssueConsentsTaskService = spy(new BulkIssueConsentsTaskService(
+    this.bulkIssueConsentsService = spy(new BulkIssueConsentsService(
       clock,
       bulkIssueConsentTaskRepository,
+      bulkIssueConsentRunRepository,
       energyPortalUserService,
       consentIssuingService
     ));
+
+    energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
+    user = ServiceUserDetail.from(energyPortalUser);
+    userWuaId = energyPortalUser.webUserAccountId();
+    bulkIssueConsentRun = new BulkIssueConsentRun(userWuaId);
   }
 
   @Test
   void getConsentsPendingIssue() {
     var consentsPendingIssue = 10L;
     when(bulkIssueConsentTaskRepository.countAllByFinishedAtIsNull()).thenReturn(consentsPendingIssue);
-    assertThat(bulkIssueConsentsTaskService.getConsentsPendingIssue()).isEqualTo(consentsPendingIssue);
+    assertThat(bulkIssueConsentsService.getCountOfConsentsNotYetIssued()).isEqualTo(consentsPendingIssue);
   }
 
   @Test
   void queueApplicationsForConsentIssue() {
     var applicationVersions = IntStream.range(0, 10).mapToObj(i -> new ApplicationVersion()).toList();
-    var user = ServiceUserDetailTestUtil.Builder().build();
 
-    bulkIssueConsentsTaskService.queueApplicationsForConsentIssue(applicationVersions, user);
+    bulkIssueConsentsService.queueApplicationsForIssue(applicationVersions, user);
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<BulkIssueConsentsTask>> bulkIssueConsentTasksCaptor = ArgumentCaptor.forClass(List.class);
@@ -78,7 +91,6 @@ class BulkIssueConsentsTaskServiceTest {
       var bulkConsentIssueTask = bulkIssueConsentTasks.get(i);
 
       assertThat(bulkConsentIssueTask.getCreatedAt()).isEqualTo(clock.instant());
-      assertThat(bulkConsentIssueTask.getCreatedByWuaId()).isEqualTo(user.wuaId());
       assertThat(bulkConsentIssueTask.getApplicationVersion()).isEqualTo(applicationVersions.get(i));
       assertThat(bulkConsentIssueTask.getStartedAt()).isNull();
       assertThat(bulkConsentIssueTask.getFinishedAt()).isNull();
@@ -89,39 +101,40 @@ class BulkIssueConsentsTaskServiceTest {
   @Test
   void bulkIssueConsents() {
     LockAssert.TestHelper.makeAllAssertsPass(true);
-
     var nonFinishedTasks = IntStream.range(0, 10).mapToObj(i -> new BulkIssueConsentsTask()).toList();
 
-    when(bulkIssueConsentTaskRepository.findAllByFinishedAtIsNull()).thenReturn(nonFinishedTasks);
-    doNothing().when(bulkIssueConsentsTaskService).issueConsent(any()); // this tested below
-
-    bulkIssueConsentsTaskService.bulkIssueConsents();
+    when(energyPortalUserService.getServiceUserByWuaId(WebUserAccountId.from(userWuaId))).thenReturn(
+        ServiceUserDetail.from(energyPortalUser));
 
     for (var nonFinishedTask : nonFinishedTasks) {
-      verify(bulkIssueConsentsTaskService).issueConsent(nonFinishedTask);
+      nonFinishedTask.setBulkIssueConsentRun(bulkIssueConsentRun);
+    }
+
+    when(bulkIssueConsentTaskRepository.findAllByFinishedAtIsNull()).thenReturn(nonFinishedTasks);
+    doNothing().when(bulkIssueConsentsService).issueConsent(any(), any()); // this tested below
+
+    bulkIssueConsentsService.bulkIssueConsents();
+
+    for (var nonFinishedTask : nonFinishedTasks) {
+      verify(bulkIssueConsentsService).issueConsent(nonFinishedTask, user);
     }
   }
 
   @Test
   void issueConsent() {
-    var bulkConsentIssueTask = new BulkIssueConsentsTask();
+    var bulkIssueConsentTask = new BulkIssueConsentsTask();
     var applicationVersion = new ApplicationVersion();
-    var userWuaId = 123L;
-    var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    var user = ServiceUserDetail.from(energyPortalUser);
 
-    bulkConsentIssueTask.setApplicationVersion(applicationVersion);
-    bulkConsentIssueTask.setCreatedByWuaId(userWuaId);
+    bulkIssueConsentTask.setBulkIssueConsentRun(bulkIssueConsentRun);
+    bulkIssueConsentTask.setApplicationVersion(applicationVersion);
 
-    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(userWuaId))).thenReturn(energyPortalUser);
-
-    bulkIssueConsentsTaskService.issueConsent(bulkConsentIssueTask);
+    bulkIssueConsentsService.issueConsent(bulkIssueConsentTask, user);
 
     verify(consentIssuingService).issueConsent(applicationVersion, user);
 
     var bulkIssueConsentTaskCaptor = ArgumentCaptor.forClass(BulkIssueConsentsTask.class);
     verify(bulkIssueConsentTaskRepository).save(bulkIssueConsentTaskCaptor.capture());
-    assertThat(bulkConsentIssueTask)
+    assertThat(bulkIssueConsentTask)
         .extracting(
             BulkIssueConsentsTask::getStartedAt,
             BulkIssueConsentsTask::getFinishedAt,
@@ -136,25 +149,21 @@ class BulkIssueConsentsTaskServiceTest {
 
   @Test
   void issueConsent_exceptionWhenIssuingConsent() {
-    var bulkConsentIssueTask = new BulkIssueConsentsTask();
+    var bulkIssueConsentTask = new BulkIssueConsentsTask();
     var applicationVersion = new ApplicationVersion();
-    var userWuaId = 123L;
-    var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    var user = ServiceUserDetail.from(energyPortalUser);
 
-    bulkConsentIssueTask.setApplicationVersion(applicationVersion);
-    bulkConsentIssueTask.setCreatedByWuaId(userWuaId);
+    bulkIssueConsentTask.setBulkIssueConsentRun(bulkIssueConsentRun);
+    bulkIssueConsentTask.setApplicationVersion(applicationVersion);
 
-    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(userWuaId))).thenReturn(energyPortalUser);
-    doThrow(new RuntimeException("Error signing PDF document")).when(consentIssuingService).issueConsent(applicationVersion, user);
+    doThrow(new RuntimeException("Error running bulk issue consent task")).when(consentIssuingService).issueConsent(applicationVersion, user);
 
-    bulkIssueConsentsTaskService.issueConsent(bulkConsentIssueTask);
+    bulkIssueConsentsService.issueConsent(bulkIssueConsentTask, user);
 
     verify(consentIssuingService).issueConsent(applicationVersion, user);
 
     var bulkIssueConsentTaskCaptor = ArgumentCaptor.forClass(BulkIssueConsentsTask.class);
     verify(bulkIssueConsentTaskRepository).save(bulkIssueConsentTaskCaptor.capture());
-    assertThat(bulkConsentIssueTask)
+    assertThat(bulkIssueConsentTask)
         .extracting(
             BulkIssueConsentsTask::getStartedAt,
             BulkIssueConsentsTask::getFinishedAt,
@@ -163,7 +172,7 @@ class BulkIssueConsentsTaskServiceTest {
         .containsExactly(
             clock.instant(),
             clock.instant(),
-            "Error signing PDF document"
+            "Error running bulk issue consent task"
         );
   }
 }
