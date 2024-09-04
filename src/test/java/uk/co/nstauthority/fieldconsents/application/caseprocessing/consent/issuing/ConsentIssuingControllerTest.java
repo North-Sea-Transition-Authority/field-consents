@@ -37,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
@@ -414,6 +415,9 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .withHeadingContent("Consent issued for %s".formatted(applicationReference))
         .build();
 
+    var consent = new Consent();
+    when(consentIssuingService.issueConsent(applicationVersion, user)).thenReturn(consent);
+
     when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, ISSUE_CONSENT)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
@@ -425,5 +429,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(consentIssuingService).issueConsent(applicationVersion, user);
+    verify(consentIssuingService).sendConsentIssuedEmails(applicationVersion, user, consent);
   }
 }

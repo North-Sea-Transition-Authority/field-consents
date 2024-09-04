@@ -187,7 +187,8 @@ public class ConsentIssuingController {
   ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    consentIssuingService.issueConsent(applicationVersion, user);
+    var consent = consentIssuingService.issueConsent(applicationVersion, user);
+    consentIssuingService.sendConsentIssuedEmails(applicationVersion, user, consent);
 
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 

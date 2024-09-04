@@ -125,6 +125,29 @@ public class ApplicationTestUtil {
     return getSubmittedApplicationVersionWithTypeIdAndVersionNumber(applicationType, APPLICATION_VERSION_ID, APPLICATION_VERSION_NUMBER);
   }
 
+  public static ApplicationVersion getApprovedForIssuingApplicationVersionWithType(ApplicationType applicationType, Long caseOfficerWuaId, Long camUserWuaId) {
+    var submittedApplication = getSubmittedApplicationWithType(applicationType);
+    var approvedForIssuingApplicationVersion = new ApplicationVersion(
+        APPLICATION_VERSION_ID,
+        submittedApplication,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now().minusSeconds(60),
+        USER_WUA_ID,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        ApplicationVersionStatus.CONSENTED,
+        caseOfficerWuaId,
+        false
+    );
+
+    approvedForIssuingApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
+    approvedForIssuingApplicationVersion.setCamWuaId(camUserWuaId);
+    return approvedForIssuingApplicationVersion;
+  }
+
   public static ApplicationVersion getSubmittedApplicationVersionWithTypeIdAndVersionNumber(ApplicationType applicationType,
                                                                                             Integer applicationVersionId,
                                                                                             Integer applicationVersionNumber) {

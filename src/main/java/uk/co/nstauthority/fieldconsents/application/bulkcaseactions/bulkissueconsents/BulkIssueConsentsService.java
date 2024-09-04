@@ -29,19 +29,22 @@ public class BulkIssueConsentsService {
   private final BulkIssueConsentRunRepository bulkIssueConsentRunRepository;
   private final EnergyPortalUserService energyPortalUserService;
   private final ConsentIssuingService consentIssuingService;
+  private final BulkIssueConsentEmailService bulkIssueConsentEmailService;
 
   BulkIssueConsentsService(
       Clock clock,
       BulkIssueConsentTaskRepository bulkIssueConsentTaskRepository,
       BulkIssueConsentRunRepository bulkIssueConsentRunRepository,
       EnergyPortalUserService energyPortalUserService,
-      ConsentIssuingService consentIssuingService
+      ConsentIssuingService consentIssuingService,
+      BulkIssueConsentEmailService bulkIssueConsentEmailService
   ) {
     this.clock = clock;
     this.bulkIssueConsentTaskRepository = bulkIssueConsentTaskRepository;
     this.bulkIssueConsentRunRepository = bulkIssueConsentRunRepository;
     this.energyPortalUserService = energyPortalUserService;
     this.consentIssuingService = consentIssuingService;
+    this.bulkIssueConsentEmailService = bulkIssueConsentEmailService;
   }
 
   public long getCountOfConsentsNotYetIssued() {
@@ -112,8 +115,12 @@ public class BulkIssueConsentsService {
     var consentRunFinished = bulkIssueConsentTaskRepository.countAllByFinishedAtIsNullAndBulkIssueConsentRun(run) == 0;
 
     if (consentRunFinished) {
-      // TODO: FCS-924 - Send bulk email
-      LOGGER.info("Send bulk email");
+      var tasks = bulkIssueConsentTaskRepository.findAllByBulkIssueConsentRun(run);
+
+      bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToRegulators(run, tasks);
+
+      //TODO FCS-925: Send emails to operators
+      //TODO FCS-926: Send emails to field equity partners
     }
   }
 

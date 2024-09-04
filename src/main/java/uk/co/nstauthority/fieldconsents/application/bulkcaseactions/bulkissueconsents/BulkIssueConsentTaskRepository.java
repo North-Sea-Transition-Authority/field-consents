@@ -10,6 +10,8 @@ public interface BulkIssueConsentTaskRepository extends ListCrudRepository<BulkI
 
   List<BulkIssueConsentsTask> findAllByFinishedAtIsNull();
 
+  List<BulkIssueConsentsTask> findAllByBulkIssueConsentRun(BulkIssueConsentRun bulkIssueConsentRun);
+
   long countAllByFinishedAtIsNull();
 
   long countAllByFinishedAtIsNullAndBulkIssueConsentRun(BulkIssueConsentRun bulkIssueConsentRun);

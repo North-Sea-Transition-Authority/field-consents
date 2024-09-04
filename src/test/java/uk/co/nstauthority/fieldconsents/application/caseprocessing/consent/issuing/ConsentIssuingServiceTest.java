@@ -39,6 +39,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentFileUsage;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
@@ -48,6 +49,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.inst
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.FieldConsentsPdfRenderResult;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
@@ -92,20 +94,22 @@ class ConsentIssuingServiceTest {
 
   private ApplicationAsset primaryApplicationAsset;
 
+  private ServiceUserDetail user;
+
+  private Consent consent;
+
   @BeforeEach
   void beforeEach() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
     application = applicationVersion.getApplication();
+    user = ServiceUserDetailTestUtil.Builder().build();
+    consent = ConsentTestUtil.newBuilder().build();
   }
 
   @Test
   void issueConsent_applicationIsNotRevision() {
     application.setVariationNo(0);
-
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    var consent = ConsentTestUtil.newBuilder().build();
 
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
@@ -118,19 +122,12 @@ class ConsentIssuingServiceTest {
     verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
     verify(applicationService).consentApplication(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
 
   @Test
   void issueConsent_applicationIsRevision() {
     application.setVariationNo(1);
-
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    var consent = ConsentTestUtil.newBuilder().build();
 
     var previousConsent = ConsentTestUtil.newBuilder().withId(consent.getId() - 1).build();
 
@@ -146,9 +143,6 @@ class ConsentIssuingServiceTest {
     verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
     verify(applicationService).consentApplication(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
 
@@ -167,97 +161,64 @@ class ConsentIssuingServiceTest {
   }
 
   @Test
-  void issueConsent_whenSendConsentIssuedEmailToOperatorFails_thenConsentIsStillIssued() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
+  void sendConsentIssuedEmails() {
+    consentIssuingService.sendConsentIssuedEmails(applicationVersion, user, consent);
 
-    var consent = ConsentTestUtil.newBuilder().build();
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+  }
 
-    when(consentService.createConsent(application, user)).thenReturn(consent);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
-    doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
-
-    // WHEN the email service call throws an exception
-    doThrow(new RuntimeException("Failed to send email"))
+  @Test
+  void sendConsentIssuedEmails_whenSendConsentIssuedEmailToOperatorFails_thenSendOtherEmailsAreCalled() {
+    // WHEN the email service call to send email to operator throws an exception
+    doThrow(new RuntimeException("Failed to send email to operator"))
         .when(consentEmailService)
         .sendConsentIssuedEmailToOperator(applicationVersion);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
-        () -> consentIssuingService.issueConsent(applicationVersion, user)
+        () -> consentIssuingService.sendConsentIssuedEmails(applicationVersion, user, consent)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
-    verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
-
-    verify(applicationService).consentApplication(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
-    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
   }
 
   @Test
-  void issueConsent_whenSendConsentIssuedEmailToCaseOfficerFails_thenConsentIsStillIssued() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    var consent = ConsentTestUtil.newBuilder().build();
-
-    when(consentService.createConsent(application, user)).thenReturn(consent);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
-    doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
-
-    // WHEN the email service call throws an exception
-    doThrow(new RuntimeException("Failed to send email"))
+  void sendConsentIssuedEmails_whenSendConsentIssuedEmailToCaseOfficerFails_thenSendOtherEmailsAreCalled() {
+    // WHEN the email service call to send email to case officer throws an exception
+    doThrow(new RuntimeException("Failed to send email to case officer"))
         .when(consentEmailService)
         .sendConsentIssuedEmailToCaseOfficer(applicationVersion);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
-        () -> consentIssuingService.issueConsent(applicationVersion, user)
+        () -> consentIssuingService.sendConsentIssuedEmails(applicationVersion, user, consent)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
-    verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
-
-    verify(applicationService).consentApplication(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
-    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
   }
 
   @Test
-  void issueConsent_whenSendConsentIssuedEmailToFieldEquityPartners_thenConsentIsStillIssued() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    var consent = ConsentTestUtil.newBuilder().build();
-
-    when(consentService.createConsent(application, user)).thenReturn(consent);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
-    doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
-
-    // WHEN the email service call throws an exception
-    doThrow(new RuntimeException("Failed to send email"))
+  void sendConsentIssuedEmails_whenSendConsentIssuedEmailToFieldEquityPartnersFails_thenSendOtherEmailsAreCalled() {
+    // WHEN the email service call to send email to FEPs throws an exception
+    doThrow(new RuntimeException("Failed to send email to field equity partners"))
         .when(consentEmailService)
-        .sendConsentIssuedEmailToFieldEquityPartners(any(), any());
+        .sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
-        () -> consentIssuingService.issueConsent(applicationVersion, user)
+        () -> consentIssuingService.sendConsentIssuedEmails(applicationVersion, user, consent)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
-    verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
-
-    verify(applicationService).consentApplication(applicationVersion);
-    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
-    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
   }
 
   @Test
   void generateDocumentInstancesAndSaveToConsent() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-    var consent = ConsentTestUtil.newBuilder().build();
-
     var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(DocumentTemplateDtoTestUtil.builder().withDisplayOrder(1).build())
         .build();
@@ -364,8 +325,6 @@ class ConsentIssuingServiceTest {
 
   @Test
   void copySupportingDocumentsToConsent() {
-    var consent = ConsentTestUtil.newBuilder().build();
-
     consentIssuingService.copySupportingDocumentsToConsent(application, consent);
 
     var supportingConsentDocumentApplicationFileUsage = ApplicationFileUsage.supportingConsentDocumentFrom(application);

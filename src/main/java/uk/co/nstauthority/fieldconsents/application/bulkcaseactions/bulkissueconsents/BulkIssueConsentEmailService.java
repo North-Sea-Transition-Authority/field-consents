@@ -1,0 +1,150 @@
+package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents;
+
+import static java.util.stream.Collectors.flatMapping;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.email.EmailService;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
+
+@Service
+class BulkIssueConsentEmailService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(BulkIssueConsentEmailService.class);
+  static final String SUCCESSFUL_APPLICATIONS_MERGE_FIELD_TEXT =
+      "The following consents have been granted and issued:" + System.lineSeparator() + "%s";
+  static final String FAILED_APPLICATIONS_MERGE_FIELD_TEXT =
+      "The following consents failed to be issued:" + System.lineSeparator() + "%s";
+  static final String SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME = "SUCCESSFUL_APPLICATIONS";
+  static final String FAILED_APPLICATIONS_MERGE_FIELD_NAME = "FAILED_APPLICATIONS";
+  static final String WORK_AREA_URL_MERGE_FIELD_NAME = "WORK_AREA_URL";
+  static final String SUBJECT_TEXT_MERGE_FIELD_NAME = "SUBJECT_TEXT";
+
+  private final EmailService emailService;
+  private final AbsoluteUrlService absoluteUrlService;
+  private final EnergyPortalUserService energyPortalUserService;
+  private final ApplicationService applicationService;
+
+  BulkIssueConsentEmailService(
+      EmailService emailService,
+      AbsoluteUrlService absoluteUrlService,
+      EnergyPortalUserService energyPortalUserService,
+      ApplicationService applicationService
+  ) {
+    this.emailService = emailService;
+    this.absoluteUrlService = absoluteUrlService;
+    this.energyPortalUserService = energyPortalUserService;
+    this.applicationService = applicationService;
+  }
+
+  void sendBulkConsentIssuedEmailToRegulators(BulkIssueConsentRun run, List<BulkIssueConsentsTask> tasks) {
+    var tasksByCaseOfficerWuaId = tasks.stream().collect(groupingBy(task -> task.getApplicationVersion().getCaseOfficerWuaId()));
+    var tasksByCamUserWuaId = tasks.stream().collect(groupingBy(task -> task.getApplicationVersion().getCamWuaId()));
+
+    // When a case officer is also in the CAM role, and they have both processed and granted the consent
+    // we're going to have only one user in the resulting map with all the tasks they're involved in as a case officer or CAM
+    var tasksByRegulatorUserWuaId = Stream
+        .concat(tasksByCaseOfficerWuaId.entrySet().stream(), tasksByCamUserWuaId.entrySet().stream())
+        .collect(groupingBy(Map.Entry::getKey, flatMapping(entry -> entry.getValue().stream(), toSet())));
+
+    for (var entry : tasksByRegulatorUserWuaId.entrySet()) {
+      sendBulkConsentIssuedEmailToRegulator(run, WebUserAccountId.from(entry.getKey()), entry.getValue());
+    }
+  }
+
+  void sendBulkConsentIssuedEmailToRegulator(
+      BulkIssueConsentRun run,
+      WebUserAccountId userWuaId,
+      Collection<BulkIssueConsentsTask> tasks
+  ) {
+    var successfulApplications = getSuccessfulApplications(tasks);
+    var failedApplications = getFailedApplications(tasks);
+
+    var recipient = FieldConsentsEmailRecipient.from(energyPortalUserService.getByWuaId(userWuaId));
+
+    try {
+      sendEmailToRegulator(
+          run,
+          recipient,
+          formatStringList(successfulApplications),
+          formatStringList(failedApplications));
+    } catch (Exception exception) {
+      LOGGER.error("""
+            An attempt to send a bulk consents issued notification to regulator \
+            by user with wuaId [{}] for bulk issue consent run with id [{}] failed. \
+            Note: this hasn't prevented the bulk consents being issued.
+            """,
+          run.getIssuedByWuaId(), run.getId(), exception);
+    }
+  }
+
+  List<String> getSuccessfulApplications(Collection<BulkIssueConsentsTask> tasks) {
+    return tasks.stream()
+        .filter(task -> task.getFinishedAt() != null && task.getErrorDetails() == null)
+        .map(task -> applicationService.getApplicationReference(task.getApplicationVersion()))
+        .sorted().toList();
+  }
+
+  List<String> getFailedApplications(Collection<BulkIssueConsentsTask> tasks) {
+    return tasks.stream()
+        .filter(task -> task.getFinishedAt() != null && task.getErrorDetails() != null)
+        .map(task -> applicationService.getApplicationReference(task.getApplicationVersion()))
+        .sorted().toList();
+  }
+
+  void sendEmailToRegulator(
+      BulkIssueConsentRun run,
+      FieldConsentsEmailRecipient recipient,
+      String formattedSuccessfulApplications,
+      String formattedFailedApplications
+  ) {
+    var mergedTemplate = emailService
+        .getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_REGULATOR)
+        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, recipient.displayName())
+        .withMailMergeField(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued")
+        .withMailMergeField(WORK_AREA_URL_MERGE_FIELD_NAME,
+            absoluteUrlService.getAbsoluteUrl(
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
+        .withMailMergeField(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+            formattedSuccessfulApplications.isEmpty()
+                ? ""
+                : String.format(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_TEXT, formattedSuccessfulApplications))
+        .withMailMergeField(FAILED_APPLICATIONS_MERGE_FIELD_NAME,
+            formattedFailedApplications.isEmpty()
+                ? ""
+                : String.format(FAILED_APPLICATIONS_MERGE_FIELD_TEXT, formattedFailedApplications))
+        .merge();
+
+    emailService.sendEmail(
+        mergedTemplate,
+        recipient,
+        run
+    );
+  }
+
+  String formatStringList(List<String> list) {
+    if (list.isEmpty()) {
+      return "";
+    }
+    if (list.size() == 1) {
+      return "* %s".formatted(list.getFirst());
+    }
+    return "* %s".formatted(String.join(System.lineSeparator() + "* ", list.subList(0, list.size())));
+  }
+}

@@ -45,6 +45,9 @@ class BulkIssueConsentsServiceTest {
   @Mock
   private ConsentIssuingService consentIssuingService;
 
+  @Mock
+  private BulkIssueConsentEmailService bulkIssueConsentEmailService;
+
   private BulkIssueConsentsService bulkIssueConsentsService;
 
   private EnergyPortalUserDto energyPortalUser;
@@ -59,7 +62,8 @@ class BulkIssueConsentsServiceTest {
       bulkIssueConsentTaskRepository,
       bulkIssueConsentRunRepository,
       energyPortalUserService,
-      consentIssuingService
+      consentIssuingService,
+      bulkIssueConsentEmailService
     ));
 
     energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing;
 
 import io.micrometer.observation.annotation.Observed;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -65,7 +64,7 @@ public class ConsentIssuingService {
 
   @Transactional
   @Observed(name = "fcs.consent.issued", contextualName = "consent issued")
-  public void issueConsent(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+  public Consent issueConsent(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var application = applicationVersion.getApplication();
 
     var consent = consentService.createConsent(application, user);
@@ -85,34 +84,42 @@ public class ConsentIssuingService {
 
     applicationService.consentApplication(applicationVersion);
 
+    return consent;
+  }
+
+  public void sendConsentIssuedEmails(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user,
+      Consent consent
+  ) {
     try {
       consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
     } catch (Exception exception) {
       LOGGER.error("""
-              An attempt to send a consent issued notification to the operator \
-              by user with wuaId [{}] for application version with id [{}] failed. \
-              Note: this hasn't prevented the consent being issued.
-              """,
+            An attempt to send a consent issued notification to the operator \
+            by user with wuaId [{}] for application version with id [{}] failed. \
+            Note: this hasn't prevented the consent being issued.
+            """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
     try {
       consentEmailService.sendConsentIssuedEmailToCaseOfficer(applicationVersion);
     } catch (Exception exception) {
       LOGGER.error("""
-              An attempt to send a consent issued notification to case officer \
-              by user with wuaId [{}] for application version with id [{}] failed. \
-              Note: this hasn't prevented the consent being issued.
-              """,
+            An attempt to send a consent issued notification to case officer \
+            by user with wuaId [{}] for application version with id [{}] failed. \
+            Note: this hasn't prevented the consent being issued.
+            """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
     try {
       consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
     } catch (Exception exception) {
       LOGGER.error("""
-              An attempt to send a consent issued notification to field equity partners \
-              by user with wuaId [{}] for application version with id [{}] failed. \
-              Note: this hasn't prevented the consent being issued.
-              """,
+            An attempt to send a consent issued notification to field equity partners \
+            by user with wuaId [{}] for application version with id [{}] failed. \
+            Note: this hasn't prevented the consent being issued.
+            """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
   }
