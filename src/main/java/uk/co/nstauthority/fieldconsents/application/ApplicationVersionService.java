@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ApplicationVersionService {
@@ -51,6 +52,7 @@ public class ApplicationVersionService {
         .toList();
   }
 
+  @Transactional
   public void deleteApplicationVersion(ApplicationVersion applicationVersion) {
     if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
       applicationVersion.setStatus(ApplicationVersionStatus.DELETED);
@@ -61,12 +63,19 @@ public class ApplicationVersionService {
     }
   }
 
+  @Transactional
   public void withdrawApplicationVersion(ApplicationVersion applicationVersion) {
     if (!ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
       throw new IllegalStateException(String.format("Application with id %s and status %s cannot be withdrawn",
           applicationVersion.getApplication().getId(), applicationVersion.getStatus().getDisplayName()));
     }
     applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
+    applicationVersionRepository.save(applicationVersion);
+  }
+
+  @Transactional
+  public void closeApplicationVersion(ApplicationVersion applicationVersion) {
+    applicationVersion.setStatus(ApplicationVersionStatus.CLOSED);
     applicationVersionRepository.save(applicationVersion);
   }
 }

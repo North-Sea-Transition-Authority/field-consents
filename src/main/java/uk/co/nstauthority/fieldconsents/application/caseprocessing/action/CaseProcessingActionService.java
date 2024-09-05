@@ -15,6 +15,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CLOSE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATIONS;
@@ -173,7 +174,8 @@ public class CaseProcessingActionService {
               APPROVE_FOR_ISSUING,
               RETURN_TO_CASE_OFFICER,
               ISSUE_CONSENT,
-              UNAPPROVE_FOR_ISSUING
+              UNAPPROVE_FOR_ISSUING,
+              CLOSE_APPLICATION
           ),
           ApplicationVersionStatus.CONSENTED,
           EnumSet.of(
@@ -193,6 +195,10 @@ public class CaseProcessingActionService {
               CONSULTATIONS,
               APPLICATION_UPDATES,
               REGULATOR_ADD_CASE_NOTE
+          ),
+          ApplicationVersionStatus.CLOSED,
+          EnumSet.of(
+              REGULATOR_ADD_CASE_NOTE
           )
       );
 
@@ -206,6 +212,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
+          entry(CLOSE_APPLICATION, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CONSULTATIONS, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(CONSULTATION_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CONSULTATION_RESPONSE, EnumSet.of(RESPOND_TO_CONSULTATION)),
@@ -304,6 +311,7 @@ public class CaseProcessingActionService {
           entry(CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER)),
           entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
           entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER)),
+          entry(CLOSE_APPLICATION, EnumSet.of(CASE_OFFICER)),
           entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER)),
@@ -338,7 +346,8 @@ public class CaseProcessingActionService {
           CHANGE_ACE_STATUS, OPTIONAL_CASE_TASKS,
           APPLICATION_UPDATES, OPTIONAL_CASE_TASKS,
           REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS,
-          BREACH_INFORMATION, OPTIONAL_CASE_TASKS
+          BREACH_INFORMATION, OPTIONAL_CASE_TASKS,
+          CLOSE_APPLICATION, OPTIONAL_CASE_TASKS
       );
 
   // If an action is here it will be displayed only within an action group

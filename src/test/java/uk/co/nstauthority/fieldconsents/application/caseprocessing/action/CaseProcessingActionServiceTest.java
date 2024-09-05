@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CLOSE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
@@ -254,21 +255,36 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED),
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSENT_PREPARATION)
+                .submittedActions(
+                    CHANGE_ACE_STATUS,
+                    CASE_OFFICER_RELEASE_OWNERSHIP,
+                    CONSENT_PREPARATION,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CASE_OFFICER_WITHDRAWAL_RESPONSE, CONSENT_PREPARATION)
+                .submittedActions(
+                    CHANGE_ACE_STATUS,
+                    CASE_OFFICER_RELEASE_OWNERSHIP,
+                    CASE_OFFICER_WITHDRAWAL_RESPONSE,
+                    CONSENT_PREPARATION,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, TECHNICAL_REVIEW_REQUEST, CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
+                .submittedActions(
+                    CHANGE_ACE_STATUS,
+                    CASE_OFFICER_RELEASE_OWNERSHIP,
+                    TECHNICAL_REVIEW_REQUEST,
+                    CONSENT_PREPARATION,
+                    APPLICATION_UPDATE_REQUEST,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
@@ -282,14 +298,22 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS),
             Set.of(APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
+                .submittedActions(
+                    CONSENT_PREPARATION,
+                    APPLICATION_UPDATE_REQUEST,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, CONSULTATION_NOT_OPEN),
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSENT_PREPARATION, CONSULTATION_REQUEST)
+                .submittedActions(
+                    CHANGE_ACE_STATUS,
+                    CASE_OFFICER_RELEASE_OWNERSHIP,
+                    CONSENT_PREPARATION,
+                    CONSULTATION_REQUEST,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
@@ -310,14 +334,21 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST, CONSULTATION_FURTHER_INFORMATION_RESPOND)
+                .submittedActions(
+                    CONSENT_PREPARATION,
+                    APPLICATION_UPDATE_REQUEST,
+                    CONSULTATION_FURTHER_INFORMATION_RESPOND,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
-                .submittedActions(CASE_OFFICER_TAKE_OWNERSHIP, CONSENT_PREPARATION)
+                .submittedActions(
+                    CASE_OFFICER_TAKE_OWNERSHIP,
+                    CONSENT_PREPARATION,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
@@ -329,8 +360,8 @@ class CaseProcessingActionServiceTest {
                     CASE_OFFICER_RELEASE_OWNERSHIP,
                     EDIT_CONSENT_DATA,
                     EDIT_CONSENT_DOCUMENTS,
-                    CONSENT_PREPARATION
-                )
+                    CONSENT_PREPARATION,
+                    CLOSE_APPLICATION)
                 .build()
         ),
         arguments(
@@ -417,7 +448,8 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST, IS_REVISABLE),
             ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION)
+                .submittedActions(CONSENT_PREPARATION,
+                    CLOSE_APPLICATION)
                 .completedActions(REVISE_CONSENT)
                 .build()
         ),
@@ -501,7 +533,8 @@ class CaseProcessingActionServiceTest {
         UNAPPROVE_FOR_ISSUING,
         RECORD_BREACH,
         REMOVE_BREACH,
-        EDIT_BREACH_INFORMATION
+        EDIT_BREACH_INFORMATION,
+        CLOSE_APPLICATION
     );
 
     var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
@@ -582,8 +615,17 @@ class CaseProcessingActionServiceTest {
     // we don't care about the ordering here because it's not going directly into a view
     assertThat(caseProcessingActionService.groupActionItemsByTaskListSection(EnumSet.allOf(CaseProcessingActionItem.class)))
         .containsExactlyInAnyOrderEntriesOf(Map.of(
-            CaseProcessingTaskListSection.CASE_TASKS, Set.of(TECHNICAL_REVIEWS, CONSULTATIONS, CONSENT_PREPARATION, CONSENT_ISSUING),
-            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, Set.of(CHANGE_ACE_STATUS, BREACH_INFORMATION, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+            CaseProcessingTaskListSection.CASE_TASKS, Set.of(
+                TECHNICAL_REVIEWS,
+                CONSULTATIONS,
+                CONSENT_PREPARATION,
+                CONSENT_ISSUING),
+            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, Set.of(
+                CHANGE_ACE_STATUS,
+                BREACH_INFORMATION,
+                APPLICATION_UPDATES,
+                REGULATOR_ADD_CASE_NOTE,
+                CLOSE_APPLICATION)
         ));
   }
 

@@ -49,7 +49,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
     ApplicationVersionStatus.AWAITING_PAYMENT,
     ApplicationVersionStatus.SUBMITTED,
     ApplicationVersionStatus.CONSENTED,
-    ApplicationVersionStatus.WITHDRAWN
+    ApplicationVersionStatus.WITHDRAWN,
+    ApplicationVersionStatus.CLOSED
 })
 @HasApplicationPermission(permissions = {
     RolePermission.PROCESS_FCS_APPLICATIONS,

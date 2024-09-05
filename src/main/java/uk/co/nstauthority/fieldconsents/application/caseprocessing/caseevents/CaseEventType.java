@@ -41,6 +41,7 @@ public enum CaseEventType {
   BREACH_RECORDED("Consent breach recorded", "Recorded by", "Recorded on", null, null),
   BREACH_REMOVED("Consent breach removed", "Removed by", "Removed on", null, null),
   CONSENT_ISSUED("Consent issued", "Issued by", "Issued on", null, null),
+  APPLICATION_CLOSED("Application closed", "Closed by", "Closed on", null, null)
   ;
 
   private final String caseEventHeader;

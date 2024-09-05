@@ -11,7 +11,8 @@ public enum ApplicationVersionStatus implements Displayable {
   SUBMITTED("Submitted", 30),
   CONSENTED("Consented", 40),
   DELETED("Deleted", 50),
-  WITHDRAWN("Withdrawn", 60);
+  WITHDRAWN("Withdrawn", 60),
+  CLOSED("Closed", 70);
 
   private final String displayName;
   private final int displayOrder;
@@ -38,7 +39,8 @@ public enum ApplicationVersionStatus implements Displayable {
             AWAITING_PAYMENT,
             SUBMITTED,
             CONSENTED,
-            WITHDRAWN
+            WITHDRAWN,
+            CLOSED
         )
     );
   }

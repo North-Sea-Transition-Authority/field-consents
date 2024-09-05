@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -168,32 +170,41 @@ class ApplicationVersionServiceTest {
 
       assertThrows(IllegalStateException.class,
           () -> applicationVersionService.deleteApplicationVersion(applicationVersion));
-      verify(applicationVersionRepository, never()).save(applicationVersion);
+      verify(applicationVersionRepository, never()).save(any());
     }
   }
 
   @Test
   void withdrawApplicationVersion_whenCalled_thenVerifyEntityUpdatedAndSaved() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersionService.withdrawApplicationVersion(applicationVersion);
+    var applicationVersion1 = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersionService.withdrawApplicationVersion(applicationVersion1);
 
-    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.WITHDRAWN);
-    verify(applicationVersionRepository).save(applicationVersion);
+    assertThat(applicationVersion1.getStatus()).isEqualTo(ApplicationVersionStatus.WITHDRAWN);
+    verify(applicationVersionRepository).save(applicationVersion1);
   }
 
   @ParameterizedTest
-  @EnumSource(ApplicationVersionStatus.class)
+  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = EnumSource.Mode.EXCLUDE)
   void withdrawApplicationVersion_ensureOnlySubmittedApplicationsCanBeWithdrawn(ApplicationVersionStatus applicationVersionStatus) {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    if (applicationVersionStatus == ApplicationVersionStatus.SUBMITTED) {
-      applicationVersionService.withdrawApplicationVersion(applicationVersion);
-      verify(applicationVersionRepository).save(applicationVersion);
-    } else {
-      applicationVersion.setStatus(applicationVersionStatus);
+    var applicationVersion1 = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion1.setStatus(applicationVersionStatus);
 
-      assertThrows(IllegalStateException.class,
-          () -> applicationVersionService.withdrawApplicationVersion(applicationVersion));
-      verify(applicationVersionRepository, never()).save(applicationVersion);
-    }
+    assertThrows(IllegalStateException.class,
+        () -> applicationVersionService.withdrawApplicationVersion(applicationVersion1));
+    verify(applicationVersionRepository, never()).save(any());
+  }
+
+  @Test
+  void closeApplicationVersion_whenCalled_thenVerifyEntityUpdatedAndSaved() {
+    var applicationVersion1 = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersionService.closeApplicationVersion(applicationVersion1);
+
+    assertThat(applicationVersion1.getStatus()).isEqualTo(ApplicationVersionStatus.CLOSED);
+
+    var applicationCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+    verify(applicationVersionRepository).save(applicationCaptor.capture());
+
+    assertThat(applicationCaptor.getValue().getStatus())
+        .isEqualTo(ApplicationVersionStatus.CLOSED);
   }
 }

@@ -37,7 +37,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
     ApplicationVersionStatus.AWAITING_PAYMENT,
     ApplicationVersionStatus.SUBMITTED,
     ApplicationVersionStatus.CONSENTED,
-    ApplicationVersionStatus.WITHDRAWN
+    ApplicationVersionStatus.WITHDRAWN,
+    ApplicationVersionStatus.CLOSED
 })
 @HasApplicationPermission(permissions = {ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION})
 @IsMemberOfTeamType(teamType = TeamType.OPRED)
