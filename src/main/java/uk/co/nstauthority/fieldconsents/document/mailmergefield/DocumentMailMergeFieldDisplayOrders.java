@@ -15,15 +15,16 @@ public class DocumentMailMergeFieldDisplayOrders {
   public static final int CONSENT_LENGTH_UPPER_CASE = 10;
   public static final int FIELD_DEVELOPMENT_PLAN_TITLE = 11;
   public static final int FIELD_DEVELOPMENT_PLAN_DATE = 12;
-  public static final int FIELD_EQUITY_PARTNER_LIST = 13;
-  public static final int LICENCE_REFERENCE_LIST = 14;
-  public static final int REGULATOR_NAME = 15;
-  public static final int REGULATOR_MNEMONIC = 16;
-  public static final int REGULATOR_EMAIL = 17;
-  public static final int REGULATOR_LEGAL_NAME = 18;
-  public static final int REGULATOR_LEGAL_MNEMONIC = 19;
-  public static final int CONSENTS_TEAM_NAME = 20;
-  public static final int SCHEDULE = 21;
-  public static final int DIGITAL_SIGNATURE = 22;
+  public static final int FIELD_DEVELOPMENT_PLAN_ADDENDUM_LIST = 13;
+  public static final int FIELD_EQUITY_PARTNER_LIST = 14;
+  public static final int LICENCE_REFERENCE_LIST = 15;
+  public static final int REGULATOR_NAME = 16;
+  public static final int REGULATOR_MNEMONIC = 17;
+  public static final int REGULATOR_EMAIL = 18;
+  public static final int REGULATOR_LEGAL_NAME = 19;
+  public static final int REGULATOR_LEGAL_MNEMONIC = 20;
+  public static final int CONSENTS_TEAM_NAME = 21;
+  public static final int SCHEDULE = 22;
+  public static final int DIGITAL_SIGNATURE = 23;
 
 }
