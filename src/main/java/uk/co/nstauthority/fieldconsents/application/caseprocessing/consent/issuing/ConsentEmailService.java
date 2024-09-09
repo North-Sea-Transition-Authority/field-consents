@@ -25,7 +25,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.Indu
 @Service
 public class ConsentEmailService {
 
-  private static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for consent issuing notification";
+  public static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for consent issuing notification";
 
   private final EmailService emailService;
   private final IndustryTeamService industryTeamService;

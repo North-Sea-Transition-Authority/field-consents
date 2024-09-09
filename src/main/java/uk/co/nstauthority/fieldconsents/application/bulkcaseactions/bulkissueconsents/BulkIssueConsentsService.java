@@ -108,18 +108,18 @@ public class BulkIssueConsentsService {
     }
     task.setFinishedAt(clock.instant());
     bulkIssueConsentTaskRepository.save(task);
-    sendEmailIfAllIssued(task.getBulkIssueConsentRun());
+    sendEmailsIfAllIssued(task.getBulkIssueConsentRun());
   }
 
-  private void sendEmailIfAllIssued(BulkIssueConsentRun run) {
+  void sendEmailsIfAllIssued(BulkIssueConsentRun run) {
     var consentRunFinished = bulkIssueConsentTaskRepository.countAllByFinishedAtIsNullAndBulkIssueConsentRun(run) == 0;
 
     if (consentRunFinished) {
       var tasks = bulkIssueConsentTaskRepository.findAllByBulkIssueConsentRun(run);
 
       bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToRegulators(run, tasks);
+      bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(run, tasks);
 
-      //TODO FCS-925: Send emails to operators
       //TODO FCS-926: Send emails to field equity partners
     }
   }
