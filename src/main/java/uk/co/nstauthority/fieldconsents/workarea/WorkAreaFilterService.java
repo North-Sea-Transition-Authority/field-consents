@@ -4,6 +4,8 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_CONSULTATIONS_QUERY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_TECHNICAL_REVIEWS_QUERY;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,17 +63,25 @@ public class WorkAreaFilterService {
 
   private Condition getWorkAreaTabCondition(WorkAreaTab workAreaTab, ServiceUserDetail user) {
     return switch (workAreaTab) {
-      case MY_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
+      case MY_APPLICATIONS ->
+          APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
           .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CASE_OFFICER.name()));
-      case MY_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue());
-      case ALL_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull();
+      case MY_TECHNICAL_REVIEWS ->
+          APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID)
+              .eq(user.wuaId().intValue());
+      case ALL_TECHNICAL_REVIEWS ->
+          APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID).isNotNull();
       case ALL_APPLICATIONS -> DSL.trueCondition();
       case UNASSIGNED_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
-      case ALL_CONSULTATIONS -> APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
-      case UNASSIGNED_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull()
-          .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()));
-      case MY_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.eq(user.wuaId().intValue());
-      case MY_CAM_APPLICATIONS -> APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
+      case ALL_CONSULTATIONS ->
+          APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID).isNotNull();
+      case UNASSIGNED_CONSULTATIONS ->
+          APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID).isNull()
+              .and(APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.STATUS).eq(ConsultationStatus.OPEN.name()));
+      case MY_CONSULTATIONS ->
+          APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID).eq(user.wuaId().intValue());
+      case MY_CAM_APPLICATIONS ->
+          APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
           .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()));
     };
   }
@@ -162,6 +172,7 @@ public class WorkAreaFilterService {
   }
 
   private Condition getTechnicalReviewerAssignedCondition(Long technicalReviewerWuaId) {
-    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(technicalReviewerWuaId.intValue());
+    return APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID)
+        .eq(technicalReviewerWuaId.intValue());
   }
 }

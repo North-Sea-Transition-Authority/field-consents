@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.jooq.impl.DSL.listAggDistinct;
 import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.select;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
@@ -22,11 +23,12 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Select;
 import org.jooq.SelectQuery;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -37,52 +39,96 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions;
 
 @Service
 public class ApplicationDataItemViewQueryService {
 
+  public static final Select<Record1<Integer>> LATEST_APP_VERSION_FOR_APP_QUERY =
+      select(max(APPLICATION_VERSIONS.ID))
+          .from(APPLICATION_VERSIONS)
+          .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID))
+          .and(APPLICATION_VERSIONS.STATUS.ne(ApplicationVersionStatus.DELETED.name()));
+
+  public static final Select<?> APPLICATION_WITHDRAWALS_QUERY =
+      select(
+          APPLICATION_VERSIONS.APPLICATION_ID,
+          APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS
+      )
+          .from(APPLICATION_WITHDRAWALS)
+          .join(APPLICATION_VERSIONS).on(APPLICATION_VERSIONS.ID.eq(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID))
+          .where(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()));
+
+  public static final Select<?> APPLICATION_TECHNICAL_REVIEWS_QUERY =
+      select(
+          APPLICATION_VERSIONS.APPLICATION_ID,
+          APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID,
+          APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS,
+          APPLICATION_TECHNICAL_REVIEWS.DEADLINE_DATE_TIME
+      )
+          .from(APPLICATION_TECHNICAL_REVIEWS)
+          .join(APPLICATION_VERSIONS)
+              .on(APPLICATION_VERSIONS.ID.eq(APPLICATION_TECHNICAL_REVIEWS.REQUEST_APPLICATION_VERSION_ID))
+          .where(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()));
+
+  public static final Select<?> APPLICATION_UPDATES_QUERY =
+      select(
+          APPLICATION_VERSIONS.APPLICATION_ID,
+          APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS,
+          APPLICATION_UPDATES.DEADLINE_DATE_TIME
+      )
+          .from(APPLICATION_UPDATES)
+          .join(APPLICATION_VERSIONS).on(APPLICATION_VERSIONS.ID.eq(APPLICATION_UPDATES.APPLICATION_VERSION_ID))
+          .where(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.eq(ApplicationUpdateStatus.OPEN.name()));
+
+  public static final Select<?> APPLICATION_CONSULTATIONS_QUERY =
+      select(
+          APPLICATION_VERSIONS.APPLICATION_ID,
+          APPLICATION_CONSULTATIONS.ID,
+          APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID,
+          APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
+          APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID,
+          APPLICATION_CONSULTATIONS.STATUS
+      )
+          .from(APPLICATION_CONSULTATIONS)
+          .join(APPLICATION_VERSIONS).on(APPLICATION_VERSIONS.ID.eq(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID))
+          .where(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()));
+
+  public static final Select<Record1<Integer>> APPLICATION_VERSIONS_PENDING_CONSENT_ISSUE_QUERY =
+      select(BULK_ISSUE_CONSENTS_TASKS.APPLICATION_VERSION_ID)
+          .from(BULK_ISSUE_CONSENTS_TASKS)
+          .where(BULK_ISSUE_CONSENTS_TASKS.FINISHED_AT.isNull());
+
+  // Get the CSV for the licences associated to the field when this is the primary application asset
+  public static final Select<?> FIELD_LICENCES_QUERY =
+      select(
+          APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID,
+          listAggDistinct(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF, ", ")
+              .withinGroupOrderBy(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF)
+              .as("fieldLicences")
+      )
+          .from(APPLICATION_ASSETS)
+          .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
+          .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+          .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
+
   private final DSLContext context;
 
-  public ApplicationDataItemViewQueryService(DSLContext context) {
+  ApplicationDataItemViewQueryService(DSLContext context) {
     this.context = context;
   }
 
-  public SelectQuery<Record> getApplicationDataItemViewsQuery(List<Condition> conditions) {
-    var allAppVersionsForAppSubQuery = context.select(APPLICATION_VERSIONS.ID)
-        .from(APPLICATION_VERSIONS)
-        .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID));
+  @Observed(name = "fcs.database.jooq-query", contextualName = "jooq query executed")
+  public List<ApplicationDataItemDto> runQueryWithCustom(
+      List<Condition> conditions,
+      Consumer<SelectQuery<Record>> selectQueryConsumer
+  ) {
+    var selectQuery = getApplicationDataItemViewsQuery(conditions);
+    selectQueryConsumer.accept(selectQuery);
 
-    var latestAppVersionForAppSubQuery = context.select(max(APPLICATION_VERSIONS.ID))
-        .from(APPLICATION_VERSIONS)
-        .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID))
-        .and(ApplicationVersions.APPLICATION_VERSIONS.STATUS.ne(ApplicationVersionStatus.DELETED.name()));
+    return selectQuery.fetchInto(ApplicationDataItemDto.class);
+  }
 
-    // Generates sub query to return application version ids that are applicable for work area and search, based on conditions.
-    // Only allows one Application Version per Application
-    var detailsSubQuery = context.select(APPLICATION_VERSIONS.ID)
-        .from(APPLICATIONS)
-        .join(APPLICATION_VERSIONS)
-        .onKey(APPLICATION_VERSIONS.APPLICATION_ID)
-        .and(APPLICATION_VERSIONS.ID.eq(latestAppVersionForAppSubQuery))
-        .where(conditions);
-
-    // Get the CSV for the licences associated to the field when this is the primary application asset
-    var fieldLicencesQuery = context.select(
-            APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID,
-                listAggDistinct(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF, ", ")
-                    .withinGroupOrderBy(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF)
-                    .as("fieldLicences")
-            )
-        .from(APPLICATION_ASSETS)
-        .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
-        .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-        .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
-
-    var applicationVersionsPendingConsentIssueQuery = context.select(BULK_ISSUE_CONSENTS_TASKS.APPLICATION_VERSION_ID)
-        .from(BULK_ISSUE_CONSENTS_TASKS)
-        .where(BULK_ISSUE_CONSENTS_TASKS.FINISHED_AT.isNull());
-
+  private SelectQuery<Record> getApplicationDataItemViewsQuery(List<Condition> conditions) {
     var applicationDataItemViewsSelectStatement = context.select(
             APPLICATIONS.ID,
             APPLICATION_VERSIONS.ID,
@@ -107,51 +153,33 @@ public class ApplicationDataItemViewQueryService {
             APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID,
             APPLICATION_VERSIONS.CAM_WUA_ID,
             APPLICATION_VERSIONS.CURRENT_CASE_OWNER,
-            APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.isNotNull(),
-            APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID,
-            APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.isNotNull(),
-            APPLICATION_TECHNICAL_REVIEWS.DEADLINE_DATE_TIME,
-            APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.isNotNull(),
-            APPLICATION_UPDATES.DEADLINE_DATE_TIME,
-            APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull(),
-            APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
+            APPLICATION_WITHDRAWALS_QUERY.field(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS).isNotNull(),
+            APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID),
+            APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS).isNotNull(),
+            APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.DEADLINE_DATE_TIME),
+            APPLICATION_UPDATES_QUERY.field(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS).isNotNull(),
+            APPLICATION_UPDATES_QUERY.field(APPLICATION_UPDATES.DEADLINE_DATE_TIME),
+            APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID).isNotNull(),
+            APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.REQUEST_DEADLINE),
             APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS,
-            fieldLicencesQuery.field("fieldLicences", String.class),
+            FIELD_LICENCES_QUERY.field("fieldLicences", String.class),
             APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull(),
             APPLICATION_CONSENT_DATA.CONSENT_START_DATE,
             APPLICATION_CONSENT_DATA.CONSENT_END_DATE,
-            APPLICATION_CONSENT_DATA.ID.isNotNull()
-              .and(APPLICATION_CONSENTS.ID.isNotNull()).as("consentIssued"),
+            APPLICATION_CONSENT_DATA.ID.isNotNull().and(APPLICATION_CONSENTS.ID.isNotNull()).as("consentIssued"),
             APPLICATION_CONSENTS.SUPERSEDED_BY_APPLICATION_CONSENT_ID.isNotNull(),
             APPLICATION_CONSENT_BREACHES.ID.isNotNull()
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
         .leftJoin(APPLICATION_ASSETS)
-            .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
-            .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name())))
-        .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
-        .leftJoin(APPLICATION_FLAGS).onKey(APPLICATION_FLAGS.APPLICATION_VERSION_ID)
+            .onKey(APPLICATION_ASSETS.APPLICATION_VERSION_ID)
+            .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
+        .leftJoin(CONSENT_LENGTHS)
+            .onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
+        .leftJoin(APPLICATION_FLAGS)
+            .onKey(APPLICATION_FLAGS.APPLICATION_VERSION_ID)
             .and(APPLICATION_FLAGS.FLAG_TYPE.eq(IS_ACE_APPLICATION.name()))
-        .leftJoin(APPLICATION_WITHDRAWALS)
-            .on(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()))
-        .leftJoin(APPLICATION_TECHNICAL_REVIEWS)
-            .on(APPLICATION_TECHNICAL_REVIEWS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()))
-        .leftJoin(APPLICATION_UPDATES)
-            .on(APPLICATION_UPDATES.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.eq(ApplicationUpdateStatus.OPEN.name()))
-        .leftJoin(APPLICATION_CONSULTATIONS)
-            .on(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
-        .leftJoin(APPLICATION_CONSULTATION_FURTHER_INFORMATION)
-            .on(APPLICATION_CONSULTATION_FURTHER_INFORMATION.CONSULTATION_ID.eq(APPLICATION_CONSULTATIONS.ID))
-            .and(APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS.eq(FurtherInformationStatus.OPEN.name()))
-        .leftJoin(fieldLicencesQuery)
-            .on(Objects.requireNonNull(fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID))
-            .eq(APPLICATION_ASSETS.ID)
-            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())))
         .leftJoin(APPLICATION_CONSENT_ISSUING_APPROVALS)
             .onKey(APPLICATION_CONSENT_ISSUING_APPROVALS.APPLICATION_ID)
             .and(APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name()))
@@ -161,23 +189,24 @@ public class ApplicationDataItemViewQueryService {
             .onKey(APPLICATION_CONSENT_DATA.APPLICATION_ID)
         .leftJoin(APPLICATION_CONSENT_BREACHES)
             .onKey(APPLICATION_CONSENT_BREACHES.CONSENT_ID)
-        .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
-        .and(APPLICATION_VERSIONS.ID.notIn(applicationVersionsPendingConsentIssueQuery));
+        .leftJoin(APPLICATION_WITHDRAWALS_QUERY)
+            .on(APPLICATION_WITHDRAWALS_QUERY.field(APPLICATION_VERSIONS.APPLICATION_ID).eq(APPLICATIONS.ID))
+        .leftJoin(APPLICATION_TECHNICAL_REVIEWS_QUERY)
+            .on(APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_VERSIONS.APPLICATION_ID).eq(APPLICATIONS.ID))
+        .leftJoin(APPLICATION_UPDATES_QUERY)
+            .on(APPLICATION_UPDATES_QUERY.field(APPLICATION_VERSIONS.APPLICATION_ID).eq(APPLICATIONS.ID))
+        .leftJoin(APPLICATION_CONSULTATIONS_QUERY)
+            .on(APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_VERSIONS.APPLICATION_ID).eq(APPLICATIONS.ID))
+        .leftJoin(APPLICATION_CONSULTATION_FURTHER_INFORMATION)
+            .on(APPLICATION_CONSULTATION_FURTHER_INFORMATION.CONSULTATION_ID
+                .eq(APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.ID)))
+            .and(APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS.eq(FurtherInformationStatus.OPEN.name()))
+        .leftJoin(FIELD_LICENCES_QUERY)
+            .on(FIELD_LICENCES_QUERY.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID).eq(APPLICATION_ASSETS.ID)
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())))
+        .where(conditions)
+        .and(APPLICATION_VERSIONS.ID.notIn(APPLICATION_VERSIONS_PENDING_CONSENT_ISSUE_QUERY))
+        .and(APPLICATION_VERSIONS.ID.eq(LATEST_APP_VERSION_FOR_APP_QUERY));
     return applicationDataItemViewsSelectStatement.getQuery();
-  }
-
-  public List<ApplicationDataItemDto> runQueryWithCustom(List<Condition> conditions,
-                                                         Consumer<SelectQuery<Record>> selectQueryConsumer) {
-    return runQueryWithCustom(conditions, selectQueryConsumer, ApplicationDataItemDto.class);
-  }
-
-  @Observed(name = "fcs.database.jooq-query", contextualName = "jooq query executed")
-  public <X extends ApplicationDataItemDto> List<X> runQueryWithCustom(List<Condition> conditions,
-                                                                       Consumer<SelectQuery<Record>> selectQueryConsumer,
-                                                                       Class<X> fetchIntoClass) {
-    var selectQuery = getApplicationDataItemViewsQuery(conditions);
-    selectQueryConsumer.accept(selectQuery);
-
-    return selectQuery.fetchInto(fetchIntoClass);
   }
 }

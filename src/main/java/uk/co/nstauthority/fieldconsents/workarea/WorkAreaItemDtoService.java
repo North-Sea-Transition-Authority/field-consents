@@ -6,6 +6,9 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationWorkAreaPriorities.APPLICATION_WORK_AREA_PRIORITIES;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_CONSULTATIONS_QUERY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_TECHNICAL_REVIEWS_QUERY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_UPDATES_QUERY;
 
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
@@ -26,10 +29,11 @@ public class WorkAreaItemDtoService {
   }
 
   @Observed(name = "fcs.database.work-area-query", contextualName = "work area query executed")
-  List<ApplicationDataItemDto> runWorkAreaQuery(List<Condition> conditions,
-                                                ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup) {
-
-    return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery ->  {
+  List<ApplicationDataItemDto> runWorkAreaQuery(
+      List<Condition> conditions,
+      ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup
+  ) {
+    return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery -> {
       selectQuery.addJoin(APPLICATION_WORK_AREA_PRIORITIES, JoinType.LEFT_OUTER_JOIN,
           APPLICATION_WORK_AREA_PRIORITIES.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
               .and(APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_GROUP.eq(applicationWorkAreaPriorityGroup.name())));
@@ -38,20 +42,23 @@ public class WorkAreaItemDtoService {
           // if the work area priority date is not set for the priority group then fallback to the other dates
           APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_DATE_TIME,
           APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
-          APPLICATION_VERSIONS.CREATED_DATE_TIME).desc();
+          APPLICATION_VERSIONS.CREATED_DATE_TIME
+      ).desc();
 
       switch (applicationWorkAreaPriorityGroup) {
-        case INDUSTRY ->
-            selectQuery.addOrderBy(
-                APPLICATION_UPDATES.DEADLINE_DATE_TIME.asc().nullsLast(),
-                workAreaPrioritySortField);
-        case CONSULTEE ->
-            selectQuery.addOrderBy(APPLICATION_CONSULTATIONS.REQUEST_DEADLINE.asc().nullsLast());
-        case REGULATOR_TECHNICAL_REVIEWER ->
-            selectQuery.addOrderBy(APPLICATION_TECHNICAL_REVIEWS.DEADLINE_DATE_TIME.asc().nullsLast());
-        case REGULATOR ->
-            selectQuery.addOrderBy(workAreaPrioritySortField);
-        default -> { }
+        case INDUSTRY -> selectQuery.addOrderBy(
+            APPLICATION_UPDATES_QUERY.field(APPLICATION_UPDATES.DEADLINE_DATE_TIME).asc().nullsLast(),
+            workAreaPrioritySortField
+        );
+        case CONSULTEE -> selectQuery.addOrderBy(
+            APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.REQUEST_DEADLINE).asc().nullsLast()
+        );
+        case REGULATOR_TECHNICAL_REVIEWER -> selectQuery.addOrderBy(
+            APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.DEADLINE_DATE_TIME).asc().nullsLast()
+        );
+        case REGULATOR -> selectQuery.addOrderBy(workAreaPrioritySortField);
+        default -> {
+        }
       }
     });
   }

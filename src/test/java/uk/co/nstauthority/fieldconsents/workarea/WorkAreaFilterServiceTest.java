@@ -15,6 +15,8 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_CONSULTATIONS_QUERY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService.APPLICATION_TECHNICAL_REVIEWS_QUERY;
 
 import java.util.List;
 import java.util.Optional;
@@ -271,7 +273,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.eq(user.wuaId().intValue())
+        APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID).eq(user.wuaId().intValue())
     );
   }
 
@@ -284,7 +286,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue())
+        APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID).eq(user.wuaId().intValue())
     );
   }
 
@@ -297,7 +299,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull()
+        APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID).isNotNull()
     );
   }
 
@@ -323,7 +325,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull()
+        APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID).isNotNull()
     );
   }
 
@@ -336,7 +338,8 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull().and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
+        APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID).isNull()
+            .and(APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.STATUS).eq(ConsultationStatus.OPEN.name()))
     );
   }
 
@@ -349,7 +352,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull()
+        APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID).isNotNull()
     );
   }
 
@@ -431,7 +434,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(123)
+        APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID).eq(123)
     );
   }
 

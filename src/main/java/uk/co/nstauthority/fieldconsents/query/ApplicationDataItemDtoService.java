@@ -341,10 +341,10 @@ public class ApplicationDataItemDtoService {
   }
 
   public List<ApplicationDataItemDto> runGetDataItemDtoQuery(List<Condition> conditions) {
-    return applicationDataItemViewQueryService.runQueryWithCustom(conditions, selectQuery ->
-            selectQuery.addOrderBy(greatest(
-                APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
-                APPLICATION_VERSIONS.CREATED_DATE_TIME).desc()),
-        ApplicationDataItemDto.class);
+    return applicationDataItemViewQueryService.runQueryWithCustom(
+        conditions,
+        selectQuery -> selectQuery
+            .addOrderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
+    );
   }
 }

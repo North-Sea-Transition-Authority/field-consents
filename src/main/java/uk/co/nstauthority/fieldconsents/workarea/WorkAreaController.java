@@ -248,10 +248,15 @@ public class WorkAreaController {
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
                                                     ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
-    var caseOfficerFilterEnabled = teamService.hasAnyTeamRoleOf(user, TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.CASE_MANAGER,
+    var caseOfficerFilterEnabled = teamService.hasAnyTeamRoleOf(
+        user,
+        TeamType.REGULATOR,
+        Set.of(
+            RegulatorTeamRole.CASE_MANAGER,
             RegulatorTeamRole.TECHNICAL_REVIEWER,
-            RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER));
+            RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER
+        )
+    );
     var caseOfficersById = caseOfficerFilterEnabled ? convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers()) : null;
     var technicalReviewersById = convertUsersToMap(technicalReviewAssignmentService.getCurrentTechnicalReviewers());
     return getWorkAreaModelAndView(filter, user)
