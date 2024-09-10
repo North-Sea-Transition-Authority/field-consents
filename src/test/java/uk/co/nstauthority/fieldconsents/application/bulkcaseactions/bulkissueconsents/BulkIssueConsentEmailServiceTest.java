@@ -17,6 +17,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.FAILED_APPLICATIONS_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.FAILED_APPLICATIONS_MERGE_FIELD_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.SUBJECT_TEXT_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.SUCCESSFUL_APPLICATIONS_MERGE_FIELD_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentEmailService.WORK_AREA_URL_MERGE_FIELD_NAME;
@@ -25,6 +26,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -53,6 +55,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartner;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
@@ -104,6 +110,8 @@ class BulkIssueConsentEmailServiceTest {
       .withId(1)
       .withTeamType(TeamType.INDUSTRY)
       .build();
+  private static final OrganisationGroupDto ORG_GROUP_1_DTO = OrganisationGroupDto.from(ORG_GROUP_1);
+  private static final OrganisationGroupDto ORG_GROUP_2_DTO = OrganisationGroupDto.from(ORG_GROUP_2);
 
   @Mock
   private EmailService emailService;
@@ -126,6 +134,12 @@ class BulkIssueConsentEmailServiceTest {
   @Mock
   private IndustryTeamService industryTeamService;
 
+  @Mock
+  private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+
+  @Mock
+  private ConsentEmailService consentEmailService;
+
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
 
@@ -141,6 +155,14 @@ class BulkIssueConsentEmailServiceTest {
   private ApplicationVersion productionApplicationVersion;
   private ApplicationVersion flareApplicationVersion;
 
+  private BulkIssueConsentsTask task1;
+  private BulkIssueConsentsTask task2;
+  private BulkIssueConsentsTask task3;
+
+  private ConsentFieldEquityPartner consentFieldEquityPartner1;
+  private ConsentFieldEquityPartner consentFieldEquityPartner2;
+  private ConsentFieldEquityPartner consentFieldEquityPartner3;
+
   @BeforeEach
   void setUp() {
     bulkIssueConsentEmailService = spy(new BulkIssueConsentEmailService(
@@ -150,7 +172,9 @@ class BulkIssueConsentEmailServiceTest {
         applicationService,
         organisationUnitService,
         teamMemberViewService,
-        industryTeamService
+        industryTeamService,
+        consentFieldEquityPartnerService,
+        consentEmailService
     ));
     productionApplicationVersion = ApplicationTestUtil.getApprovedForIssuingApplicationVersionWithType(
         ApplicationType.PRODUCTION, CASE_OFFICER_1_WUA_ID, CAM_USER_1_WUA_ID);
@@ -163,6 +187,17 @@ class BulkIssueConsentEmailServiceTest {
     flareApplicationVersion.setPrimaryOperatorOuId(OPERATOR_BP_ID);
     bulkIssueConsentRun = new BulkIssueConsentRun(ENERGY_PORTAL_USER.webUserAccountId());
     bulkIssueConsentRun.setId(UUID.randomUUID());
+
+    task1 = new BulkIssueConsentsTask();
+    task1.setConsent(ConsentTestUtil.newBuilder().withId(1).build());
+    task2 = new BulkIssueConsentsTask();
+    task2.setConsent(ConsentTestUtil.newBuilder().withId(2).build());
+    task3 = new BulkIssueConsentsTask();
+    task3.setConsent(ConsentTestUtil.newBuilder().withId(3).build());
+
+    consentFieldEquityPartner1 = new ConsentFieldEquityPartner(task1.getConsent(), OPERATOR_SHELL_1_ID, "org A", "1");
+    consentFieldEquityPartner2 = new ConsentFieldEquityPartner(task2.getConsent(), OPERATOR_SHELL_2_ID, "org B", "2");
+    consentFieldEquityPartner3 = new ConsentFieldEquityPartner(task3.getConsent(), OPERATOR_BP_ID, "org C", "3");
   }
 
   @Test
@@ -407,17 +442,15 @@ class BulkIssueConsentEmailServiceTest {
 
     doNothing().when(bulkIssueConsentEmailService).sendBulkConsentIssuedEmailToOperator(any(), any(), any()); // this is tested below
 
-    var orgGroup1Dto = OrganisationGroupDto.from(ORG_GROUP_1);
-    var orgGroup2Dto = OrganisationGroupDto.from(ORG_GROUP_2);
     var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit1.getOrganisationUnitId(), orgUnit1.getName(),
-        List.of(orgGroup1Dto));
+        List.of(ORG_GROUP_1_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_SHELL_1_ID),
         anyString())
     ).thenReturn(orgUnit1WithGroupsJson);
 
     var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit2.getOrganisationUnitId(), orgUnit2.getName(),
-        List.of(orgGroup2Dto));
+        List.of(ORG_GROUP_2_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_BP_ID),
         anyString())
@@ -425,11 +458,11 @@ class BulkIssueConsentEmailServiceTest {
 
     var consentRecipientsShell = Set.of(CONSENT_RECIPIENT_SHELL_1_WUA_ID);
     doReturn(consentRecipientsShell).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(orgGroup1Dto);
+        .getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
 
     var consentRecipientsBp = Set.of(CONSENT_RECIPIENT_BP_1_WUA_ID);
     doReturn(consentRecipientsBp).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(orgGroup2Dto);
+        .getConsentRecipientWuaIds(ORG_GROUP_2_DTO);
 
     bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(bulkIssueConsentRun, Stream.concat(tasksByShellOperator.stream(), tasksByBpOperator.stream()).toList());
 
@@ -441,17 +474,15 @@ class BulkIssueConsentEmailServiceTest {
     var tasksByShellOperator = getBulkIssueConsentTasksFromApplicationVersions(List.of(productionApplicationVersion));
     var tasksByBpOperator = getBulkIssueConsentTasksFromApplicationVersions(List.of(flareApplicationVersion));
 
-    var orgGroup1Dto = OrganisationGroupDto.from(ORG_GROUP_1);
-    var orgGroup2Dto = OrganisationGroupDto.from(ORG_GROUP_2);
     var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit1.getOrganisationUnitId(), orgUnit1.getName(),
-        List.of(orgGroup1Dto));
+        List.of(ORG_GROUP_1_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_SHELL_1_ID),
         anyString())
     ).thenReturn(orgUnit1WithGroupsJson);
 
     var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit2.getOrganisationUnitId(), orgUnit2.getName(),
-        List.of(orgGroup2Dto));
+        List.of(ORG_GROUP_2_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_BP_ID),
         anyString())
@@ -459,11 +490,11 @@ class BulkIssueConsentEmailServiceTest {
 
     var consentRecipientsShell = Set.of(SUBMITTER_SHELL_WUA_ID);
     doReturn(consentRecipientsShell).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(orgGroup1Dto);
+        .getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
 
     var consentRecipientsBp = Set.of(SUBMITTER_BP_WUA_ID);
     doReturn(consentRecipientsBp).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(orgGroup2Dto);
+        .getConsentRecipientWuaIds(ORG_GROUP_2_DTO);
 
     doNothing().when(bulkIssueConsentEmailService).sendBulkConsentIssuedEmailToOperator(any(), any(), any()); // this is tested below
 
@@ -482,23 +513,22 @@ class BulkIssueConsentEmailServiceTest {
 
     doNothing().when(bulkIssueConsentEmailService).sendBulkConsentIssuedEmailToOperator(any(), any(), any()); // this is tested below
 
-    var orgGroup1Dto = OrganisationGroupDto.from(ORG_GROUP_1);
     var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit1.getOrganisationUnitId(), orgUnit1.getName(),
-        List.of(orgGroup1Dto));
+        List.of(ORG_GROUP_1_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_SHELL_1_ID),
         anyString())
     ).thenReturn(orgUnit1WithGroupsJson);
 
     var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(orgUnit2.getOrganisationUnitId(), orgUnit2.getName(),
-        List.of(orgGroup1Dto));
+        List.of(ORG_GROUP_1_DTO));
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
         eq(OPERATOR_SHELL_2_ID),
         anyString())
     ).thenReturn(orgUnit2WithGroupsJson);
 
     doReturn(Set.of(CONSENT_RECIPIENT_SHELL_1_WUA_ID, CONSENT_RECIPIENT_SHELL_2_WUA_ID))
-        .when(bulkIssueConsentEmailService).getConsentRecipientWuaIds(orgGroup1Dto);
+        .when(bulkIssueConsentEmailService).getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
 
     bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(bulkIssueConsentRun, tasksByShellOperator);
 
@@ -623,8 +653,6 @@ class BulkIssueConsentEmailServiceTest {
 
   @Test
   void getConsentRecipientWuaIds_whenNoConsentRecipientForOperator() {
-    var orgGroupDto = OrganisationGroupDto.from(ORG_GROUP_1);
-
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
@@ -632,13 +660,11 @@ class BulkIssueConsentEmailServiceTest {
         .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
         .thenReturn(Collections.emptyList());
 
-    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(orgGroupDto)).isEmpty();
+    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(ORG_GROUP_1_DTO)).isEmpty();
   }
 
   @Test
   void getConsentRecipientWuaIds_whenMultipleConsentRecipientsForOperator() {
-    var orgGroupDto = OrganisationGroupDto.from(ORG_GROUP_1);
-
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
@@ -666,11 +692,221 @@ class BulkIssueConsentEmailServiceTest {
         .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
         .thenReturn(List.of(teamMemberViewConsentRecipient1, teamMemberViewConsentRecipient2));
 
-    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(orgGroupDto))
+    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(ORG_GROUP_1_DTO))
         .containsExactly(
             CONSENT_RECIPIENT_SHELL_1_WUA_ID,
             CONSENT_RECIPIENT_SHELL_2_WUA_ID
     );
+  }
+
+  @Test
+  void sendBulkConsentIssuedEmailToFieldEquityPartners_whenDifferentFieldEquityPartnersPerOperator() {
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task1.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner1));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task2.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner2));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task3.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner3));
+
+    var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_SHELL_1_ID, orgUnit1.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_SHELL_1_ID),
+        anyString())
+    ).thenReturn(orgUnit1WithGroupsJson);
+    var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_SHELL_2_ID, orgUnit2.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_SHELL_2_ID),
+        anyString())
+    ).thenReturn(orgUnit2WithGroupsJson);
+
+    var orgUnit3WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_BP_ID, orgUnit3.getName(),
+        List.of(ORG_GROUP_2_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_BP_ID),
+        anyString())
+    ).thenReturn(orgUnit3WithGroupsJson);
+
+    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3");
+    doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
+    doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(absoluteUrlService.getAbsoluteUrl(
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))).thenReturn(WORK_AREA_URL);
+
+    bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToFieldEquityPartners(bulkIssueConsentRun, List.of(task1, task2, task3));
+
+    verify(consentEmailService, times(3)).sendConsentIssuedEmailToFieldEquityPartner(any(), any(), templateCaptor.capture());
+
+    // verify mail merge fields
+    var mailMergeFields = templateCaptor.getAllValues();
+    assertThat(mailMergeFields).hasSize(3);
+
+    assertThat(mailMergeFields.getFirst().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit2.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+        );
+
+    assertThat(mailMergeFields.get(1).getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit1.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+        );
+
+    assertThat(mailMergeFields.get(2).getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit3.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+        );
+  }
+
+  @Test
+  void sendBulkConsentIssuedEmailToFieldEquityPartners_whenNoSuccessfulApplications() {
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task1.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner1));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task2.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner2));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task3.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner3));
+
+    var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_SHELL_1_ID, orgUnit1.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_SHELL_1_ID),
+        anyString())
+    ).thenReturn(orgUnit1WithGroupsJson);
+    var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_SHELL_2_ID, orgUnit2.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_SHELL_2_ID),
+        anyString())
+    ).thenReturn(orgUnit2WithGroupsJson);
+
+    var orgUnit3WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_BP_ID, orgUnit3.getName(),
+        List.of(ORG_GROUP_2_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_BP_ID),
+        anyString())
+    ).thenReturn(orgUnit3WithGroupsJson);
+
+    List<String> successfulApplications = List.of();
+    doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
+
+    when(emailService.getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(absoluteUrlService.getAbsoluteUrl(
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))).thenReturn(WORK_AREA_URL);
+
+    bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToFieldEquityPartners(bulkIssueConsentRun, List.of(task1, task2, task3));
+
+    verify(consentEmailService, times(3)).sendConsentIssuedEmailToFieldEquityPartner(any(), any(), templateCaptor.capture());
+
+    // verify mail merge fields
+    var mailMergeFields = templateCaptor.getAllValues();
+    assertThat(mailMergeFields).hasSize(3);
+
+    assertThat(mailMergeFields.getFirst().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit2.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME, "")
+        );
+
+    assertThat(mailMergeFields.get(1).getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit1.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME, "")
+        );
+
+    assertThat(mailMergeFields.get(2).getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit3.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME, "")
+        );
+  }
+
+  @Test
+  void sendBulkConsentIssuedEmailToFieldEquityPartners_whenSameFieldEquityPartnersPerOperator() {
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task1.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner1));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task2.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner1));
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task3.getConsent()))
+        .thenReturn(List.of(consentFieldEquityPartner3));
+
+    var orgUnit1WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_SHELL_1_ID, orgUnit1.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_SHELL_1_ID),
+        anyString())
+    ).thenReturn(orgUnit1WithGroupsJson);
+    var orgUnit2WithGroupsJson = new OrganisationUnitWithGroupsJson(OPERATOR_BP_ID, orgUnit2.getName(),
+        List.of(ORG_GROUP_1_DTO));
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(
+        eq(OPERATOR_BP_ID),
+        anyString())
+    ).thenReturn(orgUnit2WithGroupsJson);
+
+    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3");
+    doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
+    doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(absoluteUrlService.getAbsoluteUrl(
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))).thenReturn(WORK_AREA_URL);
+
+    bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToFieldEquityPartners(bulkIssueConsentRun, List.of(task1, task2, task3));
+
+    verify(consentEmailService, times(2)).sendConsentIssuedEmailToFieldEquityPartner(any(), any(), templateCaptor.capture());
+
+    // verify mail merge fields
+    var mailMergeFields = templateCaptor.getAllValues();
+    assertThat(mailMergeFields).hasSize(2);
+
+    assertThat(mailMergeFields.getFirst().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit1.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+        );
+
+    assertThat(mailMergeFields.get(1).getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, orgUnit2.getName()),
+            tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
+            tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
+            tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+        );
   }
 
   @Test

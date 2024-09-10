@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 
 @Audited
 @Entity
@@ -28,6 +29,10 @@ public class BulkIssueConsentsTask {
   @ManyToOne
   @JoinColumn(name = "bulk_issue_consent_run_id")
   private BulkIssueConsentRun bulkIssueConsentRun;
+
+  @OneToOne
+  @JoinColumn(name = "consent_id")
+  private Consent consent;
 
   private Instant createdAt;
 
@@ -63,6 +68,14 @@ public class BulkIssueConsentsTask {
   public void setBulkIssueConsentRun(
       BulkIssueConsentRun bulkIssueConsentRun) {
     this.bulkIssueConsentRun = bulkIssueConsentRun;
+  }
+
+  public Consent getConsent() {
+    return consent;
+  }
+
+  public void setConsent(Consent consent) {
+    this.consent = consent;
   }
 
   Instant getCreatedAt() {

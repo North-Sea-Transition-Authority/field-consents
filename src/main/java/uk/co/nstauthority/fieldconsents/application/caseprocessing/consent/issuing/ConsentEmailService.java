@@ -6,10 +6,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartner;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
@@ -117,17 +117,27 @@ public class ConsentEmailService {
   public void sendConsentIssuedEmailToFieldEquityPartners(ApplicationVersion applicationVersion, Consent consent) {
     var consentFieldEquityPartners = consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent);
 
-    consentFieldEquityPartners.forEach(consentFieldEquityPartner ->
-        sendConsentIssuedEmailToFieldEquityPartner(consentFieldEquityPartner, applicationVersion));
+    consentFieldEquityPartners.forEach(consentFieldEquityPartner -> {
+      var emailMergedTemplate = emailService
+          .getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion)
+          .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consentFieldEquityPartner.getOrganisationName())
+          .merge();
+
+      var organisationUnitWithGroupsJson = organisationUnitService
+          .getOrganisationUnitWithGroupsById(consentFieldEquityPartner.getOrganisationUnitId(), ORGANISATION_LOOKUP_PURPOSE);
+
+      sendConsentIssuedEmailToFieldEquityPartner(organisationUnitWithGroupsJson, applicationVersion, emailMergedTemplate);
+    });
   }
 
   // Sends an email to all the consent recipients of the organisation groups this consentFieldEquityPartner
   // is part of. If user is consent recipient in more than one organisation group, we only send an email
   // per consentFieldEquityPartner.
-  private void sendConsentIssuedEmailToFieldEquityPartner(ConsentFieldEquityPartner consentFieldEquityPartner,
-                                                          ApplicationVersion applicationVersion) {
-    var organisationUnitWithGroupsJson = organisationUnitService
-        .getOrganisationUnitWithGroupsById(consentFieldEquityPartner.getOrganisationUnitId(), ORGANISATION_LOOKUP_PURPOSE);
+  public void sendConsentIssuedEmailToFieldEquityPartner(
+      OrganisationUnitWithGroupsJson organisationUnitWithGroupsJson,
+      DomainReference domainReference,
+      MergedTemplate mergedTemplate
+  ) {
 
     var distinctEmailRecipients = organisationUnitWithGroupsJson.organisationGroups().stream()
         .flatMap(organisationGroupDto ->
@@ -137,17 +147,12 @@ public class ConsentEmailService {
         .map(FieldConsentsEmailRecipient::from)
         .collect(Collectors.toSet());
 
-    var emailMergedTemplate = emailService
-        .getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion)
-        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consentFieldEquityPartner.getOrganisationName())
-        .merge();
-
     // iterate over the list of field equity partner consent recipients to notify about the consent being issued
     distinctEmailRecipients.forEach(recipient ->
         emailService.sendEmail(
-            emailMergedTemplate,
+            mergedTemplate,
             recipient,
-            applicationVersion
+            domainReference
         ));
   }
 }

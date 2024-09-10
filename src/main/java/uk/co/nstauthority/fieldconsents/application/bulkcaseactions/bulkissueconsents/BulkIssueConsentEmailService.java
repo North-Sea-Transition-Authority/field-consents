@@ -8,16 +8,22 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consen
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartner;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
@@ -40,6 +46,9 @@ class BulkIssueConsentEmailService {
       "The following consents have been granted and issued:" + System.lineSeparator() + "%s";
   static final String FAILED_APPLICATIONS_MERGE_FIELD_TEXT =
       "The following consents failed to be issued:" + System.lineSeparator() + "%s";
+  static final String SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT =
+      "The following consents have been granted and issued for a field " +
+          "which your organisation is an equity partner:" + System.lineSeparator() + "%s";
   static final String SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME = "SUCCESSFUL_APPLICATIONS";
   static final String FAILED_APPLICATIONS_MERGE_FIELD_NAME = "FAILED_APPLICATIONS";
   static final String WORK_AREA_URL_MERGE_FIELD_NAME = "WORK_AREA_URL";
@@ -52,6 +61,8 @@ class BulkIssueConsentEmailService {
   private final OrganisationUnitService organisationUnitService;
   private final TeamMemberViewService teamMemberViewService;
   private final IndustryTeamService industryTeamService;
+  private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+  private final ConsentEmailService consentEmailService;
 
   BulkIssueConsentEmailService(
       EmailService emailService,
@@ -60,7 +71,9 @@ class BulkIssueConsentEmailService {
       ApplicationService applicationService,
       OrganisationUnitService organisationUnitService,
       TeamMemberViewService teamMemberViewService,
-      IndustryTeamService industryTeamService
+      IndustryTeamService industryTeamService,
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
+      ConsentEmailService consentEmailService
   ) {
     this.emailService = emailService;
     this.absoluteUrlService = absoluteUrlService;
@@ -69,6 +82,8 @@ class BulkIssueConsentEmailService {
     this.organisationUnitService = organisationUnitService;
     this.teamMemberViewService = teamMemberViewService;
     this.industryTeamService = industryTeamService;
+    this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
+    this.consentEmailService = consentEmailService;
   }
 
   void sendBulkConsentIssuedEmailToRegulators(BulkIssueConsentRun run, List<BulkIssueConsentsTask> tasks) {
@@ -240,18 +255,61 @@ class BulkIssueConsentEmailService {
     return consentRecipientWuaIds;
   }
 
+  public void sendBulkConsentIssuedEmailToFieldEquityPartners(BulkIssueConsentRun run,
+                                                              List<BulkIssueConsentsTask> tasks) {
+
+    var tasksByOrganisationUnitId = tasks.stream()
+        .flatMap(task -> consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(task.getConsent())
+            .stream()
+            .map(ConsentFieldEquityPartner::getOrganisationUnitId)
+            .distinct()
+            .map(organisationUnitId -> Pair.of(organisationUnitId, task))
+        )
+        .collect(Collectors.groupingBy(
+            Map.Entry::getKey,
+            Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+        ));
+
+    tasksByOrganisationUnitId.forEach((organisationUnitId, bulkTasks) -> {
+      var successfulApplications = getSuccessfulApplications(tasks);
+      var formattedSuccessfulApplications = formatStringList(successfulApplications);
+
+      var organisationUnitWithGroupsJson = organisationUnitService
+          .getOrganisationUnitWithGroupsById(organisationUnitId, ORGANISATION_LOOKUP_PURPOSE);
+
+      var emailMergedTemplate = emailService
+            .getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER)
+            .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, organisationUnitWithGroupsJson.name())
+          .withMailMergeField(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued")
+          .withMailMergeField(WORK_AREA_URL_MERGE_FIELD_NAME,
+              absoluteUrlService.getAbsoluteUrl(
+                  ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
+          .withMailMergeField(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
+              formattedSuccessfulApplications.isEmpty()
+                  ? ""
+                  : String.format(SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT, formattedSuccessfulApplications))
+          .merge();
+
+      consentEmailService.sendConsentIssuedEmailToFieldEquityPartner(organisationUnitWithGroupsJson, run, emailMergedTemplate);
+    });
+  }
+
   List<String> getSuccessfulApplications(Collection<BulkIssueConsentsTask> tasks) {
     return tasks.stream()
         .filter(task -> task.getFinishedAt() != null && task.getErrorDetails() == null)
-        .map(task -> applicationService.getApplicationReference(task.getApplicationVersion()))
-        .sorted().toList();
+        .map(BulkIssueConsentsTask::getApplicationVersion)
+        .sorted(Comparator.comparing(applicationVersion -> applicationVersion.getApplication().getApplicationNo()))
+        .map(applicationService::getApplicationReference)
+        .toList();
   }
 
   List<String> getFailedApplications(Collection<BulkIssueConsentsTask> tasks) {
     return tasks.stream()
         .filter(task -> task.getFinishedAt() != null && task.getErrorDetails() != null)
-        .map(task -> applicationService.getApplicationReference(task.getApplicationVersion()))
-        .sorted().toList();
+        .map(BulkIssueConsentsTask::getApplicationVersion)
+        .sorted(Comparator.comparing(applicationVersion -> applicationVersion.getApplication().getApplicationNo()))
+        .map(applicationService::getApplicationReference)
+        .toList();
   }
 
   String formatStringList(List<String> list) {

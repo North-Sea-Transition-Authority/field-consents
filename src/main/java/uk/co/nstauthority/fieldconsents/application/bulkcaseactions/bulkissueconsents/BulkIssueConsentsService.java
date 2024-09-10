@@ -101,7 +101,8 @@ public class BulkIssueConsentsService {
     task.setStartedAt(clock.instant());
 
     try {
-      consentIssuingService.issueConsent(task.getApplicationVersion(), user);
+      var consent = consentIssuingService.issueConsent(task.getApplicationVersion(), user);
+      task.setConsent(consent);
     } catch (RuntimeException e) {
       task.setErrorDetails(e.getMessage());
       LOGGER.error("Error running bulk issue consent task for application version {}", task.getApplicationVersion().getId(), e);
@@ -119,8 +120,7 @@ public class BulkIssueConsentsService {
 
       bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToRegulators(run, tasks);
       bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(run, tasks);
-
-      //TODO FCS-926: Send emails to field equity partners
+      bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToFieldEquityPartners(run, tasks);
     }
   }
 
