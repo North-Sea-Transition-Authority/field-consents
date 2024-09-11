@@ -18,13 +18,24 @@
       labelText=heading
       fieldsetHeadingClass="govuk-fieldset__legend--l"
       fieldsetHeadingSize="h1"
+      hiddenContent=true
     >
       <p class="govuk-body">
         Read the <@fdsAction.link linkText="guidance on the definition of a \"project\"" linkUrl="https://www.gov.uk/guidance/oil-and-gas-offshore-environmental-legislation#offshore-oil-and-gas-exploration-production-unloading-and-storage-environmental-impact-assessment-regulations-2020" />.
       </p>
 
-      <@fdsRadio.radioYes path=path/>
-      <@fdsRadio.radioNo path=path/>
+      <@fdsRadio.radioYes path=path>
+          <@fdsTextarea.textarea
+          path="form.rationaleForPurposeOfEiaRegs.inputValue"
+          nestingPath=path
+          labelText="Explain why this is considered a \"project\""/>
+      </@fdsRadio.radioYes>
+      <@fdsRadio.radioNo path=path>
+          <@fdsTextarea.textarea
+          path="form.rationaleNotForPurposeOfEiaRegs.inputValue"
+          nestingPath=path
+          labelText="Explain why this is not considered a \"project\""/>
+      </@fdsRadio.radioNo>
     </@fdsRadio.radioGroup>
     <@fdsAction.submitButtons
       primaryButtonText="Save and continue"

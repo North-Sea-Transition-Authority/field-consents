@@ -11,6 +11,7 @@ public class EiaDirectionBuilder {
   private Integer satId;
   private String cachedSatRef;
   private Boolean forPurposeOfEiaRegs;
+  private String rationaleForPurposeOfEiaRegs;
   private Boolean haveEiaDirectionToSubmit;
   private LocalDate latestDateToBeSubmitted;
   private String whyNoEiaDirection;
@@ -30,6 +31,7 @@ public class EiaDirectionBuilder {
         .withSatId(eiaDirection.getSatId())
         .withCachedSatRef(eiaDirection.getCachedSatRef())
         .withForPurposeOfEiaRegs(eiaDirection.getForPurposeOfEiaRegs())
+        .withRationaleForPurposeOfEiaRegs(eiaDirection.getRationaleForPurposeOfEiaRegs())
         .withHaveEiaDirectionToSubmit(eiaDirection.getHaveEiaDirectionToSubmit())
         .withLatestDateToBeSubmitted(eiaDirection.getLatestDateToBeSubmitted())
         .withWhyNoEiaDirection(eiaDirection.getWhyNoEiaDirection());
@@ -65,6 +67,11 @@ public class EiaDirectionBuilder {
     return this;
   }
 
+  public EiaDirectionBuilder withRationaleForPurposeOfEiaRegs(String rationaleForPurposeOfEiaRegs) {
+    this.rationaleForPurposeOfEiaRegs = rationaleForPurposeOfEiaRegs;
+    return this;
+  }
+
   public EiaDirectionBuilder withHaveEiaDirectionToSubmit(Boolean haveEiaDirectionToSubmit) {
     this.haveEiaDirectionToSubmit = haveEiaDirectionToSubmit;
     return this;
@@ -88,6 +95,7 @@ public class EiaDirectionBuilder {
         satId,
         cachedSatRef,
         forPurposeOfEiaRegs,
+        rationaleForPurposeOfEiaRegs,
         haveEiaDirectionToSubmit,
         latestDateToBeSubmitted,
         whyNoEiaDirection

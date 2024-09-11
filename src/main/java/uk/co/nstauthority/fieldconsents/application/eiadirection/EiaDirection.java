@@ -32,6 +32,8 @@ public class EiaDirection {
 
   private Boolean forPurposeOfEiaRegs;
 
+  private String rationaleForPurposeOfEiaRegs;
+
   private Boolean haveEiaDirectionToSubmit;
 
   private LocalDate latestDateToBeSubmitted;
@@ -48,6 +50,7 @@ public class EiaDirection {
       Integer satId,
       String cachedSatRef,
       Boolean forPurposeOfEiaRegs,
+      String rationaleForPurposeOfEiaRegs,
       Boolean haveEiaDirectionToSubmit,
       LocalDate latestDateToBeSubmitted,
       String whyNoEiaDirection
@@ -58,6 +61,7 @@ public class EiaDirection {
     this.satId = satId;
     this.cachedSatRef = cachedSatRef;
     this.forPurposeOfEiaRegs = forPurposeOfEiaRegs;
+    this.rationaleForPurposeOfEiaRegs = rationaleForPurposeOfEiaRegs;
     this.haveEiaDirectionToSubmit = haveEiaDirectionToSubmit;
     this.latestDateToBeSubmitted = latestDateToBeSubmitted;
     this.whyNoEiaDirection = whyNoEiaDirection;
@@ -105,6 +109,14 @@ public class EiaDirection {
 
   public void setForPurposeOfEiaRegs(Boolean forPurposeOfEiaRegs) {
     this.forPurposeOfEiaRegs = forPurposeOfEiaRegs;
+  }
+
+  public String getRationaleForPurposeOfEiaRegs() {
+    return rationaleForPurposeOfEiaRegs;
+  }
+
+  public void setRationaleForPurposeOfEiaRegs(String rationaleForPurposeOfEiaRegs) {
+    this.rationaleForPurposeOfEiaRegs = rationaleForPurposeOfEiaRegs;
   }
 
   public Boolean getHaveEiaDirectionToSubmit() {

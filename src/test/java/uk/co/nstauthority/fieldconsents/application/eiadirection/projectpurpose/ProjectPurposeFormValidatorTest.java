@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -18,13 +16,8 @@ class ProjectPurposeFormValidatorTest {
   private ProjectPurposeFormValidator validator;
 
   @Test
-  void supports() {
-    assertThat(validator.supports(ProjectPurposeForm.class)).isTrue();
-  }
-
-  @Test
   void validate_emptyRadioOnSubmission() {
-    var form = new ProjectPurposeForm(null);
+    var form = ProjectPurposeForm.empty();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     validator.validate(form, bindingResult);
@@ -41,14 +34,63 @@ class ProjectPurposeFormValidatorTest {
         );
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void validate(boolean forPurposeOfEiaRegs) {
-    var form = new ProjectPurposeForm(forPurposeOfEiaRegs);
+  @Test
+  void validate_forPurposeOfEiaRegsTrue_withRationale() {
+    var form = new ProjectPurposeForm(true, null, null);
+    form.setRationaleForPurposeOfEiaRegs("a rationale");
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     validator.validate(form, bindingResult);
 
     assertThat(bindingResult.hasErrors()).isFalse();
+  }
+
+  @Test
+  void validate_forPurposeOfEiaRegsTrue_withoutRationale_fails() {
+    var form = new ProjectPurposeForm(true, null, null);
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .hasSize(1)
+        .first()
+        .extracting(
+            FieldError::getField,
+            FieldError::getDefaultMessage
+        ).containsExactly(
+            "rationaleForPurposeOfEiaRegs.inputValue",
+            "Enter the rationale of why this is a \"project\""
+        );
+  }
+
+  @Test
+  void validate_forPurposeOfEiaRegsFalse_withRationale() {
+    var form = new ProjectPurposeForm(false, null, null);
+    form.setRationaleNotForPurposeOfEiaRegs("a rationale");
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.hasErrors()).isFalse();
+  }
+
+  @Test
+  void validate_forPurposeOfEiaRegsFalse_withoutRationale_fails() {
+    var form = new ProjectPurposeForm(false, null, null);
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .hasSize(1)
+        .first()
+        .extracting(
+            FieldError::getField,
+            FieldError::getDefaultMessage
+        ).containsExactly(
+            "rationaleNotForPurposeOfEiaRegs.inputValue",
+            "Enter the rationale of why this is not a \"project\""
+        );
   }
 }

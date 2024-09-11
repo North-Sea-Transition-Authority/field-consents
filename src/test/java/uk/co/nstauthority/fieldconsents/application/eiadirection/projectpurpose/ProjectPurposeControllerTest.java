@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -21,6 +22,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.jsoup.internal.StringUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -109,9 +111,18 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
     var taskListUrl = ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null));
 
     assertThat(model).contains(
-        entry("form", new ProjectPurposeForm(forPurposeOfEiaRegs)),
         entry("cancelUrl", taskListUrl),
         entry("backLinkUrl", taskListUrl)
+    );
+
+    assertThat((ProjectPurposeForm) model.get("form")).extracting(
+        ProjectPurposeForm::forPurposeOfEiaRegs,
+        ppf -> ppf.getRationaleForPurposeOfEiaRegs().getInputValue(),
+        ppf -> ppf.getRationaleNotForPurposeOfEiaRegs().getInputValue()
+    ).containsExactly(
+        forPurposeOfEiaRegs,
+        null,
+        null
     );
   }
 
@@ -146,7 +157,12 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(redirectUrl));
 
-    verify(validator).validate(eq(new ProjectPurposeForm(forPurposeOfEiaRegs)), any(BindingResult.class));
+    verify(validator).validate(
+        argThat(
+            (ProjectPurposeForm projectPurposeForm) -> projectPurposeForm.forPurposeOfEiaRegs() == forPurposeOfEiaRegs
+                && StringUtil.isBlank(projectPurposeForm.getRationaleForPurposeOfEiaRegs().getInputValue())
+                && StringUtil.isBlank(projectPurposeForm.getRationaleNotForPurposeOfEiaRegs().getInputValue())),
+        any(BindingResult.class));
     verify(eiaDirectionService).updateEiaDirection(eq(APPLICATION_VERSION), any(ProjectPurposeForm.class));
   }
 
@@ -159,7 +175,12 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
       return null;
     })
         .when(validator)
-        .validate(eq(new ProjectPurposeForm(forPurposeOfEiaRegs)), any(BindingResult.class));
+        .validate(
+            argThat(
+                (ProjectPurposeForm projectPurposeForm) -> projectPurposeForm.forPurposeOfEiaRegs() == forPurposeOfEiaRegs
+                    && StringUtil.isBlank(projectPurposeForm.getRationaleForPurposeOfEiaRegs().getInputValue())
+                    && StringUtil.isBlank(projectPurposeForm.getRationaleNotForPurposeOfEiaRegs().getInputValue())),
+            any(BindingResult.class));
 
     mockMvc.perform(post(ReverseRouter.route(on(ProjectPurposeController.class)
             .saveForm(APPLICATION_ID, null, null)))

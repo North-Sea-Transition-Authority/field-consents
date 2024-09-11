@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
+import org.jooq.tools.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -70,12 +71,17 @@ public class EiaDirectionService {
   @Transactional
   public void updateEiaDirection(ApplicationVersion applicationVersion, ProjectPurposeForm form) {
     var eiaDirection = eiaDirectionRepository.findByApplicationVersion(applicationVersion).orElseGet(EiaDirection::new);
-    if (Objects.equals(eiaDirection.getForPurposeOfEiaRegs(), form.forPurposeOfEiaRegs())) {
+    if (haveEiaPurposeAndRationaleRemainedUnchanged(form, eiaDirection)) {
       return;
     }
 
     eiaDirection.setApplicationVersion(applicationVersion);
     eiaDirection.setForPurposeOfEiaRegs(form.forPurposeOfEiaRegs());
+    if (Boolean.TRUE.equals(form.forPurposeOfEiaRegs())) {
+      eiaDirection.setRationaleForPurposeOfEiaRegs(form.rationaleForPurposeOfEiaRegs().getInputValue());
+    } else if (Boolean.FALSE.equals(form.forPurposeOfEiaRegs())) {
+      eiaDirection.setRationaleForPurposeOfEiaRegs(form.getRationaleNotForPurposeOfEiaRegs().getInputValue());
+    }
 
     // null out the remaining fields because they may now be invalid
     eiaDirection.setHaveSubmittedEiaDirection(null);
@@ -86,6 +92,18 @@ public class EiaDirectionService {
     eiaDirection.setCachedSatRef(null);
 
     eiaDirectionRepository.save(eiaDirection);
+  }
+
+  private static boolean haveEiaPurposeAndRationaleRemainedUnchanged(ProjectPurposeForm form, EiaDirection eiaDirection) {
+    if (!Objects.equals(eiaDirection.getForPurposeOfEiaRegs(), form.forPurposeOfEiaRegs())) {
+      return false;
+    }
+    return (Boolean.TRUE.equals(form.forPurposeOfEiaRegs())
+        && Objects.equals(eiaDirection.getRationaleForPurposeOfEiaRegs(),
+        form.rationaleForPurposeOfEiaRegs().getInputValue()))
+        || (Boolean.FALSE.equals(form.forPurposeOfEiaRegs())
+        && Objects.equals(eiaDirection.getRationaleForPurposeOfEiaRegs(),
+        form.getRationaleNotForPurposeOfEiaRegs().getInputValue()));
   }
 
   @Transactional
@@ -143,6 +161,12 @@ public class EiaDirectionService {
 
     var forPurposeOfEiaRegs = eiaDirection.getForPurposeOfEiaRegs();
     summaryDataView.addKeyValue("Is this a \"project\" for the purposes of EIA Regulations 2020?", forPurposeOfEiaRegs);
+
+    var rationaleForPurposeOfEiaRegs = eiaDirection.getRationaleForPurposeOfEiaRegs();
+    if (!StringUtils.isEmpty(rationaleForPurposeOfEiaRegs)) {
+      summaryDataView.addKeyValue("Rationale for the decision if this is a \"project\" for the purposes of EIA Regulations",
+          rationaleForPurposeOfEiaRegs);
+    }
 
     if (Objects.isNull(forPurposeOfEiaRegs) || Boolean.FALSE.equals(forPurposeOfEiaRegs)) {
       return SummaryCard.simpleSummaryCard(summaryDataView);

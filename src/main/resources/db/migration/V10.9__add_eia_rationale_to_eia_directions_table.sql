@@ -1,0 +1,3 @@
+ALTER TABLE application_eia_directions ADD COLUMN rationale_for_purpose_of_eia_regs TEXT;
+
+ALTER TABLE application_eia_directions_aud ADD COLUMN rationale_for_purpose_of_eia_regs TEXT;

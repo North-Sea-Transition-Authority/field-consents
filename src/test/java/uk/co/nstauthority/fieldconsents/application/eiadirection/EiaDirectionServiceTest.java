@@ -150,7 +150,11 @@ class EiaDirectionServiceTest {
         .thenReturn(Optional.of(filledInEiaDirection));
 
     filledInEiaDirection.setForPurposeOfEiaRegs(null);
-    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(forPurposeOfEiaRegs));
+    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(
+        forPurposeOfEiaRegs,
+        null,
+        null
+    ));
 
     verify(eiaDirectionRepository).save(eiaDirectionCaptor.capture());
     assertThat(eiaDirectionCaptor.getValue())
@@ -182,7 +186,11 @@ class EiaDirectionServiceTest {
   void updateEiaDirection_projectPurpose_withoutExistingEia(boolean forPurposeOfEiaRegs) {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
-    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(forPurposeOfEiaRegs));
+    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(
+        forPurposeOfEiaRegs,
+        null,
+        null
+    ));
 
     verify(eiaDirectionRepository).save(eiaDirectionCaptor.capture());
     assertThat(eiaDirectionCaptor.getValue())
@@ -214,7 +222,11 @@ class EiaDirectionServiceTest {
         .thenReturn(Optional.of(filledInEiaDirection));
 
     filledInEiaDirection.setForPurposeOfEiaRegs(forPurposeOfEiaRegs);
-    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(forPurposeOfEiaRegs));
+    eiaDirectionService.updateEiaDirection(applicationVersion, new ProjectPurposeForm(
+        forPurposeOfEiaRegs,
+        null,
+        null
+    ));
 
     verify(eiaDirectionRepository, never()).save(any());
   }
@@ -404,10 +416,12 @@ class EiaDirectionServiceTest {
   @Test
   void getEiaDirectionSummaryCard_haveSubmittedEiaDirection() {
     var satRef = "test/sat/ref";
+    var rationale = "It is an EIA Project";
 
     var eiaDirection = EiaDirectionBuilder.newBuilder()
         .withSatId(SAT_ID)
         .withForPurposeOfEiaRegs(true)
+        .withRationaleForPurposeOfEiaRegs(rationale)
         .withHaveSubmittedEiaDirection(true)
         .withCachedSatRef(CACHED_SAT_REF)
         .build();
@@ -415,6 +429,7 @@ class EiaDirectionServiceTest {
     var petsApplicationJson = new PetsApplicationJson(null, satRef, null, null, null);
 
     var projectPurposeQuestion = "Is this a \"project\" for the purposes of EIA Regulations 2020?";
+    var projectPurposeRationale = "Rationale for the decision if this is a \"project\" for the purposes of EIA Regulations";
     var haveSubmittedQuestion = "Have you submitted an EIA screening direction to the Secretary of State or OPRED?";
     var satIdQuestion = "EIA screening direction reference";
 
@@ -432,6 +447,7 @@ class EiaDirectionServiceTest {
         SummaryCard.simpleSummaryCard(
             SummaryDataView
                 .newWithKeyValue(projectPurposeQuestion, true)
+                .addKeyValue(projectPurposeRationale, rationale)
                 .addKeyValue(haveSubmittedQuestion, true)
                 .addKeyValue(satIdQuestion, satRef)
         )
