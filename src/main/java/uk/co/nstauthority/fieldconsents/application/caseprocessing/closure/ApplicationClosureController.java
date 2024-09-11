@@ -31,7 +31,7 @@ public class ApplicationClosureController {
   private final ApplicationSummaryService applicationSummaryService;
   private final ApplicationService applicationService;
 
-  public ApplicationClosureController(
+  ApplicationClosureController(
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
       ApplicationService applicationService
@@ -44,36 +44,35 @@ public class ApplicationClosureController {
   @GetMapping
   @ActionEndPoint(CLOSE_APPLICATION)
   public ModelAndView getConfirmation(@PathVariable Integer applicationId, ServiceUserDetail user) {
-    var applicationVersion = applicationVersionService
-        .getLatestApplicationVersionByApplicationId(applicationId);
-
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     return getConfirmationModelAndView(applicationVersion, user);
   }
 
   private ModelAndView getConfirmationModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var applicationId = applicationVersion.getApplication().getId();
-
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/closureForm",
         PAGE_TITLE,
-        user);
+        user
+    );
+
+    var applicationId = applicationVersion.getApplication().getId();
 
     return modelAndView
-        .addObject("closureUrl", ReverseRouter.route(on(ApplicationClosureController.class)
-            .closeApplication(applicationId, null)))
-        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null, null)));
+        .addObject(
+            "closureUrl",
+            ReverseRouter.route(on(ApplicationClosureController.class).closeApplication(applicationId, null))
+        )
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null, null))
+        );
   }
 
   @PostMapping
   @ActionEndPoint(CLOSE_APPLICATION)
-  public ModelAndView closeApplication(
-      @PathVariable Integer applicationId,
-      RedirectAttributes redirectAttributes
-  ) {
-    var applicationVersion = applicationVersionService
-        .getLatestApplicationVersionByApplicationId(applicationId);
+  ModelAndView closeApplication(@PathVariable Integer applicationId, RedirectAttributes redirectAttributes) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     applicationVersionService.getAllNonDeletedApplicationVersionsByApplicationId(applicationId)
             .forEach(applicationVersionService::closeApplicationVersion);

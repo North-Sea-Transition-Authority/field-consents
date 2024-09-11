@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
@@ -63,6 +64,9 @@ class ConsentDetailsSummarySectionServiceTest {
 
   @Mock
   private ApplicationRationaleProductionService applicationRationaleProductionService;
+
+  @Mock
+  private LicenceDetailsSummaryCardService licenceDetailsSummaryCardService;
 
   @Spy
   @InjectMocks
@@ -110,12 +114,16 @@ class ConsentDetailsSummarySectionServiceTest {
   void getApplicationContextSummaryItem(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    when(applicationContextService.getApplicationContextSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
+    var summaryCard1 = new SummaryCard("Application details", SummaryCardType.EMPTY_SUMMARY, null);
+    var summaryCard2 = new SummaryCard("Licence details", SummaryCardType.EMPTY_SUMMARY, null);
+
+    when(applicationContextService.getApplicationContextSummaryCard(applicationVersion)).thenReturn(summaryCard1);
+    when(licenceDetailsSummaryCardService.getSummaryCard(applicationVersion)).thenReturn(Optional.of(summaryCard2));
 
     assertThat(consentDetailsSummarySectionService.getApplicationContextSummaryItem(applicationVersion))
         .isPresent()
         .get()
-        .isEqualTo(SummaryItem.withCard("Application details", SUMMARY_CARD));
+        .isEqualTo(SummaryItem.withCards("Application details", List.of(summaryCard1, summaryCard2)));
   }
 
   @Test

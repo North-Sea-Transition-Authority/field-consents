@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.summary.shared;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
@@ -15,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.rationale.production.Applica
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -23,30 +23,26 @@ import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 public class ConsentDetailsSummarySectionService implements SummarySectionService<ApplicationVersion> {
 
   private final ApplicationContextService applicationContextService;
-
   private final ConsentLengthService consentLengthService;
-
   private final GasInjectionService gasInjectionService;
-
   private final ApplicationAssetService applicationAssetService;
-
   private final AssetSummaryService assetSummaryService;
-
   private final ApplicationRationaleFlareService applicationRationaleFlareService;
-
   private final ApplicationRationaleVentService applicationRationaleVentService;
-
   private final ApplicationRationaleProductionService applicationRationaleProductionService;
+  private final LicenceDetailsSummaryCardService licenceDetailsSummaryCardService;
 
-  @Autowired
-  ConsentDetailsSummarySectionService(ApplicationContextService applicationContextService,
-                                      ConsentLengthService consentLengthService,
-                                      GasInjectionService gasInjectionService,
-                                      ApplicationAssetService applicationAssetService,
-                                      AssetSummaryService assetSummaryService,
-                                      ApplicationRationaleFlareService applicationRationaleFlareService,
-                                      ApplicationRationaleVentService applicationRationaleVentService,
-                                      ApplicationRationaleProductionService applicationRationaleProductionService) {
+  ConsentDetailsSummarySectionService(
+      ApplicationContextService applicationContextService,
+      ConsentLengthService consentLengthService,
+      GasInjectionService gasInjectionService,
+      ApplicationAssetService applicationAssetService,
+      AssetSummaryService assetSummaryService,
+      ApplicationRationaleFlareService applicationRationaleFlareService,
+      ApplicationRationaleVentService applicationRationaleVentService,
+      ApplicationRationaleProductionService applicationRationaleProductionService,
+      LicenceDetailsSummaryCardService licenceDetailsSummaryCardService
+  ) {
     this.applicationContextService = applicationContextService;
     this.consentLengthService = consentLengthService;
     this.gasInjectionService = gasInjectionService;
@@ -55,6 +51,7 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
     this.applicationRationaleFlareService = applicationRationaleFlareService;
     this.applicationRationaleVentService = applicationRationaleVentService;
     this.applicationRationaleProductionService = applicationRationaleProductionService;
+    this.licenceDetailsSummaryCardService = licenceDetailsSummaryCardService;
   }
 
   @Override
@@ -85,9 +82,12 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
   }
 
   Optional<SummaryItem> getApplicationContextSummaryItem(ApplicationVersion applicationVersion) {
-    return Optional.of(SummaryItem.withCard("Application details",
-        applicationContextService.getApplicationContextSummaryCard(applicationVersion)
-    ));
+    var summaryCards = new ArrayList<SummaryCard>();
+
+    summaryCards.add(applicationContextService.getApplicationContextSummaryCard(applicationVersion));
+    licenceDetailsSummaryCardService.getSummaryCard(applicationVersion).ifPresent(summaryCards::add);
+
+    return Optional.of(SummaryItem.withCards("Application details", summaryCards));
   }
 
   Optional<SummaryItem> getConsentDurationSummaryItem(ApplicationVersion applicationVersion) {

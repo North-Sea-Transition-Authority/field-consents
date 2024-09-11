@@ -1,9 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.closure;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -25,7 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -101,20 +100,36 @@ class ApplicationClosureControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void getConfirmation_withPermission_success() throws Exception {
+    var viewName = "fcs/application/closureForm";
+    var pageTitle = "Are you sure you want to close this application?";
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), eq(user));
+    var modelAndView = new ModelAndView(viewName)
+        .addObject("pageTitle", pageTitle)
+        .addObject("summarySections", List.of())
+        .addObject("accordionId", 123)
+        .addObject("wideSummaryDisplay", false)
+        .addObject("selectedApplicationVersionView", null)
+        .addObject("applicationVersionViews", List.of());
+
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(new Application(APPLICATION_ID));
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, viewName, pageTitle, user)).thenReturn(modelAndView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationClosureController.class)
             .getConfirmation(APPLICATION_ID, user)))
             .with(user(user)))
-        .andExpect(view().name("fcs/application/closureForm"))
+        .andExpect(view().name(viewName))
         .andExpect(status().isOk())
-        .andExpect(model().attribute("closureUrl",
-            ReverseRouter.route(on(ApplicationClosureController.class)
-                .closeApplication(APPLICATION_ID, null))))
-        .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null, null))));
+        .andExpect(model().attribute(
+            "closureUrl",
+            ReverseRouter.route(on(ApplicationClosureController.class).closeApplication(APPLICATION_ID, null)))
+        )
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null, null)))
+        );
   }
 
   @Test

@@ -56,7 +56,8 @@ steps:
         - echo $DOCKER_CONFIG_JSON > /drone/dockerconfig/config.json
         - chmod +x gradlew
         - ./gradlew generateJooq
-        - ./gradlew checkstyleMain test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar --continue --parallel --max-workers=3
+        - ./gradlew publishEpmqMessagesIntegrationTestPublicationToMavenLocal
+        - ./gradlew checkstyleMain test epmqMessagesJarIntegrationTest bootJar --continue --parallel --max-workers=3
       build_image: repo1.dev.fivium.local:5000/docker-compose-java21
 
   - name: sync-reports

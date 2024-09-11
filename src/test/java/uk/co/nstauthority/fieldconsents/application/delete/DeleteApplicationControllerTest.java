@@ -1,24 +1,23 @@
 package uk.co.nstauthority.fieldconsents.application.delete;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController.PAGE_TITLE;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -33,38 +32,41 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @ContextConfiguration(classes = DeleteApplicationController.class)
 class DeleteApplicationControllerTest extends AbstractApplicationControllerTest {
 
+  private static final String PAGE_TITLE = "Are you sure you want to delete this draft application?";
+
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
 
   @SecurityTest
   void getDeleteApplication_whenInProgressAndUserHasCreatePermission_thenGetDeleteScreenWithSummaryView() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(true);
+    var viewName = "fcs/application/deleteApplication";
+    var modelAndView = new ModelAndView(viewName)
+        .addObject("pageTitle", PAGE_TITLE)
+        .addObject("summarySections", List.of())
+        .addObject("accordionId", 123)
+        .addObject("wideSummaryDisplay", false)
+        .addObject("selectedApplicationVersionView", null)
+        .addObject("applicationVersionViews", List.of());
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), eq(user));
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS)).thenReturn(true);
+    when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, viewName, PAGE_TITLE, user)).thenReturn(modelAndView);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(APPLICATION_ID, user)))
             .with(user(user))
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/deleteApplication"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertThat(model)
-        .containsEntry("pageTitle", PAGE_TITLE)
-        .containsKey("summarySections")
-        .containsEntry("accordionId", applicationVersion.getId())
-        .containsEntry("wideSummaryDisplay", true)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID, null)));
+        .andExpectAll(
+            status().isOk(),
+            view().name(viewName),
+            model().attribute("pageTitle", PAGE_TITLE),
+            model().attribute("summarySections", List.of()),
+            model().attribute("accordionId", 123),
+            model().attribute("wideSummaryDisplay", false),
+            model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
+        );
   }
 
   @SecurityTest

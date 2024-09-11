@@ -28,14 +28,15 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @HasApplicationPermission(permissions = RolePermission.CREATE_FCS_APPLICATIONS)
 public class DeleteApplicationController {
 
-  public static final String PAGE_TITLE = "Are you sure you want to delete this draft application?";
+  private static final String PAGE_TITLE = "Are you sure you want to delete this draft application?";
 
   private final ApplicationVersionService applicationVersionService;
-
   private final ApplicationSummaryService applicationSummaryService;
 
-  public DeleteApplicationController(ApplicationVersionService applicationVersionService,
-                                     ApplicationSummaryService applicationSummaryService) {
+  DeleteApplicationController(
+      ApplicationVersionService applicationVersionService,
+      ApplicationSummaryService applicationSummaryService
+  ) {
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
   }
@@ -47,18 +48,21 @@ public class DeleteApplicationController {
         applicationVersion,
         "fcs/application/deleteApplication",
         PAGE_TITLE,
-        user);
+        user
+    );
 
     return modelAndView
-        .addObject("deleteUrl", ReverseRouter.route(on(DeleteApplicationController.class)
-            .deleteApplication(applicationId, null)))
-        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId, null)));
+        .addObject(
+            "deleteUrl",
+            ReverseRouter.route(on(DeleteApplicationController.class).deleteApplication(applicationId, null)))
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null))
+        );
   }
 
   @PostMapping
-  public ModelAndView deleteApplication(@PathVariable Integer applicationId,
-                                        @Nullable RedirectAttributes redirectAttributes) {
+  ModelAndView deleteApplication(@PathVariable Integer applicationId, @Nullable RedirectAttributes redirectAttributes) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     applicationVersionService.deleteApplicationVersion(applicationVersion);

@@ -35,17 +35,16 @@ public class ApplicationSummaryService {
         .toList();
   }
 
-  public ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion, String viewName,
-                                                        String pageTitle, ServiceUserDetail user) {
+  public ModelAndView getApplicationSummaryModelAndView(
+      ApplicationVersion applicationVersion,
+      String viewName,
+      String pageTitle,
+      ServiceUserDetail user
+  ) {
+    var modelAndView = new ModelAndView(viewName);
+    addSummarySectionsAndVersionOptionsToModelAndView(applicationVersion, modelAndView, user);
 
-    var summarySections = getSummarySections(applicationVersion, user);
-    var wideSummaryDisplay = WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
-
-    return new ModelAndView(viewName)
-        .addObject("pageTitle", pageTitle)
-        .addObject("summarySections", summarySections)
-        .addObject("accordionId", applicationVersion.getId())
-        .addObject("wideSummaryDisplay", wideSummaryDisplay);
+    return modelAndView.addObject("pageTitle", pageTitle);
   }
 
   public ModelAndView addSummarySectionsToModelAndView(
