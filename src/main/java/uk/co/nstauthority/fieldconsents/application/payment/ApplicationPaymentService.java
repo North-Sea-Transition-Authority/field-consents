@@ -129,8 +129,8 @@ public class ApplicationPaymentService {
     };
   }
 
-  Map<String, Object> getPaymentMetadata(ApplicationVersion applicationVersion) {
-    var metadata = new LinkedHashMap<String, Object>();
+  Map<String, String> getPaymentMetadata(ApplicationVersion applicationVersion) {
+    var metadata = new LinkedHashMap<String, String>();
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
 
     metadata.put(applicationContext.getPrimaryOperatorPrompt(), applicationContext.primaryOperator());

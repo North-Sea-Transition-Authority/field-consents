@@ -124,7 +124,7 @@ class ApplicationPaymentServiceTest {
     var paymentItemReference = "testPaymentItemReference";
     var paymentAmountPence = 93000;
     var paymentDescription = "testPaymentDescription";
-    Map<String, Object> paymentMetadata = Map.of("testPaymentMetadataKey", "testPaymentMetadataValue");
+    var paymentMetadata = Map.of("testPaymentMetadataKey", "testPaymentMetadataValue");
     Function<UUID, String> returnUrlFunction = paymentId -> "testReturnUrl";
 
     var createCardPaymentResult = mock(CreateCardPaymentResult.class);

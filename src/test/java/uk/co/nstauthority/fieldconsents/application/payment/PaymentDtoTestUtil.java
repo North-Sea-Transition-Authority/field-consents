@@ -19,7 +19,7 @@ public class PaymentDtoTestUtil {
     private String itemType = "testItemType";
     private int amountPence = 100;
     private String description = "testDescription";
-    private Map<String, Object> metadata = Map.of("testMetadataKey", "testMetadataValue");
+    private Map<String, String> metadata = Map.of("testMetadataKey", "testMetadataValue");
     private String returnUrl = "testReturnUrl";
     private String createdByUserId = "testCreatedByUserId";
     private Instant createdInstant = Instant.now();
@@ -56,7 +56,7 @@ public class PaymentDtoTestUtil {
       return this;
     }
 
-    public Builder withMetadata(Map<String, Object> metadata) {
+    public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }

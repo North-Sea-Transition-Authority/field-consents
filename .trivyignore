@@ -1,2 +1,5 @@
 # org.springframework.security:spring-security-core
 CVE-2024-38810
+
+# org.springframework:spring-webmvc
+CVE-2024-38816
