@@ -83,7 +83,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ExtendWith(MockitoExtension.class)
 class BulkIssueConsentEmailServiceTest {
 
-  private static final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
+  private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneId.systemDefault());
   private static final String WORK_AREA_URL = "/workarea_url";
   private static final Long CASE_OFFICER_1_WUA_ID = 10L;
   private static final Long CASE_OFFICER_2_WUA_ID = 20L;
@@ -112,6 +112,9 @@ class BulkIssueConsentEmailServiceTest {
       .build();
   private static final OrganisationGroupDto ORG_GROUP_1_DTO = OrganisationGroupDto.from(ORG_GROUP_1);
   private static final OrganisationGroupDto ORG_GROUP_2_DTO = OrganisationGroupDto.from(ORG_GROUP_2);
+  private static final String PRODUCTION_CASE_REFERENCE = "PCON/8000/0";
+  private static final String FLARE_CASE_REFERENCE = "FCON/8001/0";
+  private static final String VENT_CASE_REFERENCE = "VCON/8002/0";
 
   @Mock
   private EmailService emailService;
@@ -154,6 +157,7 @@ class BulkIssueConsentEmailServiceTest {
 
   private ApplicationVersion productionApplicationVersion;
   private ApplicationVersion flareApplicationVersion;
+  private ApplicationVersion ventApplicationVersion;
 
   private BulkIssueConsentsTask task1;
   private BulkIssueConsentsTask task2;
@@ -178,22 +182,37 @@ class BulkIssueConsentEmailServiceTest {
     ));
     productionApplicationVersion = ApplicationTestUtil.getApprovedForIssuingApplicationVersionWithType(
         ApplicationType.PRODUCTION, CASE_OFFICER_1_WUA_ID, CAM_USER_1_WUA_ID);
+    productionApplicationVersion.setId(1);
     productionApplicationVersion.setSubmittedByWuaId(SUBMITTER_SHELL_WUA_ID);
     productionApplicationVersion.setPrimaryOperatorOuId(OPERATOR_SHELL_1_ID);
 
     flareApplicationVersion = ApplicationTestUtil.getApprovedForIssuingApplicationVersionWithType(
         ApplicationType.FLARE, CASE_OFFICER_2_WUA_ID, CAM_USER_2_WUA_ID);
+    flareApplicationVersion.setId(2);
     flareApplicationVersion.setSubmittedByWuaId(SUBMITTER_BP_WUA_ID);
     flareApplicationVersion.setPrimaryOperatorOuId(OPERATOR_BP_ID);
+    ventApplicationVersion = ApplicationTestUtil.getApprovedForIssuingApplicationVersionWithType(
+        ApplicationType.VENT, CASE_OFFICER_1_WUA_ID, CAM_USER_2_WUA_ID);
+    ventApplicationVersion.setPrimaryOperatorOuId(OPERATOR_BP_ID);
+    ventApplicationVersion.setId(3);
     bulkIssueConsentRun = new BulkIssueConsentRun(ENERGY_PORTAL_USER.webUserAccountId());
     bulkIssueConsentRun.setId(UUID.randomUUID());
 
     task1 = new BulkIssueConsentsTask();
     task1.setConsent(ConsentTestUtil.newBuilder().withId(1).build());
+    task1.setApplicationVersion(productionApplicationVersion);
+    task1.setFinishedAt(CLOCK.instant());
+    task1.setErrorDetails(null);
     task2 = new BulkIssueConsentsTask();
     task2.setConsent(ConsentTestUtil.newBuilder().withId(2).build());
+    task2.setApplicationVersion(flareApplicationVersion);
+    task2.setFinishedAt(CLOCK.instant());
+    task2.setErrorDetails(null);
     task3 = new BulkIssueConsentsTask();
     task3.setConsent(ConsentTestUtil.newBuilder().withId(3).build());
+    task3.setApplicationVersion(ventApplicationVersion);
+    task3.setFinishedAt(CLOCK.instant());
+    task3.setErrorDetails(null);
 
     consentFieldEquityPartner1 = new ConsentFieldEquityPartner(task1.getConsent(), OPERATOR_SHELL_1_ID, "org A", "1");
     consentFieldEquityPartner2 = new ConsentFieldEquityPartner(task2.getConsent(), OPERATOR_SHELL_2_ID, "org B", "2");
@@ -247,7 +266,7 @@ class BulkIssueConsentEmailServiceTest {
     when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(CASE_OFFICER_1_WUA_ID.toString()))).thenReturn(
         ENERGY_PORTAL_USER);
 
-    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3", "case/ref/4", "case/ref/5");
+    var successfulApplications = List.of(PRODUCTION_CASE_REFERENCE, FLARE_CASE_REFERENCE, VENT_CASE_REFERENCE);
     doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
     doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
 
@@ -268,11 +287,11 @@ class BulkIssueConsentEmailServiceTest {
     when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(CASE_OFFICER_1_WUA_ID.toString()))).thenReturn(
         ENERGY_PORTAL_USER);
 
-    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3");
+    var successfulApplications = List.of(PRODUCTION_CASE_REFERENCE, FLARE_CASE_REFERENCE);
     doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
     doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
 
-    var failedApplications = List.of("case/ref/4", "case/ref/5");
+    var failedApplications = List.of(VENT_CASE_REFERENCE);
     doReturn(failedApplications).when(bulkIssueConsentEmailService).getFailedApplications(any());
     doReturn(FORMATTED_FAILED_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(failedApplications);
 
@@ -311,7 +330,7 @@ class BulkIssueConsentEmailServiceTest {
   void getSuccessfulApplications_whenNoSuccessfulApplicationsThenEmpty() {
     var tasks = IntStream.range(0, 5).mapToObj(i -> new BulkIssueConsentsTask()).toList();
     tasks.forEach(task -> {
-      task.setFinishedAt(clock.instant());
+      task.setFinishedAt(CLOCK.instant());
       task.setErrorDetails("Error issuing the consent");
     });
 
@@ -322,11 +341,11 @@ class BulkIssueConsentEmailServiceTest {
   void getSuccessfulApplications_whenAllSuccessfulApplicationsThenNonEmpty() {
     var tasks = IntStream.range(0, 5).mapToObj(i -> new BulkIssueConsentsTask()).toList();
     tasks.forEach(task -> {
-      task.setFinishedAt(clock.instant());
+      task.setFinishedAt(CLOCK.instant());
       task.setErrorDetails(null);
       task.setApplicationVersion(productionApplicationVersion);
     });
-    when(applicationService.getApplicationReference(productionApplicationVersion)).thenReturn("PCON/8000/0");
+    when(applicationService.getApplicationReference(productionApplicationVersion)).thenReturn(PRODUCTION_CASE_REFERENCE);
 
     assertThat(bulkIssueConsentEmailService.getSuccessfulApplications(tasks)).isNotEmpty();
   }
@@ -335,7 +354,7 @@ class BulkIssueConsentEmailServiceTest {
   void getFailedApplications_whenNoFailedApplicationsThenEmpty() {
     var tasks = IntStream.range(0, 5).mapToObj(i -> new BulkIssueConsentsTask()).toList();
     tasks.forEach(task -> {
-      task.setFinishedAt(clock.instant());
+      task.setFinishedAt(CLOCK.instant());
       task.setErrorDetails(null);
     });
 
@@ -346,11 +365,11 @@ class BulkIssueConsentEmailServiceTest {
   void getFailedApplications_whenAllFailedApplicationsThenNonEmpty() {
     var tasks = IntStream.range(0, 5).mapToObj(i -> new BulkIssueConsentsTask()).toList();
     tasks.forEach(task -> {
-      task.setFinishedAt(clock.instant());
+      task.setFinishedAt(CLOCK.instant());
       task.setErrorDetails("Error issuing the consent");
       task.setApplicationVersion(productionApplicationVersion);
     });
-    when(applicationService.getApplicationReference(productionApplicationVersion)).thenReturn("PCON/8000/0");
+    when(applicationService.getApplicationReference(productionApplicationVersion)).thenReturn(PRODUCTION_CASE_REFERENCE);
 
     assertThat(bulkIssueConsentEmailService.getFailedApplications(tasks)).isNotEmpty();
   }
@@ -542,7 +561,7 @@ class BulkIssueConsentEmailServiceTest {
     when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(SUBMITTER_SHELL_WUA_ID.toString()))).thenReturn(
         ENERGY_PORTAL_USER);
 
-    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3", "case/ref/4", "case/ref/5");
+    var successfulApplications = List.of(PRODUCTION_CASE_REFERENCE, FLARE_CASE_REFERENCE, VENT_CASE_REFERENCE);
     doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
     doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
 
@@ -727,10 +746,9 @@ class BulkIssueConsentEmailServiceTest {
         eq(OPERATOR_BP_ID),
         anyString())
     ).thenReturn(orgUnit3WithGroupsJson);
-
-    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3");
-    doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
-    doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
+    when(applicationService.getApplicationReference(task1.getApplicationVersion())).thenReturn(PRODUCTION_CASE_REFERENCE);
+    when(applicationService.getApplicationReference(task2.getApplicationVersion())).thenReturn(FLARE_CASE_REFERENCE);
+    when(applicationService.getApplicationReference(task3.getApplicationVersion())).thenReturn(VENT_CASE_REFERENCE);
 
     when(emailService.getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
@@ -752,7 +770,7 @@ class BulkIssueConsentEmailServiceTest {
             tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
             tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
             tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
-                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted("* %s".formatted(FLARE_CASE_REFERENCE)))
         );
 
     assertThat(mailMergeFields.get(1).getMailMergeFields())
@@ -762,7 +780,7 @@ class BulkIssueConsentEmailServiceTest {
             tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
             tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
             tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
-                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted("* %s".formatted(PRODUCTION_CASE_REFERENCE)))
         );
 
     assertThat(mailMergeFields.get(2).getMailMergeFields())
@@ -772,7 +790,7 @@ class BulkIssueConsentEmailServiceTest {
             tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
             tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
             tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
-                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted("* %s".formatted(VENT_CASE_REFERENCE)))
         );
   }
 
@@ -871,9 +889,9 @@ class BulkIssueConsentEmailServiceTest {
         anyString())
     ).thenReturn(orgUnit2WithGroupsJson);
 
-    var successfulApplications = List.of("case/ref/1", "case/ref/2", "case/ref/3");
-    doReturn(successfulApplications).when(bulkIssueConsentEmailService).getSuccessfulApplications(any());
-    doReturn(FORMATTED_SUCCESSFUL_APPLICATIONS).when(bulkIssueConsentEmailService).formatStringList(successfulApplications);
+    when(applicationService.getApplicationReference(task1.getApplicationVersion())).thenReturn(PRODUCTION_CASE_REFERENCE);
+    when(applicationService.getApplicationReference(task2.getApplicationVersion())).thenReturn(FLARE_CASE_REFERENCE);
+    when(applicationService.getApplicationReference(task3.getApplicationVersion())).thenReturn(VENT_CASE_REFERENCE);
 
     when(emailService.getTemplate(GovukNotifyTemplate.BULK_CONSENTS_ISSUED_TO_FIELD_EQUITY_PARTNER))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
@@ -895,7 +913,8 @@ class BulkIssueConsentEmailServiceTest {
             tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
             tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
             tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
-                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted("* %s".formatted(
+                    String.join(System.lineSeparator() + "* ", List.of(PRODUCTION_CASE_REFERENCE, FLARE_CASE_REFERENCE)))))
         );
 
     assertThat(mailMergeFields.get(1).getMailMergeFields())
@@ -905,7 +924,7 @@ class BulkIssueConsentEmailServiceTest {
             tuple(SUBJECT_TEXT_MERGE_FIELD_NAME, "Consents issued"),
             tuple(WORK_AREA_URL_MERGE_FIELD_NAME, WORK_AREA_URL),
             tuple(SUCCESSFUL_APPLICATIONS_MERGE_FIELD_NAME,
-                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted(FORMATTED_SUCCESSFUL_APPLICATIONS))
+                SUCCESSFUL_APPLICATIONS_FEPS_MERGE_FIELD_TEXT.formatted("* %s".formatted(VENT_CASE_REFERENCE)))
         );
   }
 
@@ -918,25 +937,25 @@ class BulkIssueConsentEmailServiceTest {
 
   @Test
   void formatStringList_wheNonEmptyWithOneString() {
-    List<String> strings = List.of("case/ref/1");
+    List<String> strings = List.of(PRODUCTION_CASE_REFERENCE);
 
-    assertThat(bulkIssueConsentEmailService.formatStringList(strings)).isEqualTo("* case/ref/1");
+    assertThat(bulkIssueConsentEmailService.formatStringList(strings)).isEqualTo("* " + PRODUCTION_CASE_REFERENCE);
   }
 
   @Test
   void formatStringList_wheNonEmptyWithMultipleStrings() {
-    List<String> strings = List.of("case/ref/1", "case/ref/2", "case/ref/3");
+    List<String> strings = List.of(PRODUCTION_CASE_REFERENCE, FLARE_CASE_REFERENCE, VENT_CASE_REFERENCE);
 
-    assertThat(bulkIssueConsentEmailService.formatStringList(strings)).isEqualTo("* case/ref/1" +
-        System.lineSeparator() + "* case/ref/2" +
-        System.lineSeparator() + "* case/ref/3");
+    assertThat(bulkIssueConsentEmailService.formatStringList(strings)).isEqualTo("* " + PRODUCTION_CASE_REFERENCE +
+        System.lineSeparator() + "* " + FLARE_CASE_REFERENCE +
+        System.lineSeparator() + "* " + VENT_CASE_REFERENCE);
   }
 
   static List<BulkIssueConsentsTask> getBulkIssueConsentTasksFromApplicationVersions(List<ApplicationVersion> applicationVersions) {
     List<BulkIssueConsentsTask> tasks = new ArrayList<>();
     applicationVersions.forEach(applicationVersion -> {
       var task = new BulkIssueConsentsTask();
-      task.setFinishedAt(clock.instant());
+      task.setFinishedAt(CLOCK.instant());
       task.setApplicationVersion(applicationVersion);
       tasks.add(task);
     });

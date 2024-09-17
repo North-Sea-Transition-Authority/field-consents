@@ -271,7 +271,7 @@ class BulkIssueConsentEmailService {
         ));
 
     tasksByOrganisationUnitId.forEach((organisationUnitId, bulkTasks) -> {
-      var successfulApplications = getSuccessfulApplications(tasks);
+      var successfulApplications = getSuccessfulApplications(bulkTasks);
       var formattedSuccessfulApplications = formatStringList(successfulApplications);
 
       var organisationUnitWithGroupsJson = organisationUnitService
