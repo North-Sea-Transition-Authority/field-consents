@@ -1,6 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -86,7 +90,7 @@ public class ConsentEmailService {
         var teamConsentRecipients = teamMemberViewService
             .getTeamMemberViewsWithRolesForTeam(
                 teamOptional.get(),
-                Set.of(IndustryTeamRole.CONSENT_RECIPIENT))
+                Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR))
             .stream()
             .map(FieldConsentsEmailRecipient::from)
             .toList();

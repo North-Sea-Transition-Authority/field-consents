@@ -18,6 +18,10 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit4;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,8 +46,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartner;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
@@ -72,23 +74,9 @@ class ConsentEmailServiceTest {
       .withId(2)
       .withTeamType(TeamType.INDUSTRY)
       .build();
-
-  private static final ServiceUserDetail CONSENT_RECIPIENT_1 = ServiceUserDetailTestUtil.Builder()
-      .withForename("Consent1")
-      .withSurname("Recipient1")
-      .withEmailAddress("industry.recipient1@email.co.uk")
-      .withWuaId(1L)
-      .build();
-
-  private static final ServiceUserDetail CONSENT_RECIPIENT_2 = ServiceUserDetailTestUtil.Builder()
-      .withForename("Consent2")
-      .withSurname("Recipient2")
-      .withEmailAddress("industry.recipient2@email.co.uk")
-      .withWuaId(2L)
-      .build();
   
   private static final TeamMemberView TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1 = new TeamMemberView(
-      WebUserAccountId.from(CONSENT_RECIPIENT_1),
+      WebUserAccountId.valueOf("10"),
       new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Industry team"),
       "Mr",
       "Consent1",
@@ -99,7 +87,7 @@ class ConsentEmailServiceTest {
   );
 
   private static final TeamMemberView TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2 = new TeamMemberView(
-      WebUserAccountId.from(CONSENT_RECIPIENT_2),
+      WebUserAccountId.valueOf("20"),
       new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Consent team"),
       "Mr",
       "Consent2",
@@ -107,6 +95,39 @@ class ConsentEmailServiceTest {
       "industry.recipient2@email.co.uk",
       "06789",
       Set.of(IndustryTeamRole.CONSENT_RECIPIENT)
+  );
+
+  private static final TeamMemberView TEAM_MEMBER_VIEW_CREATOR = new TeamMemberView(
+      WebUserAccountId.valueOf("30"),
+      new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Consent team"),
+      "Mr",
+      "Creator",
+      "Creator Surname",
+      "industry.creator@email.co.uk",
+      "23412",
+      Set.of(CREATOR)
+  );
+
+  private static final TeamMemberView TEAM_MEMBER_VIEW_SUBMITTER = new TeamMemberView(
+      WebUserAccountId.valueOf("40"),
+      new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Consent team"),
+      "Mr",
+      "Submitter",
+      "Submitter Surname",
+      "industry.submitter@email.co.uk",
+      "08923",
+      Set.of(SUBMITTER)
+  );
+
+  private static final TeamMemberView TEAM_MEMBER_VIEW_EDITOR = new TeamMemberView(
+      WebUserAccountId.valueOf("50"),
+      new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Consent team"),
+      "Mr",
+      "Editor",
+      "Editor Surname",
+      "industry.editor@email.co.uk",
+      "98723",
+      Set.of(EDITOR)
   );
   
   @Mock
@@ -196,7 +217,7 @@ class ConsentEmailServiceTest {
   }
 
   @Test
-  void sendConsentIssuedEmailToOperator_withTeamFoundButNoMembersInTheConsentRecipientRole_thenOnlyApplicationSubmitterIsNotified() {
+  void sendConsentIssuedEmailToOperator_withTeamFoundButNoMemberRolesOtherThanSubmitter_thenOnlyApplicationSubmitterIsNotified() {
     var serviceDetailSubmitter = FieldConsentsEmailRecipient.from(ENERGY_PORTAL_USER_DTO);
 
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
@@ -214,7 +235,7 @@ class ConsentEmailServiceTest {
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR)))
         .thenReturn(Collections.emptyList());
     
     consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
@@ -242,7 +263,7 @@ class ConsentEmailServiceTest {
   }
 
   @Test
-  void sendConsentIssuedEmailToOperator_withTeamFoundAndMultipleMembersInTheConsentRecipientRole_thenNotifyAll() {
+  void sendConsentIssuedEmailToOperator_withTeamFoundAndMultipleMembersInDifferentRoles_thenNotifyAll() {
     var serviceDetailSubmitter = FieldConsentsEmailRecipient.from(ENERGY_PORTAL_USER_DTO);
 
     when(organisationUnitService.getOrganisationUnitWithGroupsById(
@@ -260,12 +281,17 @@ class ConsentEmailServiceTest {
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1, TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2));
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR)))
+        .thenReturn(List.of(
+            TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1,
+            TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2,
+            TEAM_MEMBER_VIEW_CREATOR,
+            TEAM_MEMBER_VIEW_SUBMITTER,
+            TEAM_MEMBER_VIEW_EDITOR));
 
     consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
 
-    verify(emailService, Mockito.times(3)).sendEmail(
+    verify(emailService, Mockito.times(6)).sendEmail(
         templateCaptor.capture(),
         emailRecipientCaptor.capture(),
         domainReferenceCaptor.capture()
@@ -275,52 +301,31 @@ class ConsentEmailServiceTest {
     var emailTemplates = templateCaptor.getAllValues();
     var domainReferences = domainReferenceCaptor.getAllValues();
 
-    var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
-    assertThat(firstEmailMergeFields)
-        .extracting(MailMergeField::name, MailMergeField::value)
-        .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CACHED_PRIMARY_OPERATOR_NAME_1)
-        );
-
-    var secondEmailMergeFields = emailTemplates.get(1).getMailMergeFields();
-    assertThat(secondEmailMergeFields)
-        .extracting(MailMergeField::name, MailMergeField::value)
-        .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CACHED_PRIMARY_OPERATOR_NAME_1)
-        );
-
-    var thirdEmailMergeFields = emailTemplates.get(2).getMailMergeFields();
-    assertThat(thirdEmailMergeFields)
-        .extracting(MailMergeField::name, MailMergeField::value)
-        .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CACHED_PRIMARY_OPERATOR_NAME_1)
-        );
+    emailTemplates.forEach(emailTemplate ->
+        assertThat(emailTemplate.getMailMergeFields())
+            .extracting(MailMergeField::name, MailMergeField::value)
+            .containsOnly(
+                tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CACHED_PRIMARY_OPERATOR_NAME_1)));
 
     // verify email recipients
     var testEmailRecipients = emailRecipientCaptor.getAllValues();
-    assertThat(testEmailRecipients).hasSize(3);
 
-    assertThat(testEmailRecipients.get(0).getEmailAddress())
-        .isEqualTo(serviceDetailSubmitter.getEmailAddress());
-    assertThat(testEmailRecipients.get(1).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CONSENT_RECIPIENT_2).getEmailAddress());
-    assertThat(testEmailRecipients.get(2).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CONSENT_RECIPIENT_1).getEmailAddress());
+    assertThat(testEmailRecipients).contains(
+        serviceDetailSubmitter,
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1),
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2),
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CREATOR),
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_SUBMITTER),
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_EDITOR));
 
     // verify domain references
-    assertThat(domainReferences.get(0).getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
-    assertThat(domainReferences.get(1).getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
-    assertThat(domainReferences.get(2).getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
+    domainReferences.forEach(domainReference -> {
+      assertThat(domainReference.getDomainId())
+          .isEqualTo(applicationVersion.getId().toString());
 
-    assertThat(domainReferences.get(0).getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
-    assertThat(domainReferences.get(1).getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
-    assertThat(domainReferences.get(2).getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+      assertThat(domainReference.getDomainType())
+          .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    });
   }
 
   @Test
