@@ -1,18 +1,34 @@
-import {expect, type Page, test} from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
-enum FieldConsentsUser {
-  INDUSTRY_BP = "industry.bp@field-consents.co.uk",
-  CASE_OFFICER = "administrator.case.officer@field-consents.co.uk",
-  CAM1 = "cam1@field-consents.co.uk"
+interface FieldConsentsUser {
+  email: string,
+  password: string
 }
+
+const users = {
+  "industry": {
+    email: "industry.bp@field-consents.co.uk",
+    password: process.env.INDUSTRY_USER_PASSWORD || "dev1"
+  },
+  "caseOfficer": {
+    email: "administrator.case.officer@field-consents.co.uk",
+    password: process.env.CASE_OFFICER_USER_PASSWORD || "dev1"
+  },
+  "cam": {
+    email: "cam1@field-consents.co.uk",
+    password: process.env.CAM_USER_PASSWORD || "dev1",
+  }
+} as const satisfies Record<string, FieldConsentsUser>;
+
+const assetName = "ANDREW";
 
 test.describe.configure({ mode: 'parallel' });
 
 async function signIn(page: Page, fieldConsentsUser: FieldConsentsUser) {
-  await page.goto('http://localhost:8080/fcs/work-area');
-  await page.locator('input[name="g0"]').fill(fieldConsentsUser);
+  await page.goto("/fcs/work-area");
+  await page.locator('input[name="g0"]').fill(fieldConsentsUser.email);
   await page.locator('input[name="g0"]').press('Tab');
-  await page.locator('input[name="g1"]').fill("dev1");
+  await page.locator('input[name="g1"]').fill(fieldConsentsUser.password);
   await page.locator('input[name="g1"]').press('Enter');
 }
 
@@ -29,12 +45,12 @@ async function assignToCamUser(page: Page, reference: string) {
 }
 
 test('submit flare application', async ({ page }) => {
-  await signIn(page, FieldConsentsUser.INDUSTRY_BP);
-  
+  await signIn(page, users.industry);
+
   await page.getByRole('link', { name: 'Manage fields/facilities' }).click();
   await page.getByLabel('', { exact: true }).click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Manage field/facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Flare').check();
@@ -48,11 +64,11 @@ test('submit flare application', async ({ page }) => {
   await page.getByLabel('Explain why you are').fill('application rationale increase reason');
   await page.getByRole('group', { name: 'Where does the flaring take' }).getByRole('combobox').click();
   await page.getByRole('searchbox').click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('group', { name: 'What is the host?' }).getByRole('combobox').click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Save and continue' }).click();
   await page.getByRole('link', { name: 'Consent duration' }).click();
   await page.getByLabel('Annual consent').check();
@@ -327,24 +343,24 @@ test('submit flare application', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CASE_OFFICER);
+  await signIn(page, users.caseOfficer);
   await assignToCamUser(page, reference);
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CAM1);
+  await signIn(page, users.cam);
   await page.getByRole('link', { name: reference }).click();
   await page.getByRole('link', { name: 'Consent issuing' }).click();
   await page.getByRole('button', { name: 'Ready to grant and issue' }).click();
 });
 
 test('submit vent application', async ({ page }) => {
-  await signIn(page, FieldConsentsUser.INDUSTRY_BP)
+  await signIn(page, users.industry)
 
   await page.getByRole('link', { name: 'Manage fields/facilities' }).click();
   await page.getByLabel('', { exact: true }).click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Manage field/facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Vent').check();
@@ -354,11 +370,11 @@ test('submit vent application', async ({ page }) => {
   await page.getByRole('link', { name: 'Application rationale' }).click();
   await page.getByLabel('Decrease').check();
   await page.getByRole('group', { name: 'Where does the venting take' }).getByRole('combobox').click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('group', { name: 'What is the host?' }).getByRole('combobox').click();
-  await page.getByRole('searchbox').fill('FARRAGON');
-  await page.getByRole('option', { name: 'FARRAGON' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Save and continue' }).click();
 
   await page.getByRole('link', { name: 'Consent duration' }).click();
@@ -387,7 +403,7 @@ test('submit vent application', async ({ page }) => {
   await page.getByLabel('Description').fill('hp vent system comment');
   await page.getByLabel('Yes').check();
   await page.getByRole('button', { name: 'Save and continue' }).click();
-  await page.getByLabel('Yes').check();
+  await page.getByLabel('No').check();
   await page.getByRole('button', { name: 'Save and continue' }).click();
 
   await page.getByRole('link', { name: 'Vent report' }).click();
@@ -579,24 +595,24 @@ test('submit vent application', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CASE_OFFICER);
+  await signIn(page, users.caseOfficer);
   await assignToCamUser(page, reference);
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CAM1)
+  await signIn(page, users.cam)
   await page.getByRole('link', { name: reference }).click();
   await page.getByRole('link', { name: 'Consent issuing' }).click();
   await page.getByRole('button', { name: 'Ready to grant and issue' }).click();
 });
 
 test('submit production application', async ({ page }) => {
-  await signIn(page, FieldConsentsUser.INDUSTRY_BP);
+  await signIn(page, users.industry);
 
   await page.getByRole('link', { name: 'Manage fields/facilities' }).click();
   await page.getByLabel('', { exact: true }).click();
-  await page.getByRole('searchbox').fill('NEPTUNE');
-  await page.getByRole('option', { name: 'NEPTUNE' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Manage field/facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Production').check();
@@ -606,11 +622,11 @@ test('submit production application', async ({ page }) => {
   await page.getByRole('link', { name: 'Application rationale' }).click();
   await page.getByLabel('Decrease').check();
   await page.getByRole('group', { name: 'At which location are the' }).getByRole('combobox').click();
-  await page.getByRole('searchbox').fill('NEPT');
-  await page.getByRole('option', { name: 'NEPTUNE' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('group', { name: 'What is the host?' }).getByRole('combobox').click();
-  await page.getByRole('searchbox').fill('NEP');
-  await page.getByRole('option', { name: 'NEPTUNE' }).click();
+  await page.getByRole('searchbox').fill(assetName);
+  await page.getByRole('option', { name: assetName }).click();
   await page.getByRole('button', { name: 'Save and continue' }).click();
 
   await page.getByRole('link', { name: 'Consent duration' }).click();
@@ -720,11 +736,13 @@ test('submit production application', async ({ page }) => {
   await page.getByLabel('Gas min value December').press('Tab');
   await page.getByLabel('Gas max value December').fill('9');
   await page.getByRole('button', { name: 'Save and continue' }).click();
-  
+
   await page.getByRole('link', { name: 'EIA screening direction' }).click();
-  await page.getByLabel('No').check();
+  await page.getByLabel('No', { exact: true }).check();
+  await page.getByLabel('Explain why this is not').click();
+  await page.getByLabel('Explain why this is not').fill('not considered a "project"');
   await page.getByRole('button', { name: 'Save and continue' }).click();
-  
+
   await page.getByRole('link', { name: 'Supporting information' }).click();
   await page.getByLabel('Notes').click();
   await page.getByLabel('Notes').fill('test');
@@ -736,12 +754,13 @@ test('submit production application', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CASE_OFFICER);;
+  await signIn(page, users.caseOfficer);
+  ;
   await assignToCamUser(page, reference);
 
   await page.getByRole('button', { name: 'Sign out' }).click();
 
-  await signIn(page, FieldConsentsUser.CAM1);
+  await signIn(page, users.cam);
   await page.getByRole('link', { name: reference }).click();
   await page.getByRole('link', { name: 'Consent issuing' }).click();
   await page.getByRole('button', { name: 'Ready to grant and issue' }).click();

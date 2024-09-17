@@ -4,12 +4,15 @@
   "devDependencies": {
     "@playwright/test": "^1.45.3",
     "@types/bun": "latest",
-    "@types/node": "^22.1.0"
+    "@types/node": "^22.5.5"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "scripts": {
     "create-applications": "playwright test --workers=5 --repeat-each=100"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
   }
 }
