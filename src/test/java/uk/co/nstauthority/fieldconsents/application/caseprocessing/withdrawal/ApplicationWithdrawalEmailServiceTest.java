@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalEmailService.CASE_MANAGERS_RECIPIENT_DISPLAY_NAME;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
-import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_2;
@@ -20,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAS
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
@@ -64,6 +65,9 @@ class ApplicationWithdrawalEmailServiceTest {
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
+
+  @Mock
+  private FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -89,7 +93,8 @@ class ApplicationWithdrawalEmailServiceTest {
         emailService,
         teamMemberViewService,
         energyPortalUserService,
-        organisationUnitService
+        organisationUnitService,
+        fieldConsentsEmailRecipientService
     );
     primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
     applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);

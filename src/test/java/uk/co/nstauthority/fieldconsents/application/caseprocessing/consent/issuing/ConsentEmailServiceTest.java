@@ -15,7 +15,6 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAS
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit4;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
@@ -48,6 +47,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.field
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -70,11 +70,6 @@ class ConsentEmailServiceTest {
       .withTeamType(TeamType.INDUSTRY)
       .build();
 
-  static final Team INDUSTRY_TEAM_2 = new TeamTestUtil.TeamBuilder()
-      .withId(2)
-      .withTeamType(TeamType.INDUSTRY)
-      .build();
-  
   private static final TeamMemberView TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1 = new TeamMemberView(
       WebUserAccountId.valueOf("10"),
       new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Industry team"),
@@ -129,7 +124,7 @@ class ConsentEmailServiceTest {
       "98723",
       Set.of(EDITOR)
   );
-  
+
   @Mock
   private EmailService emailService;
 
@@ -147,6 +142,9 @@ class ConsentEmailServiceTest {
 
   @Mock
   private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+
+  @Mock
+  private FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -170,7 +168,8 @@ class ConsentEmailServiceTest {
         teamMemberViewService,
         organisationUnitService,
         energyPortalUserService,
-        consentFieldEquityPartnerService
+        consentFieldEquityPartnerService,
+        fieldConsentsEmailRecipientService
     );
   }
 
@@ -376,20 +375,18 @@ class ConsentEmailServiceTest {
     var consent = new Consent(1);
     var consentFieldEquityPartners = List.of(
         new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+    var organisationUnitJson = OrganisationUnitWithGroupsJson.from(orgUnit1);
 
     when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
     when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
-
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+        .thenReturn(organisationUnitJson);
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(Collections.emptyList());
+    when(fieldConsentsEmailRecipientService
+        .getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(Collections.emptySet());
 
     consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
 
@@ -401,20 +398,18 @@ class ConsentEmailServiceTest {
     var consent = new Consent(1);
     var consentFieldEquityPartners = List.of(
         new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+    var organisationUnitJson = OrganisationUnitWithGroupsJson.from(orgUnit1);
 
     when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
     when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
-
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+        .thenReturn(organisationUnitJson);
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
+    when(fieldConsentsEmailRecipientService
+        .getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(Set.of(FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1)));
 
     consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
 
@@ -445,27 +440,18 @@ class ConsentEmailServiceTest {
     var consent = new Consent(1);
     var consentFieldEquityPartners = List.of(
         new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+    var organisationUnitJson = OrganisationUnitWithGroupsJson.from(orgUnit4);
 
     when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
     when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit4));
-
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
-
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_2.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM_2));
+        .thenReturn(organisationUnitJson);
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
-
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_2, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
+    when(fieldConsentsEmailRecipientService
+        .getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(Set.of(FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1)));
 
     consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
 
@@ -496,20 +482,20 @@ class ConsentEmailServiceTest {
     var consent = new Consent(1);
     var consentFieldEquityPartners = List.of(
         new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+    var organisationUnitJson = OrganisationUnitWithGroupsJson.from(orgUnit1);
 
     when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
     when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
-
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+        .thenReturn(organisationUnitJson);
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1, TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2));
+    when(fieldConsentsEmailRecipientService
+        .getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(Set.of(
+            FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1),
+            FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2)));
 
     consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
 

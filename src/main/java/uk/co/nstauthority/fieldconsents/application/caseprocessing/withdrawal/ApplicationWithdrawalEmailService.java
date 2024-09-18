@@ -1,11 +1,16 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -24,15 +29,20 @@ public class ApplicationWithdrawalEmailService {
   private final TeamMemberViewService teamMemberViewService;
   private final EnergyPortalUserService energyPortalUserService;
   private final OrganisationUnitService organisationUnitService;
+  private final FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
-  public ApplicationWithdrawalEmailService(EmailService emailService,
-                                           TeamMemberViewService teamMemberViewService,
-                                           EnergyPortalUserService energyPortalUserService,
-                                           OrganisationUnitService organisationUnitService) {
+  public ApplicationWithdrawalEmailService(
+      EmailService emailService,
+      TeamMemberViewService teamMemberViewService,
+      EnergyPortalUserService energyPortalUserService,
+      OrganisationUnitService organisationUnitService,
+      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService
+  ) {
     this.emailService = emailService;
     this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
     this.organisationUnitService = organisationUnitService;
+    this.fieldConsentsEmailRecipientService = fieldConsentsEmailRecipientService;
   }
 
   public void sendApplicationWithdrawalRequestEmail(ApplicationWithdrawal applicationWithdrawal) {
@@ -91,15 +101,27 @@ public class ApplicationWithdrawalEmailService {
         energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationWithdrawal.getRequestedByWuaId()))
     );
 
-    var mergedTemplate = emailService
-        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion)
-        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, withdrawalRequesterEmailRecipient.displayName())
-        .merge();
+    var organisationUnitWithGroupsJson = organisationUnitService
+        .getOrganisationUnitWithGroupsById(applicationVersion.getPrimaryOperatorOuId(), ORGANISATION_LOOKUP_PURPOSE);
 
-    emailService.sendEmail(
-        mergedTemplate,
-        withdrawalRequesterEmailRecipient,
-        applicationVersion
-    );
+    var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
+        organisationUnitWithGroupsJson, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR));
+
+    distinctEmailRecipients.add(withdrawalRequesterEmailRecipient);
+
+    var templateBuilder = emailService
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion);
+
+    // iterate over the list of operator recipients to notify about the outcome of the withdrawal request
+    distinctEmailRecipients.forEach(recipient -> {
+      templateBuilder
+          .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, recipient.displayName());
+
+      emailService.sendEmail(
+          templateBuilder.merge(),
+          recipient,
+          applicationVersion
+      );
+    });
   }
 }

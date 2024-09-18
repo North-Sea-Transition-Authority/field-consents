@@ -8,7 +8,6 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.indust
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
@@ -17,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Conse
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -37,19 +37,24 @@ public class ConsentEmailService {
   private final OrganisationUnitService organisationUnitService;
   private final EnergyPortalUserService energyPortalUserService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+  private final FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
-  public ConsentEmailService(EmailService emailService,
-                             IndustryTeamService industryTeamService,
-                             TeamMemberViewService teamMemberViewService,
-                             OrganisationUnitService organisationUnitService,
-                             EnergyPortalUserService energyPortalUserService,
-                             ConsentFieldEquityPartnerService consentFieldEquityPartnerService) {
+  public ConsentEmailService(
+      EmailService emailService,
+      IndustryTeamService industryTeamService,
+      TeamMemberViewService teamMemberViewService,
+      OrganisationUnitService organisationUnitService,
+      EnergyPortalUserService energyPortalUserService,
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
+      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService
+  ) {
     this.emailService = emailService;
     this.industryTeamService = industryTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.organisationUnitService = organisationUnitService;
     this.energyPortalUserService = energyPortalUserService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
+    this.fieldConsentsEmailRecipientService = fieldConsentsEmailRecipientService;
   }
 
   public void sendConsentIssuedEmailToOperator(ApplicationVersion applicationVersion) {
@@ -143,13 +148,8 @@ public class ConsentEmailService {
       MergedTemplate mergedTemplate
   ) {
 
-    var distinctEmailRecipients = organisationUnitWithGroupsJson.organisationGroups().stream()
-        .flatMap(organisationGroupDto ->
-            industryTeamService.getTeamByOrganisationGroupId(organisationGroupDto.getOrganisationGroupId()).stream())
-        .flatMap(team ->
-            teamMemberViewService.getTeamMemberViewsWithRolesForTeam(team, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)).stream())
-        .map(FieldConsentsEmailRecipient::from)
-        .collect(Collectors.toSet());
+    var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
+        organisationUnitWithGroupsJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT));
 
     // iterate over the list of field equity partner consent recipients to notify about the consent being issued
     distinctEmailRecipients.forEach(recipient ->
