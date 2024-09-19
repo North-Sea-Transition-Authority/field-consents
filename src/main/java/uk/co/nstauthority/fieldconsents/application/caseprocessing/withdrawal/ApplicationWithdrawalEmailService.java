@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
@@ -105,7 +104,7 @@ public class ApplicationWithdrawalEmailService {
         .getOrganisationUnitWithGroupsById(applicationVersion.getPrimaryOperatorOuId(), ORGANISATION_LOOKUP_PURPOSE);
 
     var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitWithGroupsJson, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR));
+        organisationUnitWithGroupsJson, Set.of(CREATOR, SUBMITTER, EDITOR));
 
     distinctEmailRecipients.add(withdrawalRequesterEmailRecipient);
 

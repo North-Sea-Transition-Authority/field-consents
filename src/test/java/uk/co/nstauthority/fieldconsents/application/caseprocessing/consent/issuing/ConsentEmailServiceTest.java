@@ -525,22 +525,16 @@ class ConsentEmailServiceTest {
 
     // verify email recipients
     var testEmailRecipients = emailRecipientCaptor.getAllValues();
-    assertThat(testEmailRecipients).hasSize(2);
 
-    assertThat(testEmailRecipients.get(0).getEmailAddress())
-        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2.contactEmail());
-    assertThat(testEmailRecipients.get(1).getEmailAddress())
-        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1.contactEmail());
+    assertThat(testEmailRecipients).containsExactlyInAnyOrder(
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1),
+        FieldConsentsEmailRecipient.from(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2)
+    );
 
     // verify domain references
-    assertThat(domainReferences.get(0).getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
-    assertThat(domainReferences.get(1).getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
-
-    assertThat(domainReferences.get(0).getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
-    assertThat(domainReferences.get(1).getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences)
+        .extracting(DomainReference::getDomainId, DomainReference::getDomainType)
+        .containsOnly(
+            tuple(applicationVersion.getId().toString(), APPLICATION_VERSION_DOMAIN_REFERENCE));
   }
 }
