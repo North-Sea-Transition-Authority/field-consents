@@ -27,6 +27,10 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -72,11 +76,10 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitWithGroupsJson;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -92,8 +95,9 @@ class BulkIssueConsentEmailServiceTest {
   private static final Integer OPERATOR_SHELL_1_ID = 10;
   private static final Integer OPERATOR_SHELL_2_ID = 20;
   private static final Long SUBMITTER_SHELL_WUA_ID = 10L;
-  private static final Long CONSENT_RECIPIENT_SHELL_1_WUA_ID = 20L;
-  private static final Long CONSENT_RECIPIENT_SHELL_2_WUA_ID = 30L;
+  private static final Long CONSENT_RECIPIENT_SHELL_WUA_ID = 20L;
+  private static final Long EDITOR_SHELL_WUA_ID = 30L;
+  private static final Long CREATOR_SHELL_WUA_ID = 40L;
   private static final Integer OPERATOR_BP_ID = 30;
   private static final Long SUBMITTER_BP_WUA_ID = 30L;
   private static final Long CONSENT_RECIPIENT_BP_1_WUA_ID = 40L;
@@ -475,13 +479,13 @@ class BulkIssueConsentEmailServiceTest {
         anyString())
     ).thenReturn(orgUnit2WithGroupsJson);
 
-    var consentRecipientsShell = Set.of(CONSENT_RECIPIENT_SHELL_1_WUA_ID);
+    var consentRecipientsShell = Set.of(CONSENT_RECIPIENT_SHELL_WUA_ID);
     doReturn(consentRecipientsShell).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
+        .getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_1_DTO);
 
     var consentRecipientsBp = Set.of(CONSENT_RECIPIENT_BP_1_WUA_ID);
     doReturn(consentRecipientsBp).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(ORG_GROUP_2_DTO);
+        .getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_2_DTO);
 
     bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(bulkIssueConsentRun, Stream.concat(tasksByShellOperator.stream(), tasksByBpOperator.stream()).toList());
 
@@ -509,11 +513,11 @@ class BulkIssueConsentEmailServiceTest {
 
     var consentRecipientsShell = Set.of(SUBMITTER_SHELL_WUA_ID);
     doReturn(consentRecipientsShell).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
+        .getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_1_DTO);
 
     var consentRecipientsBp = Set.of(SUBMITTER_BP_WUA_ID);
     doReturn(consentRecipientsBp).when(bulkIssueConsentEmailService)
-        .getConsentRecipientWuaIds(ORG_GROUP_2_DTO);
+        .getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_2_DTO);
 
     doNothing().when(bulkIssueConsentEmailService).sendBulkConsentIssuedEmailToOperator(any(), any(), any()); // this is tested below
 
@@ -546,8 +550,8 @@ class BulkIssueConsentEmailServiceTest {
         anyString())
     ).thenReturn(orgUnit2WithGroupsJson);
 
-    doReturn(Set.of(CONSENT_RECIPIENT_SHELL_1_WUA_ID, CONSENT_RECIPIENT_SHELL_2_WUA_ID))
-        .when(bulkIssueConsentEmailService).getConsentRecipientWuaIds(ORG_GROUP_1_DTO);
+    doReturn(Set.of(CONSENT_RECIPIENT_SHELL_WUA_ID, CREATOR_SHELL_WUA_ID))
+        .when(bulkIssueConsentEmailService).getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_1_DTO);
 
     bulkIssueConsentEmailService.sendBulkConsentIssuedEmailToOperators(bulkIssueConsentRun, tasksByShellOperator);
 
@@ -671,51 +675,60 @@ class BulkIssueConsentEmailServiceTest {
   }
 
   @Test
-  void getConsentRecipientWuaIds_whenNoConsentRecipientForOperator() {
+  void getDistinctOperatorEmailRecipientWuaIds_whenNoRecipientForOperator() {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
     when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR)))
         .thenReturn(Collections.emptyList());
 
-    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(ORG_GROUP_1_DTO)).isEmpty();
+    assertThat(bulkIssueConsentEmailService.getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_1_DTO)).isEmpty();
   }
 
   @Test
-  void getConsentRecipientWuaIds_whenMultipleConsentRecipientsForOperator() {
+  void getDistinctOperatorEmailRecipientWuaIds_whenMultipleRecipientsForOperator() {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    var teamMemberViewConsentRecipient1 = new TeamMemberView(
-        WebUserAccountId.from(CONSENT_RECIPIENT_SHELL_1_WUA_ID),
-        null,
-            null,
-            null,
-            null,
-            null,
-            null,
-        Set.of(IndustryTeamRole.CONSENT_RECIPIENT)
-    );
-    var teamMemberViewConsentRecipient2 = new TeamMemberView(
-        WebUserAccountId.from(CONSENT_RECIPIENT_SHELL_2_WUA_ID),
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        Set.of(IndustryTeamRole.CONSENT_RECIPIENT)
-    );
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
-        .thenReturn(List.of(teamMemberViewConsentRecipient1, teamMemberViewConsentRecipient2));
+    var teamMemberViewOperatorConsentRecipient = TeamMemberViewTestUtil.Builder()
+        .withWebUserAccountId(WebUserAccountId.from(CONSENT_RECIPIENT_SHELL_WUA_ID))
+        .withRoles(Set.of(CONSENT_RECIPIENT))
+        .build();
 
-    assertThat(bulkIssueConsentEmailService.getConsentRecipientWuaIds(ORG_GROUP_1_DTO))
-        .containsExactly(
-            CONSENT_RECIPIENT_SHELL_1_WUA_ID,
-            CONSENT_RECIPIENT_SHELL_2_WUA_ID
-    );
+    var teamMemberViewOperatorCreatorRecipient = TeamMemberViewTestUtil.Builder()
+        .withWebUserAccountId(WebUserAccountId.from(CREATOR_SHELL_WUA_ID))
+        .withRoles(Set.of(CREATOR))
+        .build();
+
+    var teamMemberViewOperatorSubmitterRecipient = TeamMemberViewTestUtil.Builder()
+        .withWebUserAccountId(WebUserAccountId.from(SUBMITTER_SHELL_WUA_ID))
+        .withRoles(Set.of(SUBMITTER))
+        .build();
+
+    var teamMemberViewOperatorEditorRecipient = TeamMemberViewTestUtil.Builder()
+        .withWebUserAccountId(WebUserAccountId.from(EDITOR_SHELL_WUA_ID))
+        .withRoles(Set.of(EDITOR))
+        .build();
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR)))
+        .thenReturn(List.of(
+            teamMemberViewOperatorConsentRecipient,
+            teamMemberViewOperatorCreatorRecipient,
+            teamMemberViewOperatorSubmitterRecipient,
+            teamMemberViewOperatorEditorRecipient));
+
+    var operatorEmailRecipients = bulkIssueConsentEmailService.getDistinctOperatorEmailRecipientWuaIds(ORG_GROUP_1_DTO);
+
+    assertThat(operatorEmailRecipients)
+        .hasSize(4)
+        .contains(
+            CONSENT_RECIPIENT_SHELL_WUA_ID,
+            CREATOR_SHELL_WUA_ID,
+            SUBMITTER_SHELL_WUA_ID,
+            EDITOR_SHELL_WUA_ID
+        );
   }
 
   @Test

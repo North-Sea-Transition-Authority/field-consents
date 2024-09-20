@@ -6,6 +6,10 @@ import static java.util.stream.Collectors.toSet;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService.ORGANISATION_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -34,7 +38,6 @@ import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -173,9 +176,9 @@ class BulkIssueConsentEmailService {
 
       var consentRecipientWuaIds = new HashSet<Long>();
 
-      // get the consent recipient wua ids for the organisation associated with the current operator
+      // get the email recipient wua ids for the organisation associated with the current operator
       primaryOperator.organisationGroups().forEach(organisationGroupDto ->
-          consentRecipientWuaIds.addAll(getConsentRecipientWuaIds(organisationGroupDto)));
+          consentRecipientWuaIds.addAll(getDistinctOperatorEmailRecipientWuaIds(organisationGroupDto)));
 
       // on each iteration add the new tasks for the current operator id. The operator might correspond to a new org group
       // or to an org group already encountered. In the latter case we simply concat the new tasks to the current list of
@@ -236,23 +239,23 @@ class BulkIssueConsentEmailService {
     }
   }
 
-  Set<Long> getConsentRecipientWuaIds(OrganisationGroupDto organisationGroupDto) {
+  Set<Long> getDistinctOperatorEmailRecipientWuaIds(OrganisationGroupDto organisationGroupDto) {
     var teamOptional = industryTeamService.getTeamByOrganisationGroupId(organisationGroupDto.getOrganisationGroupId());
-    var consentRecipientWuaIds = new HashSet<Long>();
+    var emailRecipientWuaIds = new HashSet<Long>();
 
     if (teamOptional.isPresent()) {
-      var teamConsentRecipients = teamMemberViewService
+      var teamMemberViewWuaIds = teamMemberViewService
           .getTeamMemberViewsWithRolesForTeam(
               teamOptional.get(),
-              Set.of(IndustryTeamRole.CONSENT_RECIPIENT))
+              Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR))
           .stream()
           .map(tmv -> tmv.wuaId().id())
           .toList();
 
-      consentRecipientWuaIds.addAll(teamConsentRecipients);
+      emailRecipientWuaIds.addAll(teamMemberViewWuaIds);
     }
 
-    return consentRecipientWuaIds;
+    return emailRecipientWuaIds;
   }
 
   public void sendBulkConsentIssuedEmailToFieldEquityPartners(BulkIssueConsentRun run,
