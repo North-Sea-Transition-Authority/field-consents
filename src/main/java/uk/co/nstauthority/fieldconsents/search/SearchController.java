@@ -39,6 +39,8 @@ public class SearchController {
 
   public static final String SEARCH_RESULT_ITEMS = "searchResultItems";
 
+  public static final int SEARCH_RESULT_RENDER_LIMIT = 300;
+
   private final TeamService teamService;
 
   private final SearchService searchService;
@@ -46,8 +48,6 @@ public class SearchController {
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
-
-  private static final int SEARCH_RESULT_RENDER_LIMIT = 300;
 
   SearchController(TeamService teamService,
                    SearchService searchService,

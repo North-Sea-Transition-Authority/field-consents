@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.BULK_ISSUE_CONSENTS_TASKS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
+import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_RESULT_RENDER_LIMIT;
 
 import io.micrometer.observation.annotation.Observed;
 import java.util.List;
@@ -206,7 +207,8 @@ public class ApplicationDataItemViewQueryService {
             .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())))
         .where(conditions)
         .and(APPLICATION_VERSIONS.ID.notIn(APPLICATION_VERSIONS_PENDING_CONSENT_ISSUE_QUERY))
-        .and(APPLICATION_VERSIONS.ID.eq(LATEST_APP_VERSION_FOR_APP_QUERY));
+        .and(APPLICATION_VERSIONS.ID.eq(LATEST_APP_VERSION_FOR_APP_QUERY))
+        .limit(SEARCH_RESULT_RENDER_LIMIT + 1); // +1 because we want to know when more than 300 results are returned
     return applicationDataItemViewsSelectStatement.getQuery();
   }
 }
