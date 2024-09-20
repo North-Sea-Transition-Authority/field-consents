@@ -4,17 +4,21 @@ import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDEN
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -31,36 +35,47 @@ public class ApplicationUpdateEmailService {
   private final EnergyPortalUserService energyPortalUserService;
   private final TechnicalReviewService technicalReviewService;
   private final OrganisationUnitService organisationUnitService;
+  private final FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
   @Autowired
-  ApplicationUpdateEmailService(EmailService emailService,
-                                EnergyPortalUserService energyPortalUserService,
-                                TechnicalReviewService technicalReviewService,
-                                OrganisationUnitService organisationUnitService) {
+  ApplicationUpdateEmailService(
+      EmailService emailService,
+      EnergyPortalUserService energyPortalUserService,
+      TechnicalReviewService technicalReviewService,
+      OrganisationUnitService organisationUnitService,
+      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService
+  ) {
     this.emailService = emailService;
     this.energyPortalUserService = energyPortalUserService;
     this.technicalReviewService = technicalReviewService;
     this.organisationUnitService = organisationUnitService;
+    this.fieldConsentsEmailRecipientService = fieldConsentsEmailRecipientService;
   }
 
   public void sendApplicationUpdateRequestEmail(ApplicationUpdate applicationUpdate) {
     var applicationVersion = applicationUpdate.getApplicationVersion();
-    var applicationSubmitter = ServiceUserDetail.from(
-        energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getSubmittedByWuaId()))
-    );
+    var organisationUnitWithGroupsJson = organisationUnitService
+        .getOrganisationUnitWithGroupsById(applicationVersion.getPrimaryOperatorOuId(), ORGANISATION_LOOKUP_PURPOSE);
 
-    var mergedOperatorTemplate = emailService
+    var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
+        organisationUnitWithGroupsJson, Set.of(CREATOR, SUBMITTER, EDITOR));
+
+    var templateBuilder = emailService
         .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion)
-        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, applicationSubmitter.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
-            DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
-        .merge();
+            DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME));
 
-    emailService.sendEmail(
-        mergedOperatorTemplate,
-        FieldConsentsEmailRecipient.from(applicationSubmitter),
-        applicationVersion
-    );
+    // iterate over the list of operator recipients to notify about the application update request
+    distinctEmailRecipients.forEach(recipient -> {
+      templateBuilder
+          .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, recipient.displayName());
+
+      emailService.sendEmail(
+          templateBuilder.merge(),
+          recipient,
+          applicationVersion
+      );
+    });
 
     // If the case officer is the current owner of the application and the update request was submitted by a user
     // different from the assigned case officer, notify the case officer about the update request.
