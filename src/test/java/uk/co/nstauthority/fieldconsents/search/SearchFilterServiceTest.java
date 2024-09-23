@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_2;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_DATA;
@@ -14,7 +17,10 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.APPLICATION_NO;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.ORGANISATION_GROUP_ID;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.ORGANISATION_UNIT_ID;
 
 import java.util.Collections;
@@ -34,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -46,6 +53,9 @@ class SearchFilterServiceTest {
   @Mock
   private ApplicationDataFilterService applicationDataFilterService;
 
+  @Mock
+  private OrganisationGroupQueryService organisationGroupQueryService;
+
   private SearchFilterService searchFilterService;
   private SearchFilterForm form;
 
@@ -53,7 +63,11 @@ class SearchFilterServiceTest {
   void setUp() {
     form = new SearchFilterForm();
     context = new DefaultDSLContext(SQLDialect.DEFAULT);
-    searchFilterService = new SearchFilterService(context, applicationDataFilterService);
+    searchFilterService = new SearchFilterService(
+        context,
+        applicationDataFilterService,
+        organisationGroupQueryService
+    );
   }
 
   @Test
@@ -204,5 +218,31 @@ class SearchFilterServiceTest {
   void getConditions_whenConsultee_thenApprovedForIssueConditionIsNotAdded() {
     assertThat(searchFilterService.getConditions(form, TeamType.OPRED)).doesNotContain(
         APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
+  }
+
+  @Test
+  void getConditions_OperatorGroupSelected_whenNoOrganisationGroup_thenFalseCondition() {
+    form.setOperatorGroupId(ORGANISATION_GROUP_ID);
+
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(anyList()))
+        .thenReturn(Collections.emptyList());
+
+    var conditions = searchFilterService.getConditions(form, TeamType.REGULATOR);
+
+    assertThat(conditions).containsExactly(falseCondition());
+  }
+
+  @Test
+  void getConditions_OperatorGroupSelected() {
+    form.setOperatorGroupId(ORGANISATION_GROUP_ID);
+
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(anyList()))
+        .thenReturn(List.of(orgUnit1Json, orgUnit2Json));
+
+    var conditions = searchFilterService.getConditions(form, TeamType.REGULATOR);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2))
+    );
   }
 }

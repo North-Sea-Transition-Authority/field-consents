@@ -17,6 +17,7 @@ public class SearchFilterForm extends ApplicationDataFilterForm implements Seria
   String terminalAssetKey;
   String consentStartYear;
   String consentEndYear;
+  Integer operatorGroupId;
 
   public List<AceFlagStatus> getAceFlagStatuses() {
     return aceFlagStatuses;
@@ -58,6 +59,14 @@ public class SearchFilterForm extends ApplicationDataFilterForm implements Seria
     this.consentEndYear = consentEndYear;
   }
 
+  public Integer getOperatorGroupId() {
+    return operatorGroupId;
+  }
+
+  public void setOperatorGroupId(Integer operatorGroupId) {
+    this.operatorGroupId = operatorGroupId;
+  }
+
   public String prettyPrint() {
     String prettyString = "{\n";
     prettyString += CollectionUtils.isEmpty(aceFlagStatuses) ? "" :
@@ -66,6 +75,7 @@ public class SearchFilterForm extends ApplicationDataFilterForm implements Seria
     prettyString += StringUtils.isEmpty(terminalAssetKey) ? "" : " terminalAssetKey: " + terminalAssetKey + "\n";
     prettyString += StringUtils.isEmpty(consentStartYear) ? "" : " consentStartYear: " + consentStartYear + "\n";
     prettyString += StringUtils.isEmpty(consentEndYear) ? "" : " consentEndYear: " + consentEndYear + "\n";
+    prettyString += operatorGroupId == null ? "" : " operatorGroupId: " + operatorGroupId + "\n";
     prettyString += "applicationDataFilterForm: " + super.prettyPrint();
     prettyString += "}\n";
     return prettyString;

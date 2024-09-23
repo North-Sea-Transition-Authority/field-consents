@@ -12,10 +12,14 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
@@ -24,13 +28,16 @@ public class SearchFilterService {
 
   private final DSLContext context;
   private final ApplicationDataFilterService applicationDataFilterService;
+  private final OrganisationGroupQueryService organisationGroupQueryService;
 
   SearchFilterService(
       DSLContext context,
-      ApplicationDataFilterService applicationDataFilterService
+      ApplicationDataFilterService applicationDataFilterService,
+      OrganisationGroupQueryService organisationGroupQueryService
   ) {
     this.context = context;
     this.applicationDataFilterService = applicationDataFilterService;
+    this.organisationGroupQueryService = organisationGroupQueryService;
   }
 
   List<Condition> getConditions(SearchFilterForm form, TeamType teamType) {
@@ -79,7 +86,27 @@ public class SearchFilterService {
       searchFilterConditions.add(getConsultationsCondition());
     }
 
+    Optional.ofNullable(form.getOperatorGroupId())
+        .map(this::getOperatorGroupCondition)
+        .ifPresent(searchFilterConditions::add);
+
     return searchFilterConditions;
+  }
+
+  private Condition getOperatorGroupCondition(Integer organisationGroupId) {
+    var organisationUnitJsonById = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(organisationGroupId))
+        .stream()
+        .collect(Collectors.toMap(
+            OrganisationUnitJson::organisationUnitId,
+            Function.identity()
+        ));
+
+    if (organisationUnitJsonById.isEmpty()) {
+      return falseCondition();
+    }
+
+    return APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitJsonById.keySet());
   }
 
   private Condition getConsultationsCondition() {

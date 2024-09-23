@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupRestController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
@@ -39,22 +40,28 @@ public class SearchController {
 
   public static final String SEARCH_RESULT_ITEMS = "searchResultItems";
 
+  public static final int SEARCH_RESULT_RENDER_LIMIT = 300;
+
   private final TeamService teamService;
 
   private final SearchService searchService;
 
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
+  private final SearchFilterFormService searchFilterFormService;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
 
-  private static final int SEARCH_RESULT_RENDER_LIMIT = 300;
-
-  SearchController(TeamService teamService,
-                   SearchService searchService,
-                   ApplicationDataFilterFormService applicationDataFilterFormService) {
+  SearchController(
+      TeamService teamService,
+      SearchService searchService,
+      ApplicationDataFilterFormService applicationDataFilterFormService,
+      SearchFilterFormService searchFilterFormService
+  ) {
     this.teamService = teamService;
     this.searchService = searchService;
     this.applicationDataFilterFormService = applicationDataFilterFormService;
+    this.searchFilterFormService = searchFilterFormService;
   }
 
   @GetMapping
@@ -78,6 +85,7 @@ public class SearchController {
     var prefilledField = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getFieldAssetKey());
     var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getTerminalAssetKey());
     var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(searchFilterForm.getOperatorId());
+    var prefilledOperatorGroup = searchFilterFormService.getPrefilledOrganisationGroup(searchFilterForm.getOperatorGroupId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
     var isRegulator = teamService.isRegulatorUser(user);
     var isRegulatorOrConsultee = isRegulator || teamService.isConsulteeUser(user);
@@ -90,6 +98,9 @@ public class SearchController {
         .addObject("prefilledOperator", prefilledOperator)
         .addObject("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
+        .addObject("prefilledOperatorGroup", prefilledOperatorGroup)
+        .addObject("operatorGroupSearchRestUrl",
+            ReverseRouter.route(on(OrganisationGroupRestController.class).getOrganisationGroupSearchResults(null)))
         .addObject("prefilledField", prefilledField)
         .addObject("fieldAssetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchFieldAssetsForUser(null, null)))

@@ -40,6 +40,19 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
+<#macro operatorGroupFilter form prefilledOperatorGroup operatorGroupSearchRestUrl path="form.operatorGroupId">
+  <@fdsSearch.searchFilterItem itemName="Primary operator group" expanded=prefilledOperatorGroup.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path=path
+      restUrl=springUrl(operatorGroupSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledOperatorGroup.id() : prefilledOperatorGroup.text()}
+      inputClass="govuk-input--width-10"
+      selectorMinInputLength=2
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
 <#macro assetTypeWithShoreFilter form expanded assetTypeWithShoreCheckboxes path="form.assetTypesWithShore">
   <@fdsSearch.searchFilterItem itemName="Asset type" expanded=expanded>
     <@fdsSearch.searchCheckboxes path=path checkboxes=assetTypeWithShoreCheckboxes/>

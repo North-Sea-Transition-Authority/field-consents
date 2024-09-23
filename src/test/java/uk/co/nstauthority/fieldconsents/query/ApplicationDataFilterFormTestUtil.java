@@ -16,6 +16,10 @@ public class ApplicationDataFilterFormTestUtil {
 
   public static final String ORGANISATION_NAME = "Organisation name";
 
+  public static final int ORGANISATION_GROUP_ID = 1;
+
+  public static final String ORGANISATION_GROUP_NAME = "Organisation group name";
+
   public static final String FIELD1_ASSET_ID_STRING = "1234";
 
   public static final String FIELD1_ASSET_KEY = FIELD1_ASSET_ID_STRING + AssetType.FIELD.name();
@@ -25,6 +29,8 @@ public class ApplicationDataFilterFormTestUtil {
   public static final String FIELD2_ASSET_KEY = FIELD2_ASSET_ID_STRING + AssetType.FIELD.name();
 
   public static final RestSearchItem ORGANISATION_REST_SEARCH_ITEM = new RestSearchItem(String.valueOf(ORGANISATION_UNIT_ID), ORGANISATION_NAME);
+
+  public static final RestSearchItem ORGANISATION_GROUP_REST_SEARCH_ITEM = new RestSearchItem(String.valueOf(ORGANISATION_GROUP_ID), ORGANISATION_GROUP_NAME);
 
   public static final RestSearchItem FIELD1_REST_SEARCH_ITEM = new RestSearchItem(FIELD1_ASSET_ID_STRING, AssetType.FIELD.name());
 

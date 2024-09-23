@@ -3,7 +3,9 @@ package uk.co.nstauthority.fieldconsents.integrationtest.search;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperatorAndLicences;
@@ -20,6 +22,7 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataIt
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.USER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.getCompleteApplicationDataItemForSearchBuilder;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.getConsentDurationString;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
@@ -65,6 +68,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicenc
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
@@ -77,6 +81,7 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.search.SearchFilterForm;
+import uk.co.nstauthority.fieldconsents.search.SearchFilterFormService;
 import uk.co.nstauthority.fieldconsents.search.SearchSession;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -105,6 +110,12 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
+
+  @MockBean
+  private SearchFilterFormService searchFilterFormService;
+
+  @MockBean
+  private OrganisationGroupQueryService organisationGroupQueryService;
 
   @Autowired
   private SearchController searchController;
@@ -140,6 +151,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   private RestSearchItem assetFieldRestSearchItem;
   private RestSearchItem assetTerminalRestSearchItem;
   private RestSearchItem orgUnitRestSearchItem;
+  private RestSearchItem orgUnitGroupRestSearchItem;
   private ZonedDateTime zonedDateTime;
 
   @BeforeEach
@@ -156,6 +168,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     orgUnitRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+    orgUnitGroupRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER_DETAIL, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.singletonList(REGULATOR_TEAM));
@@ -578,6 +591,41 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   @Test
   void searchByPrimaryOperator_whenNotFound() {
     searchForm.setOperatorId(2);
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
+  }
+
+  /******************************** PRIMARY OPERATOR GROUP ********************************/
+  @Test
+  void searchByPrimaryOperatorGroup_whenFound() {
+    orgUnitGroupRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_GROUP_REST_SEARCH_ITEM;
+    when(searchFilterFormService.getPrefilledOrganisationGroup(any())).thenReturn(orgUnitGroupRestSearchItem);
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(anyList()))
+        .thenReturn(List.of(orgUnit1Json));
+    searchForm.setOperatorGroupId(Integer.parseInt(orgUnitGroupRestSearchItem.id()));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getCompleteApplicationDataItemForSearchBuilder()
+            .withApplicationId(applicationId)
+            .withOperator(CACHED_PRIMARY_OPERATOR_NAME_1)
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
+    );
+  }
+
+  @Test
+  void searchByPrimaryOperatorGroup_whenNotFound() {
+    searchForm.setOperatorGroupId(2);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
