@@ -48,7 +48,8 @@ class TopNavigationServiceTest {
     assertThat(topNavigationItems).containsExactly(
         TopNavigationItem.WORK_AREA,
         TopNavigationItem.SEARCH,
-        TopNavigationItem.TEAM_MANAGEMENT
+        TopNavigationItem.TEAM_MANAGEMENT,
+        TopNavigationItem.ENERGY_PORTAL
     );
   }
 
@@ -66,7 +67,8 @@ class TopNavigationServiceTest {
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.MANAGE_ASSETS,
             TopNavigationItem.SEARCH,
-            TopNavigationItem.TEAM_MANAGEMENT
+            TopNavigationItem.TEAM_MANAGEMENT,
+            TopNavigationItem.ENERGY_PORTAL
         );
   }
 
@@ -86,7 +88,8 @@ class TopNavigationServiceTest {
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.SEARCH,
             TopNavigationItem.TEAM_MANAGEMENT,
-            TopNavigationItem.FEE_PERIODS
+            TopNavigationItem.FEE_PERIODS,
+            TopNavigationItem.ENERGY_PORTAL
         );
   }
 
@@ -106,7 +109,8 @@ class TopNavigationServiceTest {
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.SEARCH,
             TopNavigationItem.TEAM_MANAGEMENT,
-            TopNavigationItem.DOCUMENT_TEMPLATES
+            TopNavigationItem.DOCUMENT_TEMPLATES,
+            TopNavigationItem.ENERGY_PORTAL
         );
   }
 
@@ -126,7 +130,8 @@ class TopNavigationServiceTest {
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.SEARCH,
             TopNavigationItem.TEAM_MANAGEMENT,
-            TopNavigationItem.BULK_ACTIONS
+            TopNavigationItem.BULK_ACTIONS,
+            TopNavigationItem.ENERGY_PORTAL
         );
   }
 
@@ -137,7 +142,8 @@ class TopNavigationServiceTest {
         .containsExactly(
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.SEARCH,
-            TopNavigationItem.TEAM_MANAGEMENT
+            TopNavigationItem.TEAM_MANAGEMENT,
+            TopNavigationItem.ENERGY_PORTAL
         );
   }
 }

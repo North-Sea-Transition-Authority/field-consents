@@ -47,7 +47,10 @@ public enum TopNavigationItem {
   BULK_ACTIONS("Bulk actions",
       ReverseRouter.route(on(BulkCaseActionController.class).getBulkCaseActions(null)),
       Set.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)
-  );
+  ),
+  ENERGY_PORTAL("UK Energy portal",
+      ReverseRouter.route(on(EnergyPortalRedirectController.class).redirectToEnergyPortal()),
+      Collections.emptySet());
 
   private final String displayName;
   private final String url;

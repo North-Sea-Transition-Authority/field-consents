@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record EnergyPortalConfiguration(
     @NotNull String registrationUrl,
+    @NotNull String workbasketUrl,
     @NotNull String logoutUrl,
     @NotNull String logoutPreSharedKey
 ) {
