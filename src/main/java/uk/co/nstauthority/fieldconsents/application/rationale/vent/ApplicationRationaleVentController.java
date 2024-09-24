@@ -20,7 +20,9 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
@@ -40,7 +42,7 @@ public class ApplicationRationaleVentController {
   private final ApplicationRationaleVentService applicationRationaleVentService;
   private final ApplicationAssetService applicationAssetService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationRationaleVentFormValidator validator;
+  private final ApplicationRationaleFormValidator validator;
   private final ApplicationRationaleService applicationRationaleService;
   private final AssetService assetService;
   private final ApplicationRationaleEmissionService applicationRationaleEmissionService;
@@ -49,7 +51,7 @@ public class ApplicationRationaleVentController {
       ApplicationRationaleVentService applicationRationaleVentService,
       ApplicationAssetService applicationAssetService,
       ApplicationVersionService applicationVersionService,
-      ApplicationRationaleVentFormValidator validator,
+      ApplicationRationaleFormValidator validator,
       ApplicationRationaleService applicationRationaleService,
       AssetService assetService,
       ApplicationRationaleEmissionService applicationRationaleEmissionService
@@ -68,8 +70,8 @@ public class ApplicationRationaleVentController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var form = applicationRationaleService
         .findByApplicationVersion(applicationVersion)
-        .map(ApplicationRationaleVentForm::from)
-        .orElseGet(ApplicationRationaleVentForm::empty);
+        .map(ApplicationRationaleForm::from)
+        .orElseGet(ApplicationRationaleForm::empty);
 
     return getModelAndView(
         applicationVersion,
@@ -81,7 +83,7 @@ public class ApplicationRationaleVentController {
 
   @PostMapping
   ModelAndView saveForm(@PathVariable Integer applicationId,
-                        @ModelAttribute("form") ApplicationRationaleVentForm form,
+                        @ModelAttribute("form") ApplicationRationaleForm form,
                         BindingResult bindingResult) {
     validator.validate(form, bindingResult);
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -92,12 +94,18 @@ public class ApplicationRationaleVentController {
       return getModelAndView(applicationVersion, flaringLocations, hostLocation, form);
     }
 
-    var isIncrease = ApplicationRationaleType.INCREASE.equals(form.rationaleType());
+    var rationaleType = form.rationaleType();
+    String comment = switch (rationaleType) {
+      case INCREASE -> form.increaseComment().getInputValue();
+      case DECREASE -> form.decreaseComment().getInputValue();
+      default -> null;
+    };
+
     applicationRationaleVentService.saveApplicationRationale(
         applicationVersion,
-        form.rationaleType(),
-        isIncrease ? form.increaseComment().getInputValue() : null,
-        form.ventingLocationAssetKeys(),
+        rationaleType,
+        comment,
+        form.locationAssetKeys(),
         form.hostLocationAssetKey()
     );
 
@@ -108,7 +116,7 @@ public class ApplicationRationaleVentController {
       ApplicationVersion applicationVersion,
       List<ApplicationAssetView> ventingLocations,
       RestSearchItem hostLocation,
-      ApplicationRationaleVentForm form
+      ApplicationRationaleForm form
   ) {
     var applicationId = applicationVersion.getApplication().getId();
     var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
@@ -141,8 +149,8 @@ public class ApplicationRationaleVentController {
     return restUrl.replace("?term", "");
   }
 
-  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleVentForm form) {
-    return form.ventingLocationAssetKeys()
+  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleForm form) {
+    return form.locationAssetKeys()
         .stream()
         .map(AssetKey::parse)
         .flatMap(Optional::stream)
@@ -152,7 +160,7 @@ public class ApplicationRationaleVentController {
         .toList();
   }
 
-  private RestSearchItem getHostLocationFromForm(ApplicationRationaleVentForm form) {
+  private RestSearchItem getHostLocationFromForm(ApplicationRationaleForm form) {
     return AssetKey.parse(form.hostLocationAssetKey())
         .flatMap(assetKey -> assetService.getAsset(assetKey, "prefilling host location for application rationale"))
         .map(RestSearchItem::from)

@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -226,8 +225,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
       "OTHER,, comment",
   })
   void getForm_extension_other_applicationRationaleExists(
-      ApplicationRationaleType rationaleType, 
-      String extensionComment, 
+      ApplicationRationaleType rationaleType,
+      String extensionComment,
       String otherComment
   ) throws Exception {
     var comment = "comment";
@@ -303,16 +302,18 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .andExpect(status().isForbidden());
   }
 
-  @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = {"INCREASE", "DECREASE"}, mode = Mode.INCLUDE)
-  void saveForm_increase_decrease(ApplicationRationaleType rationaleType) throws Exception {
-    var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
+  @Test
+  void saveForm_increase() throws Exception {
+    var rationaleType = ApplicationRationaleType.INCREASE;
+    var productionAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
     var hostAssetKey = "assetKey1";
+    var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
-            .param("productionLocationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("increaseComment.inputValue", comment)
+            .param("productionLocationAssetKeys", String.join(",", productionAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))
@@ -324,9 +325,12 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
-        flaringAssetKeys,
+        null,
+        null,
+        productionAssetKeys,
         hostAssetKey
     );
+    expectedForm.increaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
     verify(applicationRationaleProductionFormValidator).validate(
@@ -342,9 +346,58 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     verify(applicationRationaleProductionService).saveApplicationRationale(
         applicationVersion,
         rationaleType,
+        comment,
+        productionAssetKeys,
+        hostAssetKey
+    );
+  }
+
+  @Test
+  void saveForm_decrease() throws Exception {
+    var rationaleType = ApplicationRationaleType.DECREASE;
+    var productionAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
+    var hostAssetKey = "assetKey1";
+    var comment = "comment";
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .saveForm(APPLICATION_ID, null, null)))
+            .param("rationaleType", rationaleType.toString())
+            .param("decreaseComment.inputValue", comment)
+            .param("productionLocationAssetKeys", String.join(",", productionAssetKeys))
+            .param("hostLocationAssetKey", hostAssetKey)
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
+
+    var expectedForm = new ApplicationRationaleProductionForm(
+        rationaleType,
         null,
         null,
-        flaringAssetKeys,
+        null,
+        null,
+        null,
+        productionAssetKeys,
+        hostAssetKey
+    );
+    expectedForm.decreaseComment().setInputValue(comment);
+
+    // We can't use `eq()` because the StringInput in the form is a different object
+    verify(applicationRationaleProductionFormValidator).validate(
+        argThat(o -> {
+          var form = (ApplicationRationaleProductionForm) o;
+          return Objects.equals(expectedForm.rationaleType(), form.rationaleType())
+              && expectedForm.productionLocationAssetKeys().containsAll(form.productionLocationAssetKeys())
+              && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey());
+        }),
+        any(BindingResult.class)
+    );
+
+    verify(applicationRationaleProductionService).saveApplicationRationale(
+        applicationVersion,
+        rationaleType,
+        comment,
+        productionAssetKeys,
         hostAssetKey
     );
   }
@@ -372,6 +425,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
+        null,
+        null,
         productionLocationAssetKeys,
         hostAssetKey
     );
@@ -393,7 +448,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         applicationVersion,
         rationaleType,
         comment,
-        null,
         productionLocationAssetKeys,
         hostAssetKey
     );
@@ -422,6 +476,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
+        null,
+        null,
         productionLocationAssetKeys,
         hostAssetKey
     );
@@ -442,7 +498,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     verify(applicationRationaleProductionService).saveApplicationRationale(
         applicationVersion,
         rationaleType,
-        null,
         comment,
         productionLocationAssetKeys,
         hostAssetKey
@@ -478,6 +533,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .andExpect(status().is2xxSuccessful())
         .andExpect(view().name(VIEW_NAME));
 
-    verify(applicationRationaleProductionService, never()).saveApplicationRationale(any(), any(), any(), any(), any(), any());
+    verify(applicationRationaleProductionService, never()).saveApplicationRationale(any(), any(),  any(), any(), any());
   }
 }

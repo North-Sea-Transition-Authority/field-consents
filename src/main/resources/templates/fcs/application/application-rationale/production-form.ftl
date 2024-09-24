@@ -21,18 +21,30 @@ backLinkUrl=springUrl(cancelUrl)
       <#if oilAndGasMaximums?has_content>
         <@oilAndGasMaximumsSection oilAndGasMaximums/>
       </#if>
-      <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}/>
-      <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}/>
+      <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}>
+        <@fdsTextarea.textarea
+        labelText="Enter why you are requesting an increase."
+        path="form.increaseComment.inputValue"
+        nestingPath="form.rationaleType"
+        />
+      </@fdsRadio.radioItem>
+      <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}>
+        <@fdsTextarea.textarea
+        labelText="Enter why you are requesting a decrease."
+        path="form.decreaseComment.inputValue"
+        nestingPath="form.rationaleType"
+        />
+      </@fdsRadio.radioItem>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={extensionRadio: extensionRadio.displayName}>
         <@fdsTextarea.textarea
-          labelText="Explain why you are requesting an extension."
+          labelText="Enter why you are requesting an extension."
           path="form.extensionComment.inputValue"
           nestingPath="form.rationaleType"
         />
       </@fdsRadio.radioItem>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={otherRadio: otherRadio.displayName}>
         <@fdsTextarea.textarea
-          labelText="Explain why you have selected 'other'. This could be for administrative reasons. For example Operator change or COP."
+          labelText="Enter why you have selected 'other'. This could be for administrative reasons. For example Operator change or COP."
           path="form.otherComment.inputValue"
           nestingPath="form.rationaleType"
         />

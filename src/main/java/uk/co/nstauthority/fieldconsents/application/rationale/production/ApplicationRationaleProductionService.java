@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.rationale.production;
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.HOST;
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.LOCATION;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -71,21 +72,14 @@ public class ApplicationRationaleProductionService {
   public void saveApplicationRationale(
       ApplicationVersion applicationVersion,
       ApplicationRationaleType rationaleType,
-      String extensionReason,
-      String otherReason,
+      String comment,
       List<String> productionLocationAssetKeys,
       String hostLocationAssetKey
   ) {
     var applicationRationale = repository.findByApplicationVersion(applicationVersion).orElseGet(ApplicationRationale::new);
     applicationRationale.setApplicationVersion(applicationVersion);
     applicationRationale.setRationaleType(rationaleType);
-
-    if (ApplicationRationaleType.EXTENSION.equals(rationaleType)) {
-      applicationRationale.setComment(extensionReason);
-    }
-    if (ApplicationRationaleType.OTHER.equals(rationaleType)) {
-      applicationRationale.setComment(otherReason);
-    }
+    applicationRationale.setComment(comment);
 
     repository.save(applicationRationale);
 
@@ -110,12 +104,24 @@ public class ApplicationRationaleProductionService {
           "Is this application for an increase, decrease, extension or other?",
           rationaleType.getDisplayName()
       );
-
-      if (ApplicationRationaleType.EXTENSION.equals(rationaleType)) {
-        summaryDataView.addKeyValue("Explain why you are requesting an extension", applicationRationale.getComment());
-      }
-      if (ApplicationRationaleType.OTHER.equals(rationaleType)) {
-        summaryDataView.addKeyValue("Explain why you have selected 'other'", applicationRationale.getComment());
+      if (StringUtils.isNotBlank(applicationRationale.getComment())) {
+        switch (rationaleType) {
+          case INCREASE:
+            summaryDataView.addKeyValue("Why are you asking for an increase?", applicationRationale.getComment());
+            break;
+          case DECREASE:
+            summaryDataView.addKeyValue("Why are you asking for a decrease?", applicationRationale.getComment());
+            break;
+          case EXTENSION:
+            summaryDataView.addKeyValue("Why are you asking for an extension?", applicationRationale.getComment());
+            break;
+          case OTHER:
+            summaryDataView.addKeyValue("Why have you selected 'other'?", applicationRationale.getComment());
+            break;
+          case NO_CHANGE:
+          default:
+            break;
+        }
       }
     }
 

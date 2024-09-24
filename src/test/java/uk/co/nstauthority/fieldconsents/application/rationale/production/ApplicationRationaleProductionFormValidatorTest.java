@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,8 +28,81 @@ class ApplicationRationaleProductionFormValidatorTest {
   private ApplicationRationaleProductionFormValidator validator;
 
   @Test
-  void supports() {
-    assertThat(validator.supports(ApplicationRationaleProductionForm.class)).isTrue();
+  void validate_increase_withoutComment() {
+    var hostLocationAssetKey = "hostKey";
+    var nonHostLocationAssetKeys = List.of("first", "second", "third");
+    var nonHostLocationAssetKeysSelectorField = "productionLocationAssetKeysSelector";
+
+    var form = new ApplicationRationaleProductionForm(
+        ApplicationRationaleType.INCREASE,
+        null,
+        null,
+        null,
+        null,
+        nonHostLocationAssetKeysSelectorField,
+        nonHostLocationAssetKeys,
+        hostLocationAssetKey
+    );
+    var bindingResult = getBindingResult(form);
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("increaseComment.inputValue", "increaseComment.required", "Enter why you are requesting an increase")
+        );
+
+    verify(validatorHelper).validateLocationAssets(
+        nonHostLocationAssetKeys,
+        nonHostLocationAssetKeysSelectorField,
+        bindingResult
+    );
+
+    verify(validatorHelper).validateHostLocationAsset(
+        hostLocationAssetKey,
+        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        bindingResult
+    );
+  }
+
+  @Test
+  void validate_decrease_withoutComment() {
+    var hostLocationAssetKey = "hostKey";
+    var nonHostLocationAssetKeys = List.of("first", "second", "third");
+    var nonHostLocationAssetKeysSelectorField = "productionLocationAssetKeysSelector";
+
+    var form = new ApplicationRationaleProductionForm(
+        ApplicationRationaleType.DECREASE,
+        null,
+        null,
+        null,
+        null,
+        nonHostLocationAssetKeysSelectorField,
+        nonHostLocationAssetKeys,
+        hostLocationAssetKey
+    );
+    var bindingResult = getBindingResult(form);
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("decreaseComment.inputValue", "decreaseComment.required", "Enter why you are requesting a decrease")
+        );
+
+    verify(validatorHelper).validateLocationAssets(
+        nonHostLocationAssetKeys,
+        nonHostLocationAssetKeysSelectorField,
+        bindingResult
+    );
+
+    verify(validatorHelper).validateHostLocationAsset(
+        hostLocationAssetKey,
+        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        bindingResult
+    );
   }
 
   @Test
@@ -43,6 +113,8 @@ class ApplicationRationaleProductionFormValidatorTest {
 
     var form = new ApplicationRationaleProductionForm(
         ApplicationRationaleType.EXTENSION,
+        null,
+        null,
         null,
         null,
         nonHostLocationAssetKeysSelectorField,
@@ -82,6 +154,8 @@ class ApplicationRationaleProductionFormValidatorTest {
         ApplicationRationaleType.OTHER,
         null,
         null,
+        null,
+        null,
         nonHostLocationAssetKeysSelectorField,
         nonHostLocationAssetKeys,
         hostLocationAssetKey
@@ -95,40 +169,6 @@ class ApplicationRationaleProductionFormValidatorTest {
         .containsExactly(
             tuple("otherComment.inputValue", "otherComment.required", "Enter why you have selected 'other'")
         );
-
-    verify(validatorHelper).validateLocationAssets(
-        nonHostLocationAssetKeys,
-        nonHostLocationAssetKeysSelectorField,
-        bindingResult
-    );
-
-    verify(validatorHelper).validateHostLocationAsset(
-        hostLocationAssetKey,
-        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
-        bindingResult
-    );
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = {"EXTENSION", "OTHER"}, mode = Mode.EXCLUDE)
-  void validate_notExtension_notOther_withoutComment(ApplicationRationaleType applicationRationaleType) {
-    var hostLocationAssetKey = "hostKey";
-    var nonHostLocationAssetKeys = List.of("first", "second", "third");
-    var nonHostLocationAssetKeysSelectorField = "productionLocationAssetKeysSelector";
-
-    var form = new ApplicationRationaleProductionForm(
-        applicationRationaleType,
-        null,
-        null,
-        nonHostLocationAssetKeysSelectorField,
-        nonHostLocationAssetKeys,
-        hostLocationAssetKey
-    );
-    var bindingResult = getBindingResult(form);
-
-    validator.validate(form, bindingResult);
-
-    assertThat(bindingResult.getFieldErrors()).isEmpty();
 
     verify(validatorHelper).validateLocationAssets(
         nonHostLocationAssetKeys,

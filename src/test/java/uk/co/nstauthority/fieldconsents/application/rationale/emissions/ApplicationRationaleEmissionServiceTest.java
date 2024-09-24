@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.emission;
+package uk.co.nstauthority.fieldconsents.application.rationale.emissions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -20,7 +20,9 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
@@ -40,7 +42,7 @@ public class ApplicationRationaleFlareController {
   private final ApplicationRationaleFlareService applicationRationaleFlareService;
   private final ApplicationAssetService applicationAssetService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationRationaleFlareFormValidator validator;
+  private final ApplicationRationaleFormValidator validator;
   private final ApplicationRationaleService applicationRationaleService;
   private final AssetService assetService;
   private final ApplicationRationaleEmissionService applicationRationaleEmissionService;
@@ -49,7 +51,7 @@ public class ApplicationRationaleFlareController {
       ApplicationRationaleFlareService applicationRationaleFlareService,
       ApplicationAssetService applicationAssetService,
       ApplicationVersionService applicationVersionService,
-      ApplicationRationaleFlareFormValidator validator,
+      ApplicationRationaleFormValidator validator,
       ApplicationRationaleService applicationRationaleService,
       AssetService assetService,
       ApplicationRationaleEmissionService applicationRationaleEmissionService
@@ -68,8 +70,8 @@ public class ApplicationRationaleFlareController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var form = applicationRationaleService
         .findByApplicationVersion(applicationVersion)
-        .map(ApplicationRationaleFlareForm::from)
-        .orElseGet(ApplicationRationaleFlareForm::empty);
+        .map(ApplicationRationaleForm::from)
+        .orElseGet(ApplicationRationaleForm::empty);
 
     return getModelAndView(
         applicationVersion,
@@ -81,7 +83,7 @@ public class ApplicationRationaleFlareController {
 
   @PostMapping
   ModelAndView saveForm(@PathVariable Integer applicationId,
-                        @ModelAttribute("form") ApplicationRationaleFlareForm form,
+                        @ModelAttribute("form") ApplicationRationaleForm form,
                         BindingResult bindingResult) {
     validator.validate(form, bindingResult);
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -92,12 +94,18 @@ public class ApplicationRationaleFlareController {
       return getModelAndView(applicationVersion, flaringLocations, hostLocation, form);
     }
 
-    var isIncrease = ApplicationRationaleType.INCREASE.equals(form.rationaleType());
+    var rationaleType = form.rationaleType();
+    String comment = switch (rationaleType) {
+      case INCREASE -> form.increaseComment().getInputValue();
+      case DECREASE -> form.decreaseComment().getInputValue();
+      default -> null;
+    };
+
     applicationRationaleFlareService.saveApplicationRationale(
         applicationVersion,
-        form.rationaleType(),
-        isIncrease ? form.increaseComment().getInputValue() : null,
-        form.flaringLocationAssetKeys(),
+        rationaleType,
+        comment,
+        form.locationAssetKeys(),
         form.hostLocationAssetKey()
     );
 
@@ -108,7 +116,7 @@ public class ApplicationRationaleFlareController {
       ApplicationVersion applicationVersion,
       List<ApplicationAssetView> flaringLocations,
       RestSearchItem hostLocation,
-      ApplicationRationaleFlareForm form
+      ApplicationRationaleForm form
   ) {
     var applicationId = applicationVersion.getApplication().getId();
     var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
@@ -141,8 +149,8 @@ public class ApplicationRationaleFlareController {
     return restUrl.replace("?term", "");
   }
 
-  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleFlareForm form) {
-    return form.flaringLocationAssetKeys()
+  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleForm form) {
+    return form.locationAssetKeys()
         .stream()
         .map(AssetKey::parse)
         .flatMap(Optional::stream)
@@ -152,7 +160,7 @@ public class ApplicationRationaleFlareController {
         .toList();
   }
 
-  private RestSearchItem getHostLocationFromForm(ApplicationRationaleFlareForm form) {
+  private RestSearchItem getHostLocationFromForm(ApplicationRationaleForm form) {
     return AssetKey.parse(form.hostLocationAssetKey())
         .flatMap(assetKey -> assetService.getAsset(assetKey, "prefilling host location for application rationale"))
         .map(RestSearchItem::from)

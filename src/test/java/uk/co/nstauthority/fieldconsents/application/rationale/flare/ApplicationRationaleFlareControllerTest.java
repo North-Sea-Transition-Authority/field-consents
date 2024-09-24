@@ -26,6 +26,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,8 +45,10 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.EmissionDailyAverage;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -70,7 +73,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
-  private ApplicationRationaleFlareFormValidator applicationRationaleFlareFormValidator;
+  private ApplicationRationaleFormValidator applicationRationaleFormValidator;
 
   @MockBean
   private ApplicationRationaleService applicationRationaleService;
@@ -174,9 +177,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleFlareForm.empty());
+        .isEqualTo(ApplicationRationaleForm.empty());
   }
 
   @Test
@@ -216,9 +219,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleFlareForm.empty());
+        .isEqualTo(ApplicationRationaleForm.empty());
   }
 
   @Test
@@ -262,13 +265,19 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
-    var expectedForm = new ApplicationRationaleFlareForm(rationaleType, null, null, null, null);
+    var expectedForm = new ApplicationRationaleForm(
+        rationaleType,
+        null,
+        null,
+        null,
+        Collections.emptyList(),
+        null);
     expectedForm.increaseComment().setInputValue(comment);
 
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
         .isEqualTo(expectedForm);
   }
@@ -294,7 +303,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   }
 
   @Test
-  void saveForm() throws Exception {
+  void saveForm_increase() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
     var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
@@ -304,15 +313,16 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("flaringLocationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleFlareForm(
+    var expectedForm = new ApplicationRationaleForm(
         rationaleType,
+        null,
         null,
         null,
         flaringAssetKeys,
@@ -321,12 +331,12 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     expectedForm.increaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
-    verify(applicationRationaleFlareFormValidator).validate(
+    verify(applicationRationaleFormValidator).validate(
         argThat(o -> {
-          var form = (ApplicationRationaleFlareForm) o;
+          var form = (ApplicationRationaleForm) o;
           return Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
               && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
-              && expectedForm.flaringLocationAssetKeys().containsAll(form.flaringLocationAssetKeys())
+              && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
               && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey());
         }),
         any(BindingResult.class)
@@ -335,6 +345,56 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     verify(applicationRationaleFlareService).saveApplicationRationale(
         applicationVersion,
         ApplicationRationaleType.INCREASE,
+        comment,
+        flaringAssetKeys,
+        hostAssetKey
+    );
+  }
+
+
+  @Test
+  void saveForm_decrease() throws Exception {
+    var rationaleType = ApplicationRationaleType.DECREASE;
+    var comment = "comment";
+    var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
+    var hostAssetKey = "assetKey1";
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .saveForm(APPLICATION_ID, null, null)))
+            .param("rationaleType", rationaleType.toString())
+            .param("decreaseComment.inputValue", comment)
+            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("hostLocationAssetKey", hostAssetKey)
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
+
+    var expectedForm = new ApplicationRationaleForm(
+        rationaleType,
+        null,
+        null,
+        null,
+        flaringAssetKeys,
+        hostAssetKey
+    );
+    expectedForm.decreaseComment().setInputValue(comment);
+
+    // We can't use `eq()` because the StringInput in the form is a different object
+    verify(applicationRationaleFormValidator).validate(
+        argThat(o -> {
+          var form = (ApplicationRationaleForm) o;
+          return Objects.equals(expectedForm.decreaseComment().getInputValue(), form.decreaseComment().getInputValue())
+              && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
+              && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
+              && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey());
+        }),
+        any(BindingResult.class)
+    );
+
+    verify(applicationRationaleFlareService).saveApplicationRationale(
+        applicationVersion,
+        ApplicationRationaleType.DECREASE,
         comment,
         flaringAssetKeys,
         hostAssetKey
@@ -353,8 +413,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
       bindingResult.rejectValue("rationaleType", "errorCode", "message");
       return null;
     })
-        .when(applicationRationaleFlareFormValidator)
-        .validate(any(ApplicationRationaleFlareForm.class), any(BindingResult.class));
+        .when(applicationRationaleFormValidator)
+        .validate(any(ApplicationRationaleForm.class), any(BindingResult.class));
 
     when(assetService.getAsset(eq(AssetKey.from(hostAssetKey)), anyString())).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
@@ -363,7 +423,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("flaringLocationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))

@@ -88,11 +88,19 @@ public class ApplicationRationaleProductionController {
       return getModelAndView(applicationVersion, productionLocations, hostLocation, form);
     }
 
+    var rationaleType = form.rationaleType();
+    String comment = switch (rationaleType) {
+      case INCREASE -> form.increaseComment().getInputValue();
+      case DECREASE -> form.decreaseComment().getInputValue();
+      case EXTENSION -> form.extensionComment().getInputValue();
+      case OTHER -> form.otherComment().getInputValue();
+      default -> null;
+    };
+
     applicationRationaleProductionService.saveApplicationRationale(
         applicationVersion,
-        form.rationaleType(),
-        form.extensionComment().getInputValue(),
-        form.otherComment().getInputValue(),
+        rationaleType,
+        comment,
         form.productionLocationAssetKeys(),
         form.hostLocationAssetKey()
     );

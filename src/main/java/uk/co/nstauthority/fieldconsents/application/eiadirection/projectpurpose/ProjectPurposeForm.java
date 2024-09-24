@@ -12,11 +12,11 @@ public record ProjectPurposeForm(
   public ProjectPurposeForm {
     rationaleForPurposeOfEiaRegs = new StringInput(
         "rationaleForPurposeOfEiaRegs",
-        "the rationale of why this is a \"project\""
+        "why this is a \"project\""
     );
     rationaleNotForPurposeOfEiaRegs = new StringInput(
         "rationaleNotForPurposeOfEiaRegs",
-        "the rationale of why this is not a \"project\""
+        "why this is not a \"project\""
     );
   }
 

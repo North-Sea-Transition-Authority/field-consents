@@ -26,6 +26,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,8 +45,10 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
-import uk.co.nstauthority.fieldconsents.application.rationale.emission.EmissionDailyAverage;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -70,7 +73,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
-  private ApplicationRationaleVentFormValidator applicationRationaleVentFormValidator;
+  private ApplicationRationaleFormValidator validator;
 
   @MockBean
   private ApplicationRationaleService applicationRationaleService;
@@ -174,9 +177,9 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleVentForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleVentForm.empty());
+        .isEqualTo(ApplicationRationaleForm.empty());
   }
 
   @Test
@@ -214,9 +217,9 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleVentForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleVentForm.empty());
+        .isEqualTo(ApplicationRationaleForm.empty());
   }
 
   @Test
@@ -259,13 +262,19 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
-    var expectedForm = new ApplicationRationaleVentForm(rationaleType, null, null, null, null);
+    var expectedForm = new ApplicationRationaleForm(
+        rationaleType,
+        null,
+        null,
+        null,
+        Collections.emptyList(),
+        null);
     expectedForm.increaseComment().setInputValue(comment);
 
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleVentForm.class))
+        .asInstanceOf(type(ApplicationRationaleForm.class))
         .usingRecursiveComparison()
         .isEqualTo(expectedForm);
   }
@@ -291,7 +300,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
   }
 
   @Test
-  void saveForm() throws Exception {
+  void saveForm_increase() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
     var ventingAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
@@ -301,15 +310,16 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
             .getForm(APPLICATION_ID)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("ventingLocationAssetKeys", String.join(",", ventingAssetKeys))
+            .param("locationAssetKeys", String.join(",", ventingAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleVentForm(
+    var expectedForm = new ApplicationRationaleForm(
         rationaleType,
+        null,
         null,
         null,
         ventingAssetKeys,
@@ -318,20 +328,67 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     expectedForm.increaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
-    verify(applicationRationaleVentFormValidator).validate(
-        argThat(o -> {
-          var form = (ApplicationRationaleVentForm) o;
-          return Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
+    verify(validator).validate(
+        argThat(form ->
+            Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
               && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
-              && expectedForm.ventingLocationAssetKeys().containsAll(form.ventingLocationAssetKeys())
-              && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey());
-        }),
+              && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
+              && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey())
+        ),
         any(BindingResult.class)
     );
 
     verify(applicationRationaleVentService).saveApplicationRationale(
         applicationVersion,
         ApplicationRationaleType.INCREASE,
+        comment,
+        ventingAssetKeys,
+        hostAssetKey
+    );
+  }
+
+  @Test
+  void saveForm_decrease() throws Exception {
+    var rationaleType = ApplicationRationaleType.DECREASE;
+    var comment = "comment";
+    var ventingAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
+    var hostAssetKey = "assetKey1";
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .getForm(APPLICATION_ID)))
+            .param("rationaleType", rationaleType.toString())
+            .param("decreaseComment.inputValue", comment)
+            .param("locationAssetKeys", String.join(",", ventingAssetKeys))
+            .param("hostLocationAssetKey", hostAssetKey)
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
+
+    var expectedForm = new ApplicationRationaleForm(
+        rationaleType,
+        null,
+        null,
+        null,
+        ventingAssetKeys,
+        hostAssetKey
+    );
+    expectedForm.decreaseComment().setInputValue(comment);
+
+    // We can't use `eq()` because the StringInput in the form is a different object
+    verify(validator).validate(
+        argThat(form ->
+            Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
+              && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
+              && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
+              && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey())
+        ),
+        any(BindingResult.class)
+    );
+
+    verify(applicationRationaleVentService).saveApplicationRationale(
+        applicationVersion,
+        ApplicationRationaleType.DECREASE,
         comment,
         ventingAssetKeys,
         hostAssetKey
@@ -350,8 +407,8 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
       bindingResult.rejectValue("rationaleType", "errorCode", "message");
       return null;
     })
-        .when(applicationRationaleVentFormValidator)
-        .validate(any(ApplicationRationaleVentForm.class), any(BindingResult.class));
+        .when(validator)
+        .validate(any(ApplicationRationaleForm.class), any(BindingResult.class));
 
     when(assetService.getAsset(eq(AssetKey.from(hostAssetKey)), anyString())).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
@@ -360,7 +417,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
             .getForm(APPLICATION_ID)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("ventingLocationAssetKeys", String.join(",", ventingAssetKeys))
+            .param("locationAssetKeys", String.join(",", ventingAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))

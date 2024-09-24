@@ -120,145 +120,86 @@ class ApplicationRationaleProductionServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = {"INCREASE", "DECREASE"}, mode = INCLUDE)
-  void saveApplicationRationale_increase_decrease(ApplicationRationaleType rationaleType) {
-    var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
-
-    applicationRationaleProductionService.saveApplicationRationale(
-        applicationVersion,
-        rationaleType,
-        null,
-        null,
-        flaringLocationAssetKeys,
-        hostLocationAssetKey
-    );
-
-    verify(repository).save(applicationRationaleCaptor.capture());
-    assertThat(applicationRationaleCaptor.getValue())
-        .extracting(
-            ApplicationRationale::getApplicationVersion,
-            ApplicationRationale::getRationaleType,
-            ApplicationRationale::getComment
-        ).containsExactly(
-            applicationVersion,
-            rationaleType,
-            null
-        );
-  }
-
-  @Test
-  void saveApplicationRationale_extension() {
-    var comment = "comment";
-    var rationaleType = ApplicationRationaleType.EXTENSION;
-    var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
-
-    applicationRationaleProductionService.saveApplicationRationale(
-        applicationVersion,
-        rationaleType,
-        comment,
-        null,
-        flaringLocationAssetKeys,
-        hostLocationAssetKey
-    );
-
-    verify(repository).save(applicationRationaleCaptor.capture());
-    assertThat(applicationRationaleCaptor.getValue())
-        .extracting(
-            ApplicationRationale::getApplicationVersion,
-            ApplicationRationale::getRationaleType,
-            ApplicationRationale::getComment
-        ).containsExactly(
-            applicationVersion,
-            rationaleType,
-            comment
-        );
-
-    verify(applicationAssetService).deleteAssetsByApplicationVersionAndAssetRoles(
-        applicationVersion,
-        Set.of(AssetRole.HOST, AssetRole.LOCATION)
-    );
-
-    for (var key : flaringLocationAssetKeys) {
-      verify(applicationAssetService).createAssetForApplicationVersion(
-          applicationVersion,
-          key,
-          AssetRole.LOCATION
-      );
-    }
-
-    verify(applicationAssetService).createAssetForApplicationVersion(
-        applicationVersion,
-        hostLocationAssetKey,
-        AssetRole.HOST
-    );
-  }
-
-  @Test
-  void saveApplicationRationale_other() {
-    var comment = "comment";
-    var rationaleType = ApplicationRationaleType.OTHER;
-    var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
-
-    applicationRationaleProductionService.saveApplicationRationale(
-        applicationVersion,
-        rationaleType,
-        null,
-        comment,
-        flaringLocationAssetKeys,
-        hostLocationAssetKey
-    );
-
-    verify(repository).save(applicationRationaleCaptor.capture());
-    assertThat(applicationRationaleCaptor.getValue())
-        .extracting(
-            ApplicationRationale::getApplicationVersion,
-            ApplicationRationale::getRationaleType,
-            ApplicationRationale::getComment
-        ).containsExactly(
-            applicationVersion,
-            rationaleType,
-            comment
-        );
-
-    verify(applicationAssetService).deleteAssetsByApplicationVersionAndAssetRoles(
-        applicationVersion,
-        Set.of(AssetRole.HOST, AssetRole.LOCATION)
-    );
-
-    for (var key : flaringLocationAssetKeys) {
-      verify(applicationAssetService).createAssetForApplicationVersion(
-          applicationVersion,
-          key,
-          AssetRole.LOCATION
-      );
-    }
-
-    verify(applicationAssetService).createAssetForApplicationVersion(
-        applicationVersion,
-        hostLocationAssetKey,
-        AssetRole.HOST
-    );
-  }
-
-  @ParameterizedTest
   @EnumSource(ApplicationRationaleType.class)
-  void getSummaryCard_rationaleType(ApplicationRationaleType applicationRationaleType) {
-    when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
+  void saveApplicationRationale(ApplicationRationaleType rationaleType) {
+    var comment = "comment";
+    var productionLocationAssetKeys = List.of("assetKey1", "assetKey2");
+    var hostLocationAssetKey = "assetKey1";
 
-    applicationRationale.setRationaleType(applicationRationaleType);
+    applicationRationaleProductionService.saveApplicationRationale(
+        applicationVersion,
+        rationaleType,
+        comment,
+        productionLocationAssetKeys,
+        hostLocationAssetKey
+    );
 
-    getSummaryKeyValuesFrom(applicationRationaleProductionService.getSummaryCard(applicationVersion))
-        .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
-        .contains(tuple("Is this application for an increase, decrease, extension or other?", applicationRationaleType.getDisplayName()));
+    verify(repository).save(applicationRationaleCaptor.capture());
+    assertThat(applicationRationaleCaptor.getValue())
+        .extracting(
+            ApplicationRationale::getApplicationVersion,
+            ApplicationRationale::getRationaleType,
+            ApplicationRationale::getComment
+        ).containsExactly(
+            applicationVersion,
+            rationaleType,
+            comment
+        );
+
+    verify(applicationAssetService).deleteAssetsByApplicationVersionAndAssetRoles(
+        applicationVersion,
+        Set.of(AssetRole.HOST, AssetRole.LOCATION)
+    );
+
+    for (var key : productionLocationAssetKeys) {
+      verify(applicationAssetService).createAssetForApplicationVersion(
+          applicationVersion,
+          key,
+          AssetRole.LOCATION
+      );
+    }
+
+    verify(applicationAssetService).createAssetForApplicationVersion(
+        applicationVersion,
+        hostLocationAssetKey,
+        AssetRole.HOST
+    );
   }
 
   @Test
   void getSummaryCard_rationaleNotFound() {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
     assertThat(applicationRationaleProductionService.getSummaryCard(applicationVersion)).isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+  @Test
+  void getSummaryCard_increase_withComment() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
+
+    applicationRationale.setRationaleType(ApplicationRationaleType.INCREASE);
+    applicationRationale.setComment("comment");
+
+    getSummaryKeyValuesFrom(applicationRationaleProductionService.getSummaryCard(applicationVersion))
+        .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
+        .contains(
+            tuple("Is this application for an increase, decrease, extension or other?", ApplicationRationaleType.INCREASE.getDisplayName()),
+            tuple("Why are you asking for an increase?", "comment")
+        );
+  }
+
+  @Test
+  void getSummaryCard_decrease_withComment() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
+
+    applicationRationale.setRationaleType(ApplicationRationaleType.DECREASE);
+    applicationRationale.setComment("comment");
+
+    getSummaryKeyValuesFrom(applicationRationaleProductionService.getSummaryCard(applicationVersion))
+        .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
+        .contains(
+            tuple("Is this application for an increase, decrease, extension or other?", ApplicationRationaleType.DECREASE.getDisplayName()),
+            tuple("Why are you asking for a decrease?", "comment")
+        );
   }
 
   @Test
@@ -272,7 +213,7 @@ class ApplicationRationaleProductionServiceTest {
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
         .contains(
             tuple("Is this application for an increase, decrease, extension or other?", ApplicationRationaleType.EXTENSION.getDisplayName()),
-            tuple("Explain why you are requesting an extension", "comment")
+            tuple("Why are you asking for an extension?", "comment")
         );
   }
 
@@ -287,7 +228,7 @@ class ApplicationRationaleProductionServiceTest {
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
         .contains(
             tuple("Is this application for an increase, decrease, extension or other?", ApplicationRationaleType.OTHER.getDisplayName()),
-            tuple("Explain why you have selected 'other'", "comment")
+            tuple("Why have you selected 'other'?", "comment")
         );
   }
 

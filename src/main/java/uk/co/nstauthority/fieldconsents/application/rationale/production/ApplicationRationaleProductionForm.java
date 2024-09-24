@@ -8,6 +8,8 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 
 public record ApplicationRationaleProductionForm(
     ApplicationRationaleType rationaleType,
+    StringInput increaseComment,
+    StringInput decreaseComment,
     StringInput extensionComment,
     StringInput otherComment,
     String productionLocationAssetKeysSelector,
@@ -16,12 +18,16 @@ public record ApplicationRationaleProductionForm(
 ) {
 
   public ApplicationRationaleProductionForm {
+    increaseComment = new StringInput("increaseComment", "why you are requesting an increase");
+    decreaseComment = new StringInput("decreaseComment", "why you are requesting a decrease");
     extensionComment = new StringInput("extensionComment", "why you are requesting an extension");
     otherComment = new StringInput("otherComment", "why you have selected 'other'");
   }
 
   public static ApplicationRationaleProductionForm empty() {
     return new ApplicationRationaleProductionForm(
+        null,
+        null,
         null,
         null,
         null,
@@ -38,15 +44,28 @@ public record ApplicationRationaleProductionForm(
         null,
         null,
         null,
+        null,
+        null,
         null
     );
 
     var rationaleType = applicationRationale.getRationaleType();
-    if (ApplicationRationaleType.EXTENSION.equals(rationaleType)) {
-      form.extensionComment().setInputValue(applicationRationale.getComment());
-    }
-    if (ApplicationRationaleType.OTHER.equals(rationaleType)) {
-      form.otherComment().setInputValue(applicationRationale.getComment());
+    switch (rationaleType) {
+      case INCREASE:
+        form.increaseComment().setInputValue((applicationRationale.getComment()));
+        break;
+      case DECREASE:
+        form.decreaseComment().setInputValue((applicationRationale.getComment()));
+        break;
+      case EXTENSION:
+        form.extensionComment().setInputValue((applicationRationale.getComment()));
+        break;
+      case OTHER:
+        form.otherComment().setInputValue((applicationRationale.getComment()));
+        break;
+      case NO_CHANGE:
+      default:
+        break;
     }
 
     return form;

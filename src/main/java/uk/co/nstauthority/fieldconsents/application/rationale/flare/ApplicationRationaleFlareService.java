@@ -3,10 +3,10 @@ package uk.co.nstauthority.fieldconsents.application.rationale.flare;
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.HOST;
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.LOCATION;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -47,15 +47,6 @@ public class ApplicationRationaleFlareService {
       List<String> flaringLocationAssetKeys,
       String hostLocationAssetKey
   ) {
-    var isIncrease = ApplicationRationaleType.INCREASE.equals(rationaleType);
-    if (!isIncrease && Objects.nonNull(comment)) {
-      throw new IllegalArgumentException(
-          "Comment is not applicable for %s.%s".formatted(
-              ApplicationRationaleType.class.getSimpleName(),
-              rationaleType
-          ));
-    }
-
     var applicationRationale = repository.findByApplicationVersion(applicationVersion).orElseGet(ApplicationRationale::new);
     applicationRationale.setApplicationVersion(applicationVersion);
     applicationRationale.setRationaleType(rationaleType);
@@ -78,11 +69,20 @@ public class ApplicationRationaleFlareService {
     if (applicationRationaleOptional.isPresent()) {
       var applicationRationale = applicationRationaleOptional.get();
 
-      var increaseOrDecrease = applicationRationale.getRationaleType();
-      summaryDataView.addKeyValue("Is this application for an increase or decrease?", increaseOrDecrease.getDisplayName());
+      var rationaleType = applicationRationale.getRationaleType();
+      summaryDataView.addKeyValue("Is this application for an increase or decrease?", rationaleType.getDisplayName());
 
-      if (ApplicationRationaleType.INCREASE.equals(increaseOrDecrease)) {
-        summaryDataView.addKeyValue("Why are you asking for an increase?", applicationRationale.getComment());
+      if (StringUtils.isNotBlank(applicationRationale.getComment())) {
+        switch (rationaleType) {
+          case INCREASE:
+            summaryDataView.addKeyValue("Why are you asking for an increase?", applicationRationale.getComment());
+            break;
+          case DECREASE:
+            summaryDataView.addKeyValue("Why are you asking for a decrease?", applicationRationale.getComment());
+            break;
+          default:
+            break;
+        }
       }
     }
 

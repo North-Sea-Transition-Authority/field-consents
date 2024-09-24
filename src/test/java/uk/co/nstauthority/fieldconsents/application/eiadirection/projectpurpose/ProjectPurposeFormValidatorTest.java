@@ -60,7 +60,7 @@ class ProjectPurposeFormValidatorTest {
             FieldError::getDefaultMessage
         ).containsExactly(
             "rationaleForPurposeOfEiaRegs.inputValue",
-            "Enter the rationale of why this is a \"project\""
+            "Enter why this is a \"project\""
         );
   }
 
@@ -90,7 +90,7 @@ class ProjectPurposeFormValidatorTest {
             FieldError::getDefaultMessage
         ).containsExactly(
             "rationaleNotForPurposeOfEiaRegs.inputValue",
-            "Enter the rationale of why this is not a \"project\""
+            "Enter why this is not a \"project\""
         );
   }
 }

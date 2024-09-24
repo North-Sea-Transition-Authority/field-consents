@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.emission;
+package uk.co.nstauthority.fieldconsents.application.rationale.emissions;
 
 import java.math.BigDecimal;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;

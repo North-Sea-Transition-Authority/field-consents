@@ -23,12 +23,18 @@ backLinkUrl=springUrl(cancelUrl)
       </#if>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}>
         <@fdsTextarea.textarea
-          labelText="Explain why you are requesting an increase. This could be that additional Wells are being drilled."
+          labelText="Enter why you are requesting an increase. This could be that additional Wells are being drilled."
           path="form.increaseComment.inputValue"
           nestingPath="form.rationaleType"
         />
       </@fdsRadio.radioItem>
-      <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}/>
+      <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}>
+          <@fdsTextarea.textarea
+          labelText="Enter why you are requesting a decrease."
+          path="form.decreaseComment.inputValue"
+          nestingPath="form.rationaleType"
+          />
+      </@fdsRadio.radioItem>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={noChangeRadio: noChangeRadio.displayName}/>
     </@fdsRadio.radioGroup>
     <@fdsFieldset.fieldset
@@ -38,8 +44,8 @@ backLinkUrl=springUrl(cancelUrl)
       hintText="List all the physical location(s) of all flaring activities associated with this consent.
                 Note that this should be the location of the flare(s), not the source of the gas.">
       <@fdsAddToList.addToList
-        pathForList="form.flaringLocationAssetKeys"
-        pathForSelector="form.flaringLocationAssetKeysSelector"
+        pathForList="form.locationAssetKeys"
+        pathForSelector="form.locationAssetKeysSelector"
         restUrl=springUrl(flaringLocationSearchUrl)
         alreadyAdded=flaringLocations
         itemName="Flaring locations"

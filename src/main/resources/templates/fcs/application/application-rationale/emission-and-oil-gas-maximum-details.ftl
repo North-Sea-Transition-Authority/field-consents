@@ -1,6 +1,6 @@
 <#include '../../../fds/components/details/details.ftl'>
 
-<#-- @ftlvariable name="emissionDailyAverage" type="uk.co.nstauthority.fieldconsents.application.rationale.emission.EmissionDailyAverage" -->
+<#-- @ftlvariable name="emissionDailyAverage" type="uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage" -->
 <#-- @ftlvariable name="oilAndGasMaximums" type="uk.co.nstauthority.fieldconsents.application.rationale.production.OilAndGasMaximums" -->
 
 <#macro emissionDailyAverageSection emissionDailyAverage>

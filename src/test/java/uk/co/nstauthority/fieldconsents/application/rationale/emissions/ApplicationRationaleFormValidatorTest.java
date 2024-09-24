@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.vent;
+package uk.co.nstauthority.fieldconsents.application.rationale.emissions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -22,28 +22,23 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationRationaleVentFormValidatorTest {
+class ApplicationRationaleFormValidatorTest {
 
   @Mock
   private ApplicationRationaleFormValidatorHelper validatorHelper;
 
   @InjectMocks
-  private ApplicationRationaleVentFormValidator validator;
-
-  @Test
-  void supports() {
-    assertThat(validator.supports(ApplicationRationaleVentForm.class)).isTrue();
-  }
+  private ApplicationRationaleFormValidator validator;
 
   @Test
   void validate_increase_withoutComment() {
     var hostLocationAssetKey = "hostKey";
-    var hostLocationAssetKeyField = "hostLocationAssetKey";
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
-    var nonHostLocationAssetKeysSelectorField = "ventingLocationAssetKeysSelector";
+    var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
 
-    var form = new ApplicationRationaleVentForm(
+    var form = new ApplicationRationaleForm(
         ApplicationRationaleType.INCREASE,
+        null,
         null,
         nonHostLocationAssetKeysSelectorField,
         nonHostLocationAssetKeys,
@@ -72,16 +67,53 @@ class ApplicationRationaleVentFormValidatorTest {
     );
   }
 
-  @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = "INCREASE", mode = Mode.EXCLUDE)
-  void validate_notIncrease_withoutComment(ApplicationRationaleType applicationRationaleType) {
+  @Test
+  void validate_decrease_withoutComment() {
     var hostLocationAssetKey = "hostKey";
-    var hostLocationAssetKeyField = "hostLocationAssetKey";
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
-    var nonHostLocationAssetKeysSelectorField = "ventingLocationAssetKeysSelector";
+    var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
 
-    var form = new ApplicationRationaleVentForm(
+    var form = new ApplicationRationaleForm(
+        ApplicationRationaleType.DECREASE,
+        null,
+        null,
+        nonHostLocationAssetKeysSelectorField,
+        nonHostLocationAssetKeys,
+        hostLocationAssetKey
+    );
+    var bindingResult = getBindingResult(form);
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("decreaseComment.inputValue", "decreaseComment.required", "Enter why you are requesting a decrease")
+        );
+
+    verify(validatorHelper).validateLocationAssets(
+        nonHostLocationAssetKeys,
+        nonHostLocationAssetKeysSelectorField,
+        bindingResult
+    );
+
+    verify(validatorHelper).validateHostLocationAsset(
+        hostLocationAssetKey,
+        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        bindingResult
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationRationaleType.class, names = {"INCREASE", "DECREASE"}, mode = Mode.EXCLUDE)
+  void validate_notIncrease_notDecrease_withoutComment(ApplicationRationaleType applicationRationaleType) {
+    var hostLocationAssetKey = "hostKey";
+    var nonHostLocationAssetKeys = List.of("first", "second", "third");
+    var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
+
+    var form = new ApplicationRationaleForm(
         applicationRationaleType,
+        null,
         null,
         nonHostLocationAssetKeysSelectorField,
         nonHostLocationAssetKeys,

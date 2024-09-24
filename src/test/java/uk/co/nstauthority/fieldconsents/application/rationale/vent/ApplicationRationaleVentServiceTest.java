@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
@@ -59,7 +58,7 @@ class ApplicationRationaleVentServiceTest {
   private ApplicationRationaleVentService applicationRationaleVentService;
 
   @Captor
-  private ArgumentCaptor<ApplicationRationale> applicationRationaletCaptor;
+  private ArgumentCaptor<ApplicationRationale> applicationRationaleCaptor;
 
   private ApplicationVersion applicationVersion;
 
@@ -70,24 +69,6 @@ class ApplicationRationaleVentServiceTest {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     applicationRationale = new ApplicationRationale();
     applicationRationale.setApplicationVersion(applicationVersion);
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = "INCREASE", mode = EXCLUDE)
-  void saveApplicationRationale_notIncrease_withComment(ApplicationRationaleType rationaleType) {
-    var comment = "some comment";
-    var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
-
-    assertThatThrownBy(() -> applicationRationaleVentService.saveApplicationRationale(
-        applicationVersion,
-        rationaleType,
-        comment,
-        flaringLocationAssetKeys,
-        hostLocationAssetKey
-    ))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Comment is not applicable for ApplicationRationaleType.%s".formatted(rationaleType));
   }
 
   @ParameterizedTest
@@ -104,8 +85,8 @@ class ApplicationRationaleVentServiceTest {
         hostLocationAssetKey
     );
 
-    verify(repository).save(applicationRationaletCaptor.capture());
-    assertThat(applicationRationaletCaptor.getValue())
+    verify(repository).save(applicationRationaleCaptor.capture());
+    assertThat(applicationRationaleCaptor.getValue())
         .extracting(
             ApplicationRationale::getApplicationVersion,
             ApplicationRationale::getRationaleType,
@@ -151,9 +132,24 @@ class ApplicationRationaleVentServiceTest {
         );
   }
 
+  @Test
+  void getSummaryCard_decrease_withComment() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
+
+    applicationRationale.setRationaleType(ApplicationRationaleType.DECREASE);
+    applicationRationale.setComment("comment");
+
+    getSummaryKeyValuesFrom(applicationRationaleVentService.getSummaryCard(applicationVersion))
+        .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
+        .contains(
+            tuple("Is this application for an increase or decrease?", ApplicationRationaleType.DECREASE.getDisplayName()),
+            tuple("Why are you asking for a decrease?", "comment")
+        );
+  }
+
   @ParameterizedTest
-  @EnumSource(value = ApplicationRationaleType.class, names = "INCREASE", mode = EXCLUDE)
-  void getSummaryCard_nonIncrease_withComment(ApplicationRationaleType applicationRationaleType) {
+  @EnumSource(value = ApplicationRationaleType.class, names = {"INCREASE", "DECREASE"}, mode = EXCLUDE)
+  void getSummaryCard_nonIncreaseOrDecrease_withComment(ApplicationRationaleType applicationRationaleType) {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
 
     applicationRationale.setRationaleType(applicationRationaleType);

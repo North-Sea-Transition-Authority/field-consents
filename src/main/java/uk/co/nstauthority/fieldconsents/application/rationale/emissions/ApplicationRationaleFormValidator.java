@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.production;
+package uk.co.nstauthority.fieldconsents.application.rationale.emissions;
 
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -9,22 +9,20 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @Component
-class ApplicationRationaleProductionFormValidator {
-
-  private static final String RATIONALE_TYPE_FIELD = "rationaleType";
+public class ApplicationRationaleFormValidator {
 
   private final ApplicationRationaleFormValidatorHelper validatorHelper;
 
-  ApplicationRationaleProductionFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
+  ApplicationRationaleFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
     this.validatorHelper = validatorHelper;
   }
 
-  public void validate(ApplicationRationaleProductionForm form, Errors errors) {
+  public void validate(ApplicationRationaleForm form, Errors errors) {
     ValidationUtils.rejectIfEmpty(
         errors,
-        RATIONALE_TYPE_FIELD,
+        "rationaleType",
         "required",
-        "Select whether this application is for an increase, decrease, extension or other"
+        "Select whether this application is for an increase, decrease or no change"
     );
 
     var rationaleType = form.rationaleType();
@@ -35,25 +33,20 @@ class ApplicationRationaleProductionFormValidator {
       case DECREASE:
         StringInputValidator.builder().validate(form.decreaseComment(), errors);
         break;
-      case EXTENSION:
-        StringInputValidator.builder().validate(form.extensionComment(), errors);
-        break;
-      case OTHER:
-        StringInputValidator.builder().validate(form.otherComment(), errors);
-        break;
+      case NO_CHANGE:
       default:
         break;
     }
 
     validatorHelper.validateLocationAssets(
-        form.productionLocationAssetKeys(),
-        "productionLocationAssetKeysSelector",
+        form.locationAssetKeys(),
+        "locationAssetKeysSelector",
         errors
     );
 
     validatorHelper.validateHostLocationAsset(
         form.hostLocationAssetKey(),
-        form.productionLocationAssetKeys().stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        form.locationAssetKeys().stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
         errors
     );
   }
