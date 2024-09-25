@@ -5,11 +5,11 @@
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
       restUrl=springUrl("/data-sources/user-assets")
-      labelText="Select field/facility"
+      labelText="Select field or facility"
       pageHeading=true
       labelHeadingClass="govuk-label--xl"
-      hintText="Please select a field/facility to work with."
+      hintText="Please select a field or a facility to work with."
       selectorMinInputLength=2/>
-    <@fdsAction.button buttonText="Manage field/facility" />
+    <@fdsAction.button buttonText="Manage field or facility" />
   </@fdsForm.htmlForm>
 </@defaultPage>

@@ -20,7 +20,7 @@ pageSize=PageSize.TWO_THIRDS_COLUMN>
         path="form.erapNotes.inputValue"
         labelText="ERAP alignment studies and projects"
         hintText="Provide an outline of ERAP activities related to ${applicationType} completed in the year and will be completed for the consent year.
-                  Also provide explanation if the requested consent figures are not aligned with the emissions profiles in the asset ERAP/UKSS forecast."/>
+                  Also provide explanation if the requested consent figures are not aligned with the emissions profiles in the asset ERAP or UKSS forecast."/>
     </#if>
     <@fdsFieldset.fieldset
       legendHeading="Supporting documents"

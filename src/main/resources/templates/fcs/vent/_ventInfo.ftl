@@ -24,7 +24,7 @@
     Category C
   </h2>
   <p class="govuk-body">
-    Emergency disposal and gas streams required specifically for the operation of safety critical equipment/elements. The vent rate is for inerts + hydrocarbons (Energy Act 1976).
+    Emergency disposal and gas streams required specifically for the operation of safety critical equipment or elements. The vent rate is for inerts + hydrocarbons (Energy Act 1976).
   </p>
 </#macro>
 

@@ -51,7 +51,7 @@ test('submit flare application', async ({ page }) => {
   await page.getByLabel('', { exact: true }).click();
   await page.getByRole('searchbox').fill(assetName);
   await page.getByRole('option', { name: assetName }).click();
-  await page.getByRole('button', { name: 'Manage field/facility' }).click();
+  await page.getByRole('button', { name: 'Manage field or facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Flare').check();
   await page.getByLabel('Production').check();
@@ -361,7 +361,7 @@ test('submit vent application', async ({ page }) => {
   await page.getByLabel('', { exact: true }).click();
   await page.getByRole('searchbox').fill(assetName);
   await page.getByRole('option', { name: assetName }).click();
-  await page.getByRole('button', { name: 'Manage field/facility' }).click();
+  await page.getByRole('button', { name: 'Manage field or facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Vent').check();
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -609,11 +609,11 @@ test('submit vent application', async ({ page }) => {
 test('submit production application', async ({ page }) => {
   await signIn(page, users.industry);
 
-  await page.getByRole('link', { name: 'Manage fields/facilities' }).click();
+  await page.getByRole('link', { name: 'Manage fields or facilities' }).click();
   await page.getByLabel('', { exact: true }).click();
   await page.getByRole('searchbox').fill(assetName);
   await page.getByRole('option', { name: assetName }).click();
-  await page.getByRole('button', { name: 'Manage field/facility' }).click();
+  await page.getByRole('button', { name: 'Manage field or facility' }).click();
   await page.getByRole('button', { name: 'Start application' }).click();
   await page.getByLabel('Production').check();
   await page.getByRole('button', { name: 'Continue' }).click();

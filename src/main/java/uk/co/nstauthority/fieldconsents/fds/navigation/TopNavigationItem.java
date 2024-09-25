@@ -24,7 +24,7 @@ public enum TopNavigationItem {
       ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)),
       Collections.emptySet()
   ),
-  MANAGE_ASSETS("Manage fields/facilities",
+  MANAGE_ASSETS("Manage fields or facilities",
       ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()),
       Set.of(RolePermission.MANAGE_ASSETS)
   ),

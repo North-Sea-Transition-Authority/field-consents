@@ -63,7 +63,7 @@
 </@defaultPage>
 
 <#macro assetFilter form prefilledAsset assetSearchRestUrl>
-  <@fdsSearch.searchFilterItem itemName="Primary field / facility" expanded=prefilledAsset.id()?has_content>
+  <@fdsSearch.searchFilterItem itemName="Primary field or facility" expanded=prefilledAsset.id()?has_content>
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
       restUrl=springUrl(assetSearchRestUrl)

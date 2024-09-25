@@ -26,7 +26,7 @@
           <th class="govuk-table__header" scope="col">Asset type</th>
           <th class="govuk-table__header" scope="col">Consent type</th>
           <th class="govuk-table__header" scope="col">Duration</th>
-          <th class="govuk-table__header" scope="col">New/Revised consent</th>
+          <th class="govuk-table__header" scope="col">New or revised consent</th>
           <th class="govuk-table__header" scope="col">Cost</th>
         </tr>
       </thead>

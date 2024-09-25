@@ -67,7 +67,7 @@
       <#if paymentRequired>
         <#assign submitButtonText="Pay and submit"/>
       <#else>
-        <@fdsInsetText.insetText>No payment is required for this application.</@fdsInsetText.insetText>
+        <@fdsInsetText.insetText>No payment is required for this application update.</@fdsInsetText.insetText>
         <#assign submitButtonText="Submit"/>
       </#if>
       <@fdsAction.submitButtons

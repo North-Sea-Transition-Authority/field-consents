@@ -24,7 +24,7 @@
     Category C
   </h2>
   <p class="govuk-body">
-    Emergency disposal and gas streams required specifically for the operation of safety critical equipment/elements.
+    Emergency disposal and gas streams required specifically for the operation of safety critical equipment or elements.
   </p>
 </#macro>
 

@@ -16,7 +16,6 @@ backLinkUrl=springUrl(cancelUrl)
       path="form.rationaleType"
       labelText="Is this application for an increase in production, a decrease in production or an extension?"
       fieldsetHeadingClass="govuk-fieldset__legend--m"
-      hintText="An increase is where the maximum figure you are applying for is higher than that on this year’s consent. A decrease is where the minimum figure you are applying for is less than that on this year’s consent."
       hiddenContent=true>
       <#if oilAndGasMaximums?has_content>
         <@oilAndGasMaximumsSection oilAndGasMaximums/>
@@ -50,13 +49,15 @@ backLinkUrl=springUrl(cancelUrl)
         />
       </@fdsRadio.radioItem>
     </@fdsRadio.radioGroup>
+    <@rationaleCategoryInfo/>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeading="At which location are the production activities?"
       legendHeadingClass="govuk-fieldset__legend--m"
       hintText="List all the physical location(s) of all production activities associated with this consent
                 (e.g. wellhead platform location and host processing facility location).
-                Note that this should be the location of the production equipment, not the source of the production.">
+                Note that this should be the location of all production processing equipment,
+                not just the field that is the source of the production.">
       <@fdsAddToList.addToList
         pathForList="form.productionLocationAssetKeys"
         pathForSelector="form.productionLocationAssetKeysSelector"
@@ -86,3 +87,58 @@ backLinkUrl=springUrl(cancelUrl)
       linkSecondaryActionUrl=springUrl(cancelUrl)/>
   </@fdsForm.htmlForm>
 </@defaultPage>
+
+<#macro rationaleCategoryInfo>
+  <@fdsDetails.summaryDetails summaryTitle="I do not know if my application is for an increase, decrease or extension">
+    <@rationaleInfo/>
+  </@fdsDetails.summaryDetails>
+</#macro>
+
+<#macro rationaleInfo>
+  <h3 class="govuk-heading-s">
+    Increase
+  </h3>
+  <p class="govuk-body">
+    Compared to the previous year “increase” should be selected where:
+    <ul>
+      <li>
+        there is an increase in the averaged oil or
+      </li>
+      <li>
+        there is an increase in the averaged gas profile or
+      </li>
+      <li>
+        any of the years show an increase over the current year's consented volumes
+      </li>
+    </ul>
+  </p>
+  <h3 class="govuk-heading-s">
+    Decrease
+  </h3>
+  <p class="govuk-body">
+    Compared to the previous year “decrease” should be selected where:
+    <ul>
+      <li>
+        there is a decrease in the average oil or
+      </li>
+      <li>
+        there is a decrease in the averaged gas profile or
+      </li>
+      <li>
+        any of the years show a decrease over the current year's consented volumes
+      </li>
+    </ul>
+  </p>
+  <h3 class="govuk-heading-s">
+    Extension
+  </h3>
+  <p class="govuk-body">
+    Should only be selected with prior agreement of the NSTA and will typically relate to unique circumstances around end of field life.
+  </p>
+  <h3 class="govuk-heading-s">
+    Other
+  </h3>
+  <p class="govuk-body">
+    Should be used for applications such as change of operator.
+  </p>
+</#macro>
