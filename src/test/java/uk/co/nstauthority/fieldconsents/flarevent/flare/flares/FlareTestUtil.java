@@ -9,7 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class FlareTestUtil {
   public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-  public static String BASE_FLARES_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/flares";
+  public static final String BASE_FLARES_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/flares";
   public static Integer badFlareNo = 999;
   public static Integer flareNoHp = 1;
   public static Flare flareHp = new Flare(flareAppVersion, flareNoHp, FlareType.HP_FLARE,
@@ -40,6 +40,12 @@ public class FlareTestUtil {
   public static Flare flareLpp = new Flare(flareAppVersion, 7, FlareType.LLP_FLARE,
       "LPP DESCRIPTION", Boolean.FALSE, "LPP COMMENT");
   public static List<Flare> flares = List.of(flareHp, flareMp, flareLp, flareLpp);
+
+  public static Flare flareNullDesc = new Flare(flareAppVersion, 3, FlareType.MP_FLARE,
+      null, Boolean.FALSE, "MP COMMENT");
+  public static Flare flareNullComment = new Flare(flareAppVersion, 5, FlareType.LP_FLARE,
+      "LP DESCRIPTION", Boolean.TRUE, null);
+  public static List<Flare> flaresWithNulls = List.of(flareHp, flareNullDesc, flareNullComment, flareLpp);
 
   public static List<FlareView> flareViews =
       List.of(FlareView.from(flareHp, 1), FlareView.from(flareMp, 2),

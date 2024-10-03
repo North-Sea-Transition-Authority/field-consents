@@ -23,9 +23,16 @@ public class VentView {
 
   private String comments;
 
-  public VentView(Integer displayOrder, Integer ventNo, String editUrl, String deleteUrl,
-                  String ventType, String description, String meteredFlag,
-                  String comments) {
+  public VentView(
+      Integer displayOrder,
+      Integer ventNo,
+      String editUrl,
+      String deleteUrl,
+      String ventType,
+      String description,
+      String meteredFlag,
+      String comments
+  ) {
     this.displayOrder = displayOrder;
     this.ventNo = ventNo;
     this.editUrl = editUrl;
@@ -53,7 +60,7 @@ public class VentView {
         editUrl,
         deleteUrl,
         vent.getVentType().getDisplayName(),
-        vent.getDescription(),
+        vent.getDescription() == null ? "" : vent.getDescription(),
         BooleanUtil.yesNoFromBoolean(vent.getMeteredFlag()),
         vent.getComments() == null ? "" : vent.getComments());
   }

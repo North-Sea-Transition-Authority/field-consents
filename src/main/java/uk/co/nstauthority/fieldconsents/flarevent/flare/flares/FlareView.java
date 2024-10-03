@@ -23,9 +23,16 @@ public class FlareView {
 
   private String comments;
 
-  public FlareView(Integer displayOrder, Integer flareNo, String editUrl, String deleteUrl,
-                   String flareType, String description, String meteredFlag,
-                   String comments) {
+  public FlareView(
+      Integer displayOrder,
+      Integer flareNo,
+      String editUrl,
+      String deleteUrl,
+      String flareType,
+      String description,
+      String meteredFlag,
+      String comments
+  ) {
     this.displayOrder = displayOrder;
     this.flareNo = flareNo;
     this.editUrl = editUrl;
@@ -53,7 +60,7 @@ public class FlareView {
         editUrl,
         deleteUrl,
         flare.getFlareType().getDisplayName(),
-        flare.getDescription(),
+        flare.getDescription() == null ? "" : flare.getDescription(),
         BooleanUtil.yesNoFromBoolean(flare.getMeteredFlag()),
         flare.getComments() == null ? "" : flare.getComments());
   }

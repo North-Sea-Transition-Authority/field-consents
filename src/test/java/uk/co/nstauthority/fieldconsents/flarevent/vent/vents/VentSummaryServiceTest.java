@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil.vents;
+import static uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil.ventsWithNulls;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -139,6 +140,51 @@ class VentSummaryServiceTest {
                         .addKeyValue(descPrompt, ventViews.get(2).getDescription())
                         .addKeyValue(meteredPrompt, ventViews.get(2).getMeteredFlag())
                         .addKeyValue(commentsPrompt, ventViews.get(2).getComments())
+                )
+            )
+        );
+  }
+
+  @Test
+  void getSummariesForVents_migratedVents() {
+    when(ventService.getVentsForApplicationVersion(applicationVersion)).thenReturn(ventsWithNulls);
+    var ventViews =
+        List.of(VentView.from(ventsWithNulls.get(0), 1), VentView.from(ventsWithNulls.get(1), 2),
+            VentView.from(ventsWithNulls.get(2), 3)
+        );
+
+    var summaryCards = ventSummaryService.getSummariesForVents(applicationVersion);
+
+    var ventPrompt = "Vent ";
+    var ventTypePrompt = "Vent type";
+    var descPrompt = "Description";
+    var meteredPrompt = "Metered";
+    var commentsPrompt = "Comments";
+
+    assertThat(summaryCards)
+        .isEqualTo(
+            List.of(
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(0).getDisplayOrder(),
+                    new SummaryDataView(List.of(
+                        new SummaryKeyValue(ventTypePrompt, ventViews.get(0).getVentType()),
+                        new SummaryKeyValue(descPrompt, ventViews.get(0).getDescription()),
+                        new SummaryKeyValue(meteredPrompt, ventViews.get(0).getMeteredFlag()),
+                        new SummaryKeyValue(commentsPrompt, ventViews.get(0).getComments())
+                    ))
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(1).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(ventTypePrompt, ventViews.get(1).getVentType())
+                        .addKeyValue(descPrompt, "")
+                        .addKeyValue(meteredPrompt, ventViews.get(1).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, ventViews.get(1).getComments())
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(2).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(ventTypePrompt, ventViews.get(2).getVentType())
+                        .addKeyValue(descPrompt, ventViews.get(2).getDescription())
+                        .addKeyValue(meteredPrompt, ventViews.get(2).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, "")
                 )
             )
         );

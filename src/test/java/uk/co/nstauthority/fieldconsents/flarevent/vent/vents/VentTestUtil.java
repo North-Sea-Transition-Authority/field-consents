@@ -9,7 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class VentTestUtil {
   public static ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
-  public static String BASE_VENTS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/vents";
+  public static final String BASE_VENTS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/vents";
   public static Integer badVentNo = 999;
   public static Integer ventNoHp = 1;
   public static Vent ventHp = new Vent(ventAppVersion, ventNoHp, VentType.HP_VENT,
@@ -44,6 +44,12 @@ public class VentTestUtil {
           VentView.from(ventLp, 3),
           VentView.from(ventOther, 2)
       );
+
+  public static Vent ventNullDesc = new Vent(ventAppVersion, 3, VentType.LP_VENT,
+      null, Boolean.TRUE, "LP COMMENT");
+  public static Vent ventNullComment = new Vent(ventAppVersion, 5, VentType.OTHER_VENT,
+      "OTHER DESCRIPTION", Boolean.FALSE, null);
+  public static List<Vent> ventsWithNulls = List.of(ventHp, ventNullDesc, ventNullComment);
 
   public static Map<String, String> ventTypesAsMap =
       Map.of(VentType.HP_VENT.getEnumName(), VentType.HP_VENT.getDisplayName(),
