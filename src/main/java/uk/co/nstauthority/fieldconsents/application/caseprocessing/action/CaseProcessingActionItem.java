@@ -119,7 +119,7 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(ApplicationStartUpdateController.class)
           .updateApplicationEntryPoint(applicationId))),
   REVISE_CONSENT("Revise consent", 1, false, false, null,
-      applicationId -> ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(applicationId))),
+      applicationId -> ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(applicationId, null))),
   // Consultation actions
   CONSULTATION_REQUEST("Request consultation", 99, true, false, null,
       applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),

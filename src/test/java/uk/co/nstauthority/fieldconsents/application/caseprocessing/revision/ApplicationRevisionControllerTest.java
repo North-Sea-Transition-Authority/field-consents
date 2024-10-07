@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -53,7 +54,7 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void getStartRevision_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -61,13 +62,13 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
   void getStartRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
-  void getStartRevision() throws Exception {
+  void getStartRevision_regulatorUser() throws Exception {
     var applicationReference = "Test/application/reference";
 
     when(caseProcessingActionService.userHasAnyAction(
@@ -76,14 +77,38 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
         CaseProcessingActionItem.REVISE_CONSENT
     )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
 
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/revision/startRevision"))
         .andExpect(model().attribute("applicationReference", applicationReference))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("startRevisionUrl", ReverseRouter.route(on(ApplicationRevisionController.class)
+            .startRevision(APPLICATION_ID, null))));
+  }
+
+  @SecurityTest
+  void getStartRevision_industryUser() throws Exception {
+    var applicationReference = "Test/application/reference";
+
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.REVISE_CONSENT
+    )).thenReturn(true);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+    when(teamService.isRegulatorUser(user)).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/revision/startRevision"))
+        .andExpect(model().attribute("applicationReference", applicationReference))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("startRevisionUrl", ReverseRouter.route(on(ApplicationRevisionController.class)
             .startRevision(APPLICATION_ID, null))));
   }

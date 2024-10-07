@@ -11,11 +11,13 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Controller
 @RequestMapping("applications/{applicationId}/revision")
@@ -25,26 +27,35 @@ public class ApplicationRevisionController {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationRevisionService applicationRevisionService;
+  private final TeamService teamService;
 
   ApplicationRevisionController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
-      ApplicationRevisionService applicationRevisionService
+      ApplicationRevisionService applicationRevisionService,
+      TeamService teamService
   ) {
     this.applicationService = applicationService;
     this.applicationRevisionService = applicationRevisionService;
     this.applicationVersionService = applicationVersionService;
+    this.teamService = teamService;
   }
 
   @GetMapping("/start")
-  public ModelAndView getStartRevision(@PathVariable Integer applicationId) {
+  public ModelAndView getStartRevision(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
+    var regulatorUser = teamService.isRegulatorUser(user);
+    var backLinkUrl = regulatorUser
+        ? ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+        .caseProcessing(applicationId, null, null, null))
+        : ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(applicationId, null, null, null));
+
     return new ModelAndView("fcs/application/revision/startRevision")
         .addObject("applicationReference", applicationReference)
-        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null, null)))
+        .addObject("backLinkUrl", backLinkUrl)
         .addObject("startRevisionUrl", ReverseRouter.route(on(ApplicationRevisionController.class)
             .startRevision(applicationId, null)));
   }
