@@ -198,6 +198,9 @@ public class CaseProcessingActionService {
           ),
           ApplicationVersionStatus.CLOSED,
           EnumSet.of(
+              TECHNICAL_REVIEWS,
+              CONSULTATIONS,
+              APPLICATION_UPDATES,
               REGULATOR_ADD_CASE_NOTE
           )
       );
