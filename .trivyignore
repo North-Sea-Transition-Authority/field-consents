@@ -1,8 +1,5 @@
-# org.springframework.security:spring-security-core
-CVE-2024-38810
-
-# org.springframework:spring-webmvc
-CVE-2024-38816
-
-# com.google.protobuf:protobuf-java (app.jar)
+# com.google.protobuf:protobuf-java
 CVE-2024-7254
+
+# commons-io:commons-io
+CVE-2024-47554

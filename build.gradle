@@ -1,5 +1,5 @@
 plugins {
-  id("org.springframework.boot") version "3.3.3"
+  id("org.springframework.boot") version "3.3.4"
   id("io.spring.dependency-management") version "1.1.6"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
@@ -112,6 +112,7 @@ tasks {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
     systemProperty 'spring.profiles.active', 'test'
+    maxParallelForks 4
   }
   bootJar {
     archiveFileName.set("${rootProject.name}.jar")

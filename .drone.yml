@@ -16,6 +16,7 @@ steps:
         # the GRADLE_USER_HOME environment variable pointing here.
         - ./gradle_cache
         - ./sonar_cache
+        - ./trivy_cache
 
   - name: fetch-fds-submodule
     image: alpine/git:v2.26.2
@@ -141,7 +142,7 @@ steps:
         path: /var/webfiles
     commands:
       # timeout set as initial cache population can seemingly take a while sometimes
-      - trivy image --timeout 30m --exit-code 1 quay.io/fivium/field-consents:trivy-scan-target
+      - trivy --cache-dir /drone/src/trivy_cache image --timeout 30m --exit-code 1 quay.io/fivium/field-consents:trivy-scan-target
     when:
       status:
         - success
@@ -185,6 +186,7 @@ steps:
         - ./node_modules
         - ./gradle_cache
         - ./sonar_cache
+        - ./trivy_cache
 
   - name: slack
     image: plugins/slack
