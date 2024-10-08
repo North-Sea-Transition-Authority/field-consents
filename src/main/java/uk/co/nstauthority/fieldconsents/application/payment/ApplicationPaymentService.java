@@ -133,6 +133,7 @@ public class ApplicationPaymentService {
     var metadata = new LinkedHashMap<String, String>();
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
 
+    metadata.put("Application reference", applicationService.generateApplicationShortReference(applicationVersion));
     metadata.put(applicationContext.getPrimaryOperatorPrompt(), applicationContext.primaryOperator());
 
     var primaryAsset = applicationContext.primaryAsset();

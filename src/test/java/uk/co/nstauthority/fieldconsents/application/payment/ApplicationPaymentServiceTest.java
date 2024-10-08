@@ -260,6 +260,7 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsField_noSecondaryAssets() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
 
@@ -267,12 +268,14 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
         .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary field", primaryAssetFieldName)
     );
@@ -281,6 +284,7 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsField_singleSecondaryFieldAsset() {
     var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
 
@@ -290,6 +294,7 @@ class ApplicationPaymentServiceTest {
 
     var secondaryAssetFieldName = "testSecondaryAssetFieldName";
 
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
@@ -297,6 +302,7 @@ class ApplicationPaymentServiceTest {
         .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary field", primaryAssetFieldName),
         entry("Additional field", secondaryAssetFieldName)
@@ -306,6 +312,7 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsField_multipleSecondaryFieldAssets() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
 
@@ -316,6 +323,7 @@ class ApplicationPaymentServiceTest {
     var secondaryAsset1FieldName = "testSecondaryAsset1FieldName";
     var secondaryAsset2FieldName = "testSecondaryAsset2FieldName";
 
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
@@ -323,6 +331,7 @@ class ApplicationPaymentServiceTest {
         .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary field", primaryAssetFieldName),
         entry("Additional fields", secondaryAsset1FieldName + ", " + secondaryAsset2FieldName)
@@ -332,6 +341,7 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsField_secondaryTerminalAssetNotIncluded() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
 
@@ -339,12 +349,14 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
         .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary field", primaryAssetFieldName)
     );
@@ -353,6 +365,7 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsTerminal() {
     var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
 
@@ -360,12 +373,14 @@ class ApplicationPaymentServiceTest {
     var primaryAssetTerminalName = "testPrimaryAssetTerminalName";
     var primaryAssetTerminalJson = new TerminalJson(primaryAssetTerminalId, primaryAssetTerminalName, null);
 
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(primaryAssetTerminalJson)
         .withPrimaryOperator(primaryOperatorName)
         .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Facility", primaryAssetTerminalName)
     );

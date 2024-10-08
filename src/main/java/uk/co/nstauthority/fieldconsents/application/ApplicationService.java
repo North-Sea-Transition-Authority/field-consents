@@ -247,11 +247,34 @@ public class ApplicationService {
     Objects.requireNonNull(variationNumber, "Cannot generate application reference with null variation number");
     Objects.requireNonNull(versionNumber, "Cannot generate application reference with null version number");
 
-    return "%s/%d/%d (Version %d)".formatted(
+    return "%s (Version %d)".formatted(
+        generateApplicationShortReference(applicationType, applicationNumber, variationNumber),
+        versionNumber
+    );
+  }
+
+  public String generateApplicationShortReference(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
+    return generateApplicationShortReference(
+        application.getType(),
+        application.getApplicationNo(),
+        application.getVariationNo()
+    );
+  }
+
+  private String generateApplicationShortReference(
+      ApplicationType applicationType,
+      Integer applicationNumber,
+      Integer variationNumber
+  ) {
+    Objects.requireNonNull(applicationType, "Cannot generate application reference with null application type");
+    Objects.requireNonNull(applicationNumber, "Cannot generate application reference with null application number");
+    Objects.requireNonNull(variationNumber, "Cannot generate application reference with null variation number");
+
+    return "%s/%d/%d".formatted(
         applicationType.getReferenceMnemonic(),
         applicationNumber,
-        variationNumber,
-        versionNumber
+        variationNumber
     );
   }
 

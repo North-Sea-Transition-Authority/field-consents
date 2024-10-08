@@ -496,10 +496,73 @@ public class ApplicationServiceTest {
   }
 
   @Test
+  void generateApplicationShortReference_forProductionApplication() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    assertThat(applicationService.generateApplicationShortReference(applicationVersion)).isEqualTo("PCON/500/0");
+  }
+
+  @Test
+  void generateApplicationShortReference_forVentApplication() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
+
+    assertThat(applicationService.generateApplicationShortReference(applicationVersion)).isEqualTo("VCON/500/0");
+  }
+
+  @Test
+  void generateApplicationShortReference_forFlareApplication() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+
+    assertThat(applicationService.generateApplicationShortReference(applicationVersion)).isEqualTo("FCON/500/0");
+  }
+
+
+  @Test
+  void generateApplicationShortReference_nullType() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(null);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationShortReference(applicationVersion))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null application type");
+  }
+
+  @Test
+  void generateApplicationShortReference_nullApplicationNumber() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithTypeIdAndVersionNumber(
+        ApplicationType.PRODUCTION,
+        null,
+        1);
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    application.setApplicationNo(null);
+    application.setVariationNo(null);
+    applicationVersion.setApplication(application);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationShortReference(applicationVersion))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null application number");
+  }
+
+  @Test
+  void generateApplicationShortReference_nullVariationNumber() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithTypeIdAndVersionNumber(
+        ApplicationType.PRODUCTION,
+        1,
+        1);
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    application.setApplicationNo(1);
+    application.setVariationNo(null);
+    applicationVersion.setApplication(application);
+
+    assertThatThrownBy(() -> applicationService.generateApplicationShortReference(applicationVersion))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Cannot generate application reference with null variation number");
+  }
+
+  @Test
   void getApplicationReference_withInProgressApplication() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
-    assertThat(applicationService.getApplicationReference(applicationVersion)).isEqualTo("");
+    assertThat(applicationService.getApplicationReference(applicationVersion)).isEmpty();
   }
 
   @Test
