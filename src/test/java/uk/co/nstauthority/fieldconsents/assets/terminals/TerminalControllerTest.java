@@ -25,7 +25,6 @@ import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
-import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
@@ -80,7 +79,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
     when(assetService.getStartApplicationDecisionForTerminal(eq(user), terminalJsonSupplierCaptor.capture())).thenReturn(startApplicationDecision);
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
-    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user))
+    when(manageAssetService.getApplicationDataItemViews(terminalJson.getAssetKey(), user))
         .thenReturn(applicationDataItemViews);
 
     var backLinkUrl = ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection());

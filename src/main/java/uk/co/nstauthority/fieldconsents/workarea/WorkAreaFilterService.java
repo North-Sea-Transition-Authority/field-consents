@@ -91,7 +91,7 @@ public class WorkAreaFilterService {
 
     Optional.ofNullable(filter.getAssetKey())
         .map(AssetKey::from)
-        .flatMap(assetKey -> assetService.getAsset(assetKey, FIELD_LOOKUP_PURPOSE))
+        .flatMap(assetService::findAsset)
         .map(this::getAssetCondition)
         .ifPresent(conditions::add);
 

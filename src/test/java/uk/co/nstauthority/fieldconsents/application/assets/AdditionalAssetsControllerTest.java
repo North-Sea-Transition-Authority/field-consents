@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,13 +28,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
-import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -41,8 +42,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = AdditionalAssetsController.class)
 class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
-
-  static final String ASSET_KEY = "1FIELD";
   
   @MockBean
   private AssetService assetService;
@@ -100,7 +99,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
         .containsEntry(AdditionalAssetsController.PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
         .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, expectBaseAdditionalAssetsUrl + "/summary");
     assertThat((AssetSelectionForm) model.get("form"))
-        .extracting(AssetSelectionForm::getAssetKey)
+        .extracting(AssetSelectionForm::assetKey)
         .isNull();
   }
 
@@ -113,8 +112,15 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
 
   @Test
   void saveNewAsset_emptyForm() throws Exception {
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(applicationVersion);
 
-    doCallRealMethod().when(additionalAssetSelectionFormValidator).validate(any(), any());
+    doAnswer(invocation -> {
+      var bindingResult = invocation.getArgument(1, BindingResult.class);
+      bindingResult.rejectValue("assetKey", "required", "Select an asset");
+      return null;
+    })
+        .when(additionalAssetSelectionFormValidator).validate(any(), any(), eq(applicationVersion));
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveNewAsset(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
@@ -131,16 +137,17 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
         .containsEntry(AdditionalAssetsController.PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
         .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, expectBaseAdditionalAssetsUrl + "/summary");
     assertThat((AssetSelectionForm) model.get("form"))
-        .extracting(AssetSelectionForm::getAssetKey)
+        .extracting(AssetSelectionForm::assetKey)
         .isNull();
   }
 
   @Test
   void saveNewAsset_validForm() throws Exception {
-    AssetSelectionForm form = new AssetSelectionForm(ASSET_KEY, applicationVersion);
-    AssetJson assetJson = field1Json;
+    var assetJson = field1Json;
 
-    when(assetService.getAsset(form.getAssetKey())).thenReturn(assetJson);
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+
+    when(assetService.getAsset(form.getAssetKey().orElseThrow())).thenReturn(assetJson);
     when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(field1JsonWithOperatorAndLicences);
 
@@ -148,7 +155,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
             ApplicationTestUtil.APPLICATION_ID, form, null)))
             .with(user(user))
             .with(csrf())
-            .param("assetKey", ASSET_KEY))
+            .param("assetKey", assetJson.getAssetKey().toString()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseAdditionalAssetsUrl + "/summary"));
 
@@ -158,16 +165,16 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
 
   @Test
   void saveNewAsset_terminalAsset_passThroughValidation() throws Exception {
-    AssetJson assetJson = terminal1Json;
-    AssetSelectionForm form = new AssetSelectionForm(assetJson.getSelectionId(), applicationVersion);
+    var assetJson = terminal1Json;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
 
-    when(assetService.getAsset(form.getAssetKey())).thenReturn(assetJson);
+    when(assetService.getAsset(assetJson.getAssetKey())).thenReturn(assetJson);
 
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveNewAsset(
         ApplicationTestUtil.APPLICATION_ID, form, null)))
             .with(user(user))
             .with(csrf())
-            .param("assetKey", assetJson.getSelectionId()))
+            .param("assetKey", assetJson.getAssetKey().toString()))
         .andExpect(status().is4xxClientError());
   }
 

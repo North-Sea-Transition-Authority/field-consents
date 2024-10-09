@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -27,8 +28,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = AssetSelectionController.class)
 class AssetSelectionControllerTest extends AbstractControllerTest {
 
-  private static final String FIELD1_ASSET_KEY = "1FIELD";
-
   private static final String ASSET_SELECTION_VIEW_NAME = "fcs/assets/assetSelection";
 
   private ServiceUserDetail user;
@@ -40,7 +39,7 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setup() {
     user = ServiceUserDetailTestUtil.Builder().build();
-    form = new AssetSelectionForm();
+    form = AssetSelectionForm.empty();
     bindingResult = new BeanPropertyBindingResult(form, "form");
   }
 
@@ -97,9 +96,9 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
         .perform(post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))
             .with(csrf())
-            .param("assetKey", FIELD1_ASSET_KEY)) // this sets the assetKey in the bound in stub form var
+            .param("assetKey", field1AssetJson.getAssetKey().toString())) // this sets the assetKey in the bound in stub form var
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageAssetController.class).manageAsset(FIELD1_ASSET_KEY))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageAssetController.class).manageAsset(field1AssetJson.getAssetKey().toString()))));
   }
 
   @Test

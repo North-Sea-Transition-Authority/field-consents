@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.assets;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,14 +27,13 @@ public class ManageAssetController {
 
   @GetMapping("asset-selected")
   public ModelAndView manageAsset(@RequestParam String assetKey) {
-    Optional<AssetJson> assetJson = assetService.getAssetFromKey(assetKey);
-
-    if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.FIELD)) {
-      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().getId(), null));
-    } else if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.TERMINAL)) {
-      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().getId(), null));
-    } else {
-      return ReverseRouter.redirect(on(AssetSelectionController.class).getAssetSelection());
-    }
+    return AssetKey.parse(assetKey)
+        .flatMap(assetService::findAsset)
+        .map(assetJson -> switch (assetJson.getAssetType()) {
+          case FIELD -> ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.getId(), null));
+          case TERMINAL -> ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.getId(), null));
+          default -> throw new UnsupportedOperationException("Cannot manage non field/terminal asset");
+        })
+        .orElse(ReverseRouter.redirect(on(AssetSelectionController.class).getAssetSelection()));
   }
 }

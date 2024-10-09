@@ -1,10 +1,10 @@
 <#include '../layout/layout.ftl'>
 
 <@defaultPage htmlTitle=pageTitle>
-  <@fdsForm.htmlForm actionUrl=springUrl("/manage-asset")>
+  <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
-      restUrl=springUrl("/data-sources/user-assets")
+      restUrl=springUrl(assetSearchUrl)
       labelText="Select field or facility"
       pageHeading=true
       labelHeadingClass="govuk-label--xl"

@@ -3,9 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.rationale.flare;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,6 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
@@ -46,9 +47,9 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
-import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -151,6 +152,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     primaryApplicationAsset.setAssetType(AssetType.FIELD);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -159,9 +163,6 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchAllAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -193,6 +194,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -201,9 +205,6 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -243,6 +244,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -251,9 +255,6 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -306,15 +307,16 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   void saveForm_increase() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
-    var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("locationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -325,8 +327,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         null,
         null,
         null,
-        flaringAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.increaseComment().setInputValue(comment);
 
@@ -346,7 +348,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         applicationVersion,
         ApplicationRationaleType.INCREASE,
         comment,
-        flaringAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -356,15 +358,16 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   void saveForm_decrease() throws Exception {
     var rationaleType = ApplicationRationaleType.DECREASE;
     var comment = "comment";
-    var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("decreaseComment.inputValue", comment)
-            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("locationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -375,8 +378,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         null,
         null,
         null,
-        flaringAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.decreaseComment().setInputValue(comment);
 
@@ -396,7 +399,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         applicationVersion,
         ApplicationRationaleType.DECREASE,
         comment,
-        flaringAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -405,8 +408,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   void saveForm_validationFailed() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
-    var flaringAssetKeys = List.of("123FIELD");
-    var hostAssetKey = flaringAssetKeys.get(0);
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
@@ -416,15 +420,18 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .when(applicationRationaleFormValidator)
         .validate(any(ApplicationRationaleForm.class), any(BindingResult.class));
 
-    when(assetService.getAsset(eq(AssetKey.from(hostAssetKey)), anyString())).thenReturn(Optional.empty());
+    when(assetService.findAsset(hostAssetKey)).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("locationAssetKeys", String.join(",", flaringAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("locationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is2xxSuccessful())

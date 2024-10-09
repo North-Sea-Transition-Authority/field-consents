@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
@@ -52,6 +51,6 @@ public class FieldController {
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId, null))
         )
-        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(fieldJson), user));
+        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(fieldJson.getAssetKey(), user));
   }
 }

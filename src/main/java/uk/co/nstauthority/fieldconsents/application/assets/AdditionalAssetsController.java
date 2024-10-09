@@ -21,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
-import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -121,7 +121,7 @@ public class AdditionalAssetsController {
   @GetMapping("/new")
   public ModelAndView addAdditionalAsset(@PathVariable Integer applicationId) {
     ModelAndView modelAndView = getNewAdditionalAssetModelAndView(applicationId);
-    modelAndView.addObject("form", new AssetSelectionForm());
+    modelAndView.addObject("form", AssetSelectionForm.empty());
 
     return modelAndView;
   }
@@ -130,16 +130,15 @@ public class AdditionalAssetsController {
   public ModelAndView saveNewAsset(@PathVariable Integer applicationId,
                                    @ModelAttribute("form") AssetSelectionForm form,
                                    BindingResult bindingResult) {
-    ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    form.setApplicationVersion(applicationVersion);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    additionalAssetSelectionFormValidator.validate(form, bindingResult);
+    additionalAssetSelectionFormValidator.validate(form, bindingResult, applicationVersion);
 
     if (bindingResult.hasErrors()) {
       return getNewAdditionalAssetModelAndView(applicationId);
     }
 
-    AssetJson assetJson = assetService.getAsset(form.getAssetKey());
+    var assetJson = assetService.getAsset(form.getAssetKey().orElseThrow());
 
     if (assetJson.getAssetType() == AssetType.TERMINAL) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -160,6 +159,7 @@ public class AdditionalAssetsController {
   private ModelAndView getNewAdditionalAssetModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/assets/additionalAsset");
     modelAndView
+        .addObject("assetSearchUrl", ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
         .addObject(PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
         .addObject(CANCEL_URL_ATTR_NAME,
             ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId)));

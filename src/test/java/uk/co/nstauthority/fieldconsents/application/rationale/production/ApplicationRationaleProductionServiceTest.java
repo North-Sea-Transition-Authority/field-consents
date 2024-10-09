@@ -11,6 +11,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
@@ -123,15 +126,15 @@ class ApplicationRationaleProductionServiceTest {
   @EnumSource(ApplicationRationaleType.class)
   void saveApplicationRationale(ApplicationRationaleType rationaleType) {
     var comment = "comment";
-    var productionLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var hostAssetKey = assetKeys.getFirst();
 
     applicationRationaleProductionService.saveApplicationRationale(
         applicationVersion,
         rationaleType,
         comment,
-        productionLocationAssetKeys,
-        hostLocationAssetKey
+        assetKeys,
+        hostAssetKey
     );
 
     verify(repository).save(applicationRationaleCaptor.capture());
@@ -151,17 +154,17 @@ class ApplicationRationaleProductionServiceTest {
         Set.of(AssetRole.HOST, AssetRole.LOCATION)
     );
 
-    for (var key : productionLocationAssetKeys) {
+    for (var assetKey : assetKeys) {
       verify(applicationAssetService).createAssetForApplicationVersion(
           applicationVersion,
-          key,
+          assetKey,
           AssetRole.LOCATION
       );
     }
 
     verify(applicationAssetService).createAssetForApplicationVersion(
         applicationVersion,
-        hostLocationAssetKey,
+        hostAssetKey,
         AssetRole.HOST
     );
   }

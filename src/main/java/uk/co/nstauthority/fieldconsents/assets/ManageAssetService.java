@@ -39,9 +39,11 @@ public class ManageAssetService {
   }
 
   List<Condition> getConditions(AssetKey assetKey) {
-    var condition = switch (assetKey.assetType()) {
+    var assetType = assetKey.assetType();
+    var condition = switch (assetType) {
       case FIELD -> applicationDataFilterService.getFieldCondition(assetKey);
       case TERMINAL -> applicationDataFilterService.getTerminalCondition(assetKey);
+      default -> throw new UnsupportedOperationException("Invalid asset type: %s".formatted(assetType.getDisplayName()));
     };
 
     return List.of(condition);

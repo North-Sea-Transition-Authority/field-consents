@@ -5,13 +5,17 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsControllerTest.ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field4AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field4JsonWithOperatorAndLicences;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
-import org.springframework.validation.ValidationUtils;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -46,12 +48,6 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   private AdditionalAssetSelectionFormValidator validator;
 
-  private Errors errors;
-
-  private Map<String, List<String>> errorMap;
-
-  private AssetSelectionForm form;
-
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
@@ -63,16 +59,16 @@ class AdditionalAssetSelectionFormValidatorTest {
         BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
         applicationAssetService
     );
-    form = new AssetSelectionForm(ASSET_KEY, applicationVersion);
-    errors = new BeanPropertyBindingResult(form, "form");
   }
 
   @Test
   void validate_emptyForm() {
-    form.setAssetKey(null);
-    ValidationUtils.invokeValidator(validator, form, errors);
+    var form = AssetSelectionForm.empty();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    validator.validate(form, bindingResult, applicationVersion);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
 
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
@@ -82,15 +78,15 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_terminalAsset() {
-    form.setAssetKey(AssetTestUtil.TERMINAL1_ASSET_KEY);
+    var assetJson = terminal1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.TERMINAL1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.terminal1AssetJson);
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
-
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(AdditionalAssetSelectionFormValidator.ASSET_MUST_BE_FIELD))
@@ -99,36 +95,38 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_fieldAssetWithInvalidStatus() {
-    form.setAssetKey(AssetTestUtil.FIELD4_ASSET_KEY);
+    var assetJson = field4AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.FIELD4_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field4AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field4AssetJson.getId()), any()))
-        .thenReturn(FieldTestUtil.field4JsonWithOperatorAndLicences);
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
+        .thenReturn(field4JsonWithOperatorAndLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_ALLOWED_STATUS
-                    .formatted(AssetTestUtil.field4AssetJson.getName())))
+                    .formatted(field4AssetJson.getName())))
     );
   }
 
   @Test
   void validate_fieldAssetNoOperatorButLicencesExist() {
-    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+    var assetJson = field1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field1AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field1JsonWithNoOperatorButLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
@@ -141,16 +139,17 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_fieldAssetOperatorButNoLicences() {
-    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+    var assetJson = field1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field1AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field1JsonWithOperatorButEmptyLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
@@ -163,16 +162,17 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_fieldAssetNoOperatorOrLicences() {
-    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+    var assetJson = field1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field1AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field1JsonWithNullOperatorAndLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
@@ -185,32 +185,34 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_fieldAssetWithOperatorAndLicences() {
-    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+    var assetJson = field1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field1AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field1JsonWithOperatorAndLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    assertThat(errors.hasErrors()).isFalse();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
   void validate_fieldAssetWithDuplicatedPrimaryAsset() {
-    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+    var assetJson = field1AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
         .thenReturn(List.of(fieldAsset1));
-    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field1AssetJson);
-    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
+    when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field1JsonWithOperatorAndLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(
@@ -219,18 +221,19 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Test
   void validate_fieldAssetWithDuplicatedSecondaryAsset() {
-    form.setAssetKey(AssetTestUtil.FIELD2_ASSET_KEY);
+    var assetJson = field2AssetJson;
+    var form = AssetSelectionForm.from(assetJson.getAssetKey());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
         .thenReturn(List.of(fieldAsset2));
-    when(assetService.getAsset(AssetTestUtil.FIELD2_ASSET_KEY))
-        .thenReturn(AssetTestUtil.field2AssetJson);
+    when(assetService.findAsset(assetJson.getAssetKey())).thenReturn(Optional.of(assetJson));
     when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field2AssetJson.getId()), any()))
         .thenReturn(FieldTestUtil.field2JsonWithOperatorAndLicences);
 
-    ValidationUtils.invokeValidator(validator, form, errors);
+    validator.validate(form, bindingResult, applicationVersion);
 
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
             Collections.singletonList(

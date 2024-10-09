@@ -1,5 +1,8 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,7 +45,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_fieldRedirect() throws Exception {
-    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1AssetJson));
+    when(assetService.findAsset(field1AssetJson.getAssetKey())).thenReturn(Optional.of(field1AssetJson));
 
     mockMvc
         .perform(
@@ -58,7 +61,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void manageAsset_fieldRedirect_unauthorized() throws Exception {
-    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1AssetJson));
+    when(assetService.findAsset(field1AssetJson.getAssetKey())).thenReturn(Optional.of(field1AssetJson));
 
     mockMvc
         .perform(
@@ -71,7 +74,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_terminalRedirect() throws Exception {
-    when(assetService.getAssetFromKey(TERMINAL1_ASSET_KEY)).thenReturn(Optional.of(terminal1AssetJson));
+    when(assetService.findAsset(terminal1AssetJson.getAssetKey())).thenReturn(Optional.of(terminal1AssetJson));
 
     mockMvc
         .perform(
@@ -86,8 +89,6 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_noFieldOrTerminalRedirect() throws Exception {
-    when(assetService.getAssetFromKey(BAD_ASSET_KEY)).thenReturn(Optional.empty());
-
     mockMvc
         .perform(
             get(ReverseRouter.route(on(ManageAssetController.class).manageAsset(BAD_ASSET_KEY)))
@@ -96,5 +97,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())));
+
+    verify(assetService, never()).findAsset(any());
   }
 }

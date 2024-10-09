@@ -8,7 +8,6 @@ import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1Ass
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService.ASSETS_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService.ORGANISATION_UNIT_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
@@ -94,7 +93,7 @@ class ApplicationDataFilterFormServiceTest {
 
   @Test
   void getPrefilledAsset_withFieldAssetKey() {
-    doReturn(Optional.of(field1AssetJson)).when(assetService).getAsset(AssetKey.from(FIELD1_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
+    doReturn(Optional.of(field1AssetJson)).when(assetService).findAsset(AssetKey.from(FIELD1_ASSET_KEY));
 
     assertThat(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY))
         .isEqualTo(new RestSearchItem(field1AssetJson.getSelectionId(), field1AssetJson.getSelectionText()));
@@ -102,7 +101,7 @@ class ApplicationDataFilterFormServiceTest {
 
   @Test
   void getPrefilledAsset_withTerminalAssetKey() {
-    doReturn(Optional.of(terminal1AssetJson)).when(assetService).getAsset(AssetKey.from(TERMINAL1_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
+    doReturn(Optional.of(terminal1AssetJson)).when(assetService).findAsset(AssetKey.from(TERMINAL1_ASSET_KEY));
 
     assertThat(applicationDataFilterFormService.getPrefilledAsset(TERMINAL1_ASSET_KEY))
         .isEqualTo(new RestSearchItem(terminal1AssetJson.getSelectionId(), terminal1AssetJson.getSelectionText()));

@@ -4,7 +4,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
-import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
@@ -101,8 +99,8 @@ public class ApplicationRationaleProductionController {
         applicationVersion,
         rationaleType,
         comment,
-        form.productionLocationAssetKeys(),
-        form.hostLocationAssetKey()
+        form.productionLocationAssetKeys().stream().map(AssetKey::from).toList(),
+        AssetKey.from(form.hostLocationAssetKey())
     );
 
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
@@ -115,8 +113,8 @@ public class ApplicationRationaleProductionController {
       ApplicationRationaleProductionForm form
   ) {
     var applicationId = applicationVersion.getApplication().getId();
-    var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
-    var assetSearchRestUrl = getAssetSearchUrl(isTerminal);
+    var primaryApplicationAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+    var assetSearchRestUrl = applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset);
 
     var modelAndView = new ModelAndView("fcs/application/application-rationale/production-form")
         .addObject("form", form)
@@ -138,28 +136,18 @@ public class ApplicationRationaleProductionController {
     return modelAndView;
   }
 
-  private String getAssetSearchUrl(boolean isTerminal) {
-    var restUrl = isTerminal
-        ? ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null))
-        : ReverseRouter.route(on(AssetRestController.class).searchAllAssets(null));
-
-    return restUrl.replace("?term", "");
-  }
-
   private List<ApplicationAssetView> getProductionLocationsFromForm(ApplicationRationaleProductionForm form) {
     return form.productionLocationAssetKeys()
         .stream()
-        .map(AssetKey::parse)
-        .flatMap(Optional::stream)
-        .map(assetKey -> assetService.getAsset(assetKey, "prefilling production locations for application rationale"))
-        .flatMap(Optional::stream)
+        .flatMap(assetKey -> AssetKey.parse(assetKey).stream())
+        .flatMap(assetKey -> assetService.findAsset(assetKey).stream())
         .map(ApplicationAssetView::from)
         .toList();
   }
 
   private RestSearchItem getHostLocationFromForm(ApplicationRationaleProductionForm form) {
     return AssetKey.parse(form.hostLocationAssetKey())
-        .flatMap(assetKey -> assetService.getAsset(assetKey, "prefilling host location for application rationale"))
+        .flatMap(assetService::findAsset)
         .map(RestSearchItem::from)
         .orElse(RestSearchItem.EMPTY_REST_SEARCH_ITEM);
   }

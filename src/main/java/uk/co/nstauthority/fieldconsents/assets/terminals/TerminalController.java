@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
@@ -49,6 +48,6 @@ public class TerminalController {
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId, null))
         )
-        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user));
+        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(terminalJson.getAssetKey(), user));
   }
 }

@@ -8,10 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
-import org.springframework.validation.ValidationUtils;
-import org.springframework.validation.Validator;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -21,7 +18,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicenc
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
 @Service
-class AdditionalAssetSelectionFormValidator implements Validator {
+class AdditionalAssetSelectionFormValidator {
 
   static final String ASSET_KEY_FIELD_NAME = "assetKey";
 
@@ -66,56 +63,48 @@ class AdditionalAssetSelectionFormValidator implements Validator {
     this.applicationAssetService = applicationAssetService;
   }
 
-  @Override
-  public boolean supports(@NotNull Class<?> clazz) {
-    return AssetSelectionForm.class.equals(clazz);
-  }
-
-  @Override
-  public void validate(@NotNull Object target, @NotNull Errors errors) {
-    var form = (AssetSelectionForm) target;
+  public void validate(AssetSelectionForm form, @NotNull Errors errors, ApplicationVersion applicationVersion) {
     var purpose = "Check field status and that an operator and associated licences exist when adding a field to an application";
 
-    ValidationUtils.rejectIfEmpty(errors, ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".required",
-        ASSET_EMPTY);
+    var assetJson = form.getAssetKey().flatMap(assetService::findAsset).orElse(null);
+    if (assetJson == null) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, "empty", ASSET_EMPTY);
+      return;
+    }
 
-    if (!errors.hasErrors()) {
-      AssetJson assetJson = assetService.getAsset(form.getAssetKey());
+    if (assetJson.getAssetType() != AssetType.FIELD) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustBeAField",
+          ASSET_MUST_BE_FIELD);
+      return;
+    }
 
-      if (assetJson.getAssetType() == AssetType.FIELD) {
+    FieldWithOperatorAndLicencesJson fieldJson =
+        fieldService.getFieldWithOperatorAndLicences(assetJson.getId(), purpose);
 
-        FieldWithOperatorAndLicencesJson fieldJson =
-            fieldService.getFieldWithOperatorAndLicences(assetJson.getId(), purpose);
+    rejectIfDuplicatedField(errors, applicationVersion, fieldJson);
 
-        rejectIfDuplicatedField(errors, form.getApplicationVersion(), fieldJson);
+    if (errors.hasFieldErrors(ASSET_KEY_FIELD_NAME)) {
+      return;
+    }
 
-        if (errors.hasFieldErrors(ASSET_KEY_FIELD_NAME)) {
-          return;
-        }
+    if (!FIELD_STATUSES_ALLOWED.contains(fieldJson.getStatusJson().status())) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveAllowedStatus",
+          ASSET_MUST_HAVE_ALLOWED_STATUS.formatted(fieldJson.getName()));
+      return;
+    }
 
-        if (!FIELD_STATUSES_ALLOWED.contains(fieldJson.getStatusJson().status())) {
-          errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveAllowedStatus",
-              ASSET_MUST_HAVE_ALLOWED_STATUS.formatted(fieldJson.getName()));
-          return;
-        }
-
-        if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
-          errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
-              ASSET_MUST_HAVE_OPERATOR_LICENCES.formatted(fieldJson.getName()) +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
-        } else if (!fieldJson.operatorExists()) {
-          errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperator",
-              ASSET_MUST_HAVE_OPERATOR.formatted(fieldJson.getName()) +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
-        } else if (!fieldJson.licencesExist()) {
-          errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveLicences",
-              ASSET_MUST_HAVE_LICENCES.formatted(fieldJson.getName()) +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
-        }
-      } else if (assetJson.getAssetType() == AssetType.TERMINAL) {
-        errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustBeAField",
-            ASSET_MUST_BE_FIELD);
-      }
+    if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
+          ASSET_MUST_HAVE_OPERATOR_LICENCES.formatted(fieldJson.getName()) +
+          ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
+    } else if (!fieldJson.operatorExists()) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperator",
+          ASSET_MUST_HAVE_OPERATOR.formatted(fieldJson.getName()) +
+          ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
+    } else if (!fieldJson.licencesExist()) {
+      errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveLicences",
+          ASSET_MUST_HAVE_LICENCES.formatted(fieldJson.getName()) +
+          ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
     }
   }
 

@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
@@ -73,8 +74,8 @@ public class ApplicationRationaleProductionService {
       ApplicationVersion applicationVersion,
       ApplicationRationaleType rationaleType,
       String comment,
-      List<String> productionLocationAssetKeys,
-      String hostLocationAssetKey
+      List<AssetKey> productionLocationAssetKeys,
+      AssetKey hostLocationAssetKey
   ) {
     var applicationRationale = repository.findByApplicationVersion(applicationVersion).orElseGet(ApplicationRationale::new);
     applicationRationale.setApplicationVersion(applicationVersion);

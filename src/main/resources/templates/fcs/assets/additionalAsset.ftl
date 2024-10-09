@@ -9,7 +9,7 @@
   <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
-      restUrl=springUrl("/data-sources/field-assets")
+      restUrl=springUrl(assetSearchUrl)
       labelText="Add another field"
       pageHeading=true
       hintText=ADDITIONAL_ASSET_HINT_TEXT

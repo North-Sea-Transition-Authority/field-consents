@@ -3,7 +3,9 @@ package uk.co.nstauthority.fieldconsents.assets;
 public enum AssetType {
 
   FIELD("Field"),
-  TERMINAL("Facility");
+  TERMINAL("Facility"),
+  FACILITY("Facility"),
+  HUB("Hub");
 
   private final String displayName;
 

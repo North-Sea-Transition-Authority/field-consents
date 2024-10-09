@@ -7,6 +7,9 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
@@ -74,15 +77,15 @@ class ApplicationRationaleVentServiceTest {
   @ParameterizedTest
   @EnumSource(ApplicationRationaleType.class)
   void saveApplicationRationale_nonIncrease(ApplicationRationaleType rationaleType) {
-    var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
-    var hostLocationAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var hostAssetKey = assetKeys.getFirst();
 
     applicationRationaleVentService.saveApplicationRationale(
         applicationVersion,
         rationaleType,
         null,
-        flaringLocationAssetKeys,
-        hostLocationAssetKey
+        assetKeys,
+        hostAssetKey
     );
 
     verify(repository).save(applicationRationaleCaptor.capture());
@@ -102,17 +105,17 @@ class ApplicationRationaleVentServiceTest {
         Set.of(AssetRole.HOST, AssetRole.LOCATION)
     );
 
-    for (var key : flaringLocationAssetKeys) {
+    for (var assetKey : assetKeys) {
       verify(applicationAssetService).createAssetForApplicationVersion(
           applicationVersion,
-          key,
+          assetKey,
           AssetRole.LOCATION
       );
     }
 
     verify(applicationAssetService).createAssetForApplicationVersion(
         applicationVersion,
-        hostLocationAssetKey,
+        hostAssetKey,
         AssetRole.HOST
     );
   }

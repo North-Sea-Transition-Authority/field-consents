@@ -25,7 +25,6 @@ import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
-import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
@@ -79,7 +78,7 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(assetService.getStartApplicationDecisionForField(eq(user), any())).thenReturn(startApplicationDecision);
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
-    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithOperatorAndLicences), user))
+    when(manageAssetService.getApplicationDataItemViews(field1JsonWithOperatorAndLicences.getAssetKey(), user))
         .thenReturn(applicationDataItemViews);
 
     var backLinkUrl = ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection());

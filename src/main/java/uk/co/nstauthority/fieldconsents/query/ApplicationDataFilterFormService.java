@@ -10,7 +10,6 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 public class ApplicationDataFilterFormService {
 
   public static final String ORGANISATION_UNIT_LOOKUP_PURPOSE = "Lookup organisation unit for application data";
-  public static final String ASSETS_LOOKUP_PURPOSE = "Lookup assets for application data";
 
   private final AssetService assetService;
   private final OrganisationUnitService organisationUnitService;
@@ -37,7 +36,7 @@ public class ApplicationDataFilterFormService {
 
   public RestSearchItem getPrefilledAsset(String assetKey) {
     return AssetKey.parse(assetKey)
-        .flatMap(key -> assetService.getAsset(AssetKey.from(assetKey), ASSETS_LOOKUP_PURPOSE))
+        .flatMap(assetService::findAsset)
         .map(RestSearchItem::from)
         .orElse(RestSearchItem.EMPTY_REST_SEARCH_ITEM);
   }

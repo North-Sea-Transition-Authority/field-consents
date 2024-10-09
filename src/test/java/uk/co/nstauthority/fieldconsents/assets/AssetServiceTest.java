@@ -11,9 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.BAD_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
@@ -57,6 +55,7 @@ public class AssetServiceTest {
 
   private static final String FIELD_LOOKUP_PURPOSE = "Determining whether an application can be started for this field";
   private static final String TERMINAL_LOOKUP_PURPOSE = "Determining whether an application can be started for this terminal";
+  private static final String ASSET_LOOKUP_PURPOSE = "looking up asset for asset key";
   private static final int FIELD_ID = 1;
   private static final int TERMINAL_ID = 2;
   private static final int OPERATOR_OU_ID = 3;
@@ -89,64 +88,45 @@ public class AssetServiceTest {
   @Test
   void getAssetFromKey_nullAssetKey() {
 
-    Optional<AssetJson> assetJson = assetService.getAssetFromKey(null);
+    Optional<AssetJson> assetJson = assetService.findAsset(null);
     assertThat(assetJson).isEqualTo(Optional.empty());
 
   }
 
   @Test
   void getAssetFromKey_field() {
-    when(fieldService.findField(field1Json.getId(), "Field asset picked from search selector"))
+    when(fieldService.findField(field1Json.getId(), ASSET_LOOKUP_PURPOSE))
         .thenReturn(Optional.of(field1Json));
 
-    Optional<AssetJson> assetJson = assetService.getAssetFromKey(FIELD1_ASSET_KEY);
+    Optional<AssetJson> assetJson = assetService.findAsset(field1AssetJson.getAssetKey());
     assertThat(assetJson).isEqualTo(Optional.of(field1Json));
   }
 
   @Test
   void getAssetFromKey_terminal() {
-    when(terminalService.findTerminal(terminal1Json.getId(), "Terminal asset picked from search selector"))
+    when(terminalService.findTerminal(terminal1Json.getId(), ASSET_LOOKUP_PURPOSE))
         .thenReturn(Optional.of(terminal1Json));
 
-    Optional<AssetJson> assetJson = assetService.getAssetFromKey(TERMINAL1_ASSET_KEY);
+    Optional<AssetJson> assetJson = assetService.findAsset(terminal1Json.getAssetKey());
     assertThat(assetJson).isEqualTo(Optional.of(terminal1Json));
   }
 
   @Test
-  void getAssetFromKey_invalidKey_thenException() {
-
-    assertThatThrownBy(() -> assetService.getAssetFromKey(BAD_ASSET_KEY))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Not a valid AssetKey: " + BAD_ASSET_KEY);
-
-  }
-
-  @Test
   void getAssetOld_validKey() {
-    when(fieldService.findField(FIELD_ID_1, "Field asset picked from search selector"))
+    when(fieldService.findField(FIELD_ID_1, ASSET_LOOKUP_PURPOSE))
         .thenReturn(Optional.of(field1Json));
 
-    AssetJson assetJson = assetService.getAsset(FIELD1_ASSET_KEY);
+    AssetJson assetJson = assetService.getAsset(field1Json.getAssetKey());
     assertThat(assetJson).isEqualTo(field1Json);
-  }
-
-  @Test
-  void getAssetOld_invalidKey_thenException() {
-
-    assertThatThrownBy(() -> assetService.getAsset(BAD_ASSET_KEY))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Not a valid AssetKey: " + BAD_ASSET_KEY);
-
   }
 
   @Test
   void getAsset_field() {
     var assetKey = new AssetKey(1, AssetType.FIELD);
-    var requestPurpose = "request purpose";
 
-    when(fieldService.findField(assetKey.assetId(), requestPurpose)).thenReturn(Optional.of(field1Json));
+    when(fieldService.findField(assetKey.assetId(), ASSET_LOOKUP_PURPOSE)).thenReturn(Optional.of(field1Json));
 
-    assertThat(assetService.getAsset(assetKey, requestPurpose))
+    assertThat(assetService.findAsset(assetKey))
         .isPresent()
         .get()
         .isEqualTo(field1Json);
@@ -155,11 +135,10 @@ public class AssetServiceTest {
   @Test
   void getAsset_terminal() {
     var assetKey = new AssetKey(1, AssetType.TERMINAL);
-    var requestPurpose = "request purpose";
 
-    when(terminalService.findTerminal(assetKey.assetId(), requestPurpose)).thenReturn(Optional.of(terminal2JsonWithOperator));
+    when(terminalService.findTerminal(assetKey.assetId(), ASSET_LOOKUP_PURPOSE)).thenReturn(Optional.of(terminal2JsonWithOperator));
 
-    assertThat(assetService.getAsset(assetKey, requestPurpose))
+    assertThat(assetService.findAsset(assetKey))
         .isPresent()
         .get()
         .isEqualTo(terminal2JsonWithOperator);
@@ -167,7 +146,7 @@ public class AssetServiceTest {
 
   @Test
   void getAsset_nullAssetKey() {
-    assertThat(assetService.getAsset(null, "request purpose")).isEmpty();
+    assertThat(assetService.findAsset(null)).isEmpty();
   }
 
   @Test

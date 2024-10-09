@@ -46,7 +46,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 class WorkAreaFilterServiceTest {
 
   private static final Condition SUBMITTED_APPLICATION_CONDITION = APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
-  private static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
 
   @Mock
   private AssetService assetService;
@@ -142,7 +141,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());
-    doReturn(Optional.empty()).when(assetService).getAsset(assetKey, FIELD_LOOKUP_PURPOSE);
+    doReturn(Optional.empty()).when(assetService).findAsset(assetKey);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -158,7 +157,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());
-    doReturn(Optional.of(field1AssetJson)).when(assetService).getAsset(assetKey, FIELD_LOOKUP_PURPOSE);
+    doReturn(Optional.of(field1AssetJson)).when(assetService).findAsset(assetKey);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -178,7 +177,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());
-    doReturn(Optional.of(terminal1AssetJson)).when(assetService).getAsset(assetKey, FIELD_LOOKUP_PURPOSE);
+    doReturn(Optional.of(terminal1AssetJson)).when(assetService).findAsset(assetKey);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 

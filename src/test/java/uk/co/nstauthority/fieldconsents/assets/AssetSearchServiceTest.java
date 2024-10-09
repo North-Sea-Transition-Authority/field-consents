@@ -43,7 +43,7 @@ class AssetSearchServiceTest {
   private final ServiceUserDetail user = ServiceUserDetailTestUtil.Builder().build();
 
   @Test
-  void searchAssetsForUser_verifyListAndOrder() {
+  void searchFieldsAndTerminalsForUser_verifyListAndOrder() {
     when(fieldSearchService
         .searchFieldsWithOperatorForUser("1", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of(field1JsonWithOperator));
@@ -59,7 +59,7 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  void searchAssetsForUser_verifyListAndOrderFieldsOnly() {
+  void searchFieldsAndTerminalsForUser_verifyListAndOrderFieldsOnly() {
     when(fieldSearchService
         .searchFieldsWithOperatorForUser("F", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of(field3JsonWithOperator, field1JsonWithOperator, field2JsonWithOperator));
@@ -76,7 +76,7 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  void searchAssetsForUser_verifyListAndOrderTerminalsOnly() {
+  void searchFieldsAndTerminalsForUser_verifyListAndOrderTerminalsOnly() {
     when(fieldSearchService
         .searchFieldsWithOperatorForUser("T", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of());
@@ -143,27 +143,27 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  void searchAssets_verifyListAndOrder() {
+  void searchFieldsAndTerminals_verifyListAndOrder() {
     when(fieldSearchService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(List.of(field1Json));
     when(terminalSearchService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(List.of(terminal1Json));
 
-    assertThat(assetSearchService.searchAssets("1")).containsExactly(field1Json, terminal1Json);
+    assertThat(assetSearchService.searchFieldsAndTerminals("1")).containsExactly(field1Json, terminal1Json);
   }
 
   @Test
-  void searchAssets_verifyListAndOrderFieldsOnly() {
+  void searchFieldsAndTerminals_verifyListAndOrderFieldsOnly() {
     when(fieldSearchService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(List.of(field1Json));
     when(terminalSearchService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(Collections.emptyList());
 
-    assertThat(assetSearchService.searchAssets("1")).containsExactly(field1Json);
+    assertThat(assetSearchService.searchFieldsAndTerminals("1")).containsExactly(field1Json);
   }
 
   @Test
-  void searchAssets_verifyListAndOrderTerminalsOnly() {
+  void searchFieldsAndTerminals_verifyListAndOrderTerminalsOnly() {
     when(fieldSearchService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(Collections.emptyList());
     when(terminalSearchService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(List.of(terminal1Json));
 
-    assertThat(assetSearchService.searchAssets("1")).containsExactly(terminal1Json);
+    assertThat(assetSearchService.searchFieldsAndTerminals("1")).containsExactly(terminal1Json);
   }
 
   @Test

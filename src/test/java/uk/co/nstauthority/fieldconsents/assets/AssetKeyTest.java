@@ -15,13 +15,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 class AssetKeyTest {
 
   @Test
-  void from_withAssetJson() {
-    var assetJson = AssetTestUtil.field1AssetJson;
-
-    assertThat(AssetKey.from(assetJson)).isEqualTo(new AssetKey(assetJson.getId(), assetJson.getAssetType()));
-  }
-
-  @Test
   void from_withString_valid() {
     assertThat(AssetKey.from("1FIELD")).isEqualTo(new AssetKey(1, FIELD));
   }

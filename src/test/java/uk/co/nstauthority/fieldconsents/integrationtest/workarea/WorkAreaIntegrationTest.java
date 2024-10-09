@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService.CONSULTATION_TEAM_TYPE;
@@ -533,7 +532,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setAssetKey(FIELD1_ASSET_KEY);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
-    doReturn(Optional.of(field1JsonWithOperatorAndLicences)).when(assetService).getAsset(any(AssetKey.class), anyString());
+    doReturn(Optional.of(field1JsonWithOperatorAndLicences)).when(assetService).findAsset(any(AssetKey.class));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
@@ -555,7 +554,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setAssetKey(FIELD2_ASSET_KEY);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD2_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD2_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
-    doReturn(Optional.of(field2JsonWithOperatorAndLicences)).when(assetService).getAsset(any(AssetKey.class), anyString());
+    doReturn(Optional.of(field2JsonWithOperatorAndLicences)).when(assetService).findAsset(any(AssetKey.class));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
@@ -569,7 +568,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setAssetKey(TERMINAL1_ASSET_KEY);
     assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL1_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL1_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
-    doReturn(Optional.of(terminal1JsonWithOperator)).when(assetService).getAsset(any(AssetKey.class), anyString());
+    doReturn(Optional.of(terminal1JsonWithOperator)).when(assetService).findAsset(any(AssetKey.class));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var applicationVersion = createNewApplicationVersionForTerminal(ApplicationType.PRODUCTION, consentLengthForm);
@@ -592,7 +591,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setAssetKey(TERMINAL2_ASSET_KEY);
     assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL2_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL2_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
-    doReturn(Optional.of(terminal2JsonWithOperator)).when(assetService).getAsset(any(AssetKey.class), anyString());
+    doReturn(Optional.of(terminal2JsonWithOperator)).when(assetService).findAsset(any(AssetKey.class));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 

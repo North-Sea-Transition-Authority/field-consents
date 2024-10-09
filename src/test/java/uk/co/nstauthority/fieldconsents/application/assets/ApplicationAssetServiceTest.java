@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,16 +28,31 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.energyportalapi.client.field.FieldApi;
+import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Facility;
+import uk.co.fivium.energyportalapi.generated.types.FacilityStatus;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
+import uk.co.fivium.energyportalapi.generated.types.Field;
+import uk.co.fivium.energyportalapi.generated.types.FieldShore;
+import uk.co.fivium.energyportalapi.generated.types.Hub;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -44,10 +60,15 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
-import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
+import uk.co.nstauthority.fieldconsents.assets.facility.FacilityService;
+import uk.co.nstauthority.fieldconsents.assets.facility.FacilityWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.Shore;
+import uk.co.nstauthority.fieldconsents.assets.hubs.HubService;
+import uk.co.nstauthority.fieldconsents.assets.hubs.HubWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,33 +78,33 @@ class ApplicationAssetServiceTest {
   private ApplicationAssetRepository applicationAssetRepository;
 
   @Mock
+  private FieldApi fieldApi;
+
+  @Mock
   private FieldService fieldService;
 
   @Mock
   private TerminalService terminalService;
 
   @Mock
-  private ApplicationFlagService applicationFlagService;
+  private FacilityService facilityService;
 
   @Mock
-  private AssetService assetService;
+  private HubService hubService;
+
+  @Mock
+  private ApplicationFlagService applicationFlagService;
 
   @Captor
   private ArgumentCaptor<ApplicationAsset> assetArgumentCaptor;
 
+  @InjectMocks
   private ApplicationAssetService applicationAssetService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    applicationAssetService = new ApplicationAssetService(
-        fieldService,
-        terminalService,
-        applicationAssetRepository,
-        applicationFlagService,
-        assetService
-    );
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
   }
 
@@ -446,6 +467,81 @@ class ApplicationAssetServiceTest {
         );
   }
 
+  @Test
+  void getAssetJsonForApplicationAsset_facility() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.FACILITY);
+
+    var facilityWithOperatorJson = FacilityWithOperatorJson.from(
+        Facility.newBuilder()
+            .id(1)
+            .name("facility name")
+            .type(FacilityType.MOBILE_DRILLING_OTHER_TYPE)
+            .status(FacilityStatus.OPERATIONAL)
+            .operator(OrganisationUnit.newBuilder()
+                .organisationUnitId(100)
+                .name("facility operator")
+                .build()
+            )
+            .build()
+    );
+
+    when(facilityService.findFacilityWithOperator(applicationAsset.getAssetId(), "Facility lookup for application asset"))
+        .thenReturn(Optional.of(facilityWithOperatorJson));
+
+    assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset)).isEqualTo(facilityWithOperatorJson);
+  }
+
+  @Test
+  void getAssetJsonForApplicationAsset_facility_cachedInformation() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.FACILITY);
+    applicationAsset.setCachedAssetName("cached name");
+
+    var facilityWithOperatorJson = FacilityWithOperatorJson.fromCachedInformation(applicationAsset.getAssetId(), applicationAsset.getCachedAssetName());
+    when(facilityService.findFacilityWithOperator(applicationAsset.getAssetId(), "Facility lookup for application asset")).thenReturn(Optional.empty());
+
+    assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset)).isEqualTo(facilityWithOperatorJson);
+  }
+
+  @Test
+  void getAssetJsonForApplicationAsset_hub() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.HUB);
+
+    var hubWithOperatorJson = HubWithOperatorJson.from(
+        Hub.newBuilder()
+            .id(1)
+            .name("hub name")
+            .operator(OrganisationUnit.newBuilder()
+                .organisationUnitId(100)
+                .name("hub operator")
+                .build()
+            )
+            .build()
+    );
+
+    when(hubService.findHubWithOperator(applicationAsset.getAssetId(), "Hub lookup for application asset"))
+        .thenReturn(Optional.of(hubWithOperatorJson));
+
+    assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset)).isEqualTo(hubWithOperatorJson);
+  }
+
+  @Test
+  void getAssetJsonForApplicationAsset_hub_cachedInformation() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.HUB);
+    applicationAsset.setCachedAssetName("cached name");
+
+    var hubWithOperatorJson = HubWithOperatorJson.fromCachedInformation(applicationAsset.getAssetId(), applicationAsset.getCachedAssetName());
+    when(hubService.findHubWithOperator(applicationAsset.getAssetId(), "Hub lookup for application asset")).thenReturn(Optional.empty());
+
+    assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset)).isEqualTo(hubWithOperatorJson);
+  }
 
   @Test
   void getAdditionalAssetsSetupForm_whenTrue() {
@@ -553,9 +649,8 @@ class ApplicationAssetServiceTest {
   @ParameterizedTest
   @EnumSource(AssetRole.class)
   void createAssetForApplicationVersion_field(AssetRole assetRole) {
-    var assetKey = "assetKey";
+    var assetKey = field1Json.getAssetKey();
 
-    when(assetService.getAsset(assetKey)).thenReturn(field1Json);
     when(fieldService.getFieldWithOperator(eq(field1.getFieldId()), anyString())).thenReturn(field1JsonWithOperator);
 
     applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
@@ -580,9 +675,8 @@ class ApplicationAssetServiceTest {
   @ParameterizedTest
   @EnumSource(AssetRole.class)
   void createAssetForApplicationVersion_terminal(AssetRole assetRole) {
-    var assetKey = "assetKey";
+    var assetKey = terminal1Json.getAssetKey();
 
-    when(assetService.getAsset(assetKey)).thenReturn(terminal1Json);
     when(terminalService.getTerminalWithOperator(eq(terminal1.getTerminalId()), anyString())).thenReturn(terminal1JsonWithOperator);
 
     applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
@@ -602,6 +696,140 @@ class ApplicationAssetServiceTest {
             terminal1.getTerminalId(),
             assetRole
         );
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void createAssetForApplicationVersion_facility(AssetRole assetRole) {
+    var assetKey = new AssetKey(1, AssetType.FACILITY);
+    var facilityJson = FacilityWithOperatorJson.from(
+        Facility.newBuilder()
+            .id(1)
+            .name("facility name")
+            .type(FacilityType.FLOATING_PROCESS_STORAGE_OFFLOADING_UNIT)
+            .status(FacilityStatus.PLANNED)
+            .operator(OrganisationUnit.newBuilder()
+                .organisationUnitId(100)
+                .name("facility operator")
+                .build()
+            )
+            .build()
+    );
+
+    when(facilityService.getFacilityWithOperator(eq(assetKey.assetId()), anyString())).thenReturn(facilityJson);
+
+    applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
+
+    var applicationAssetCaptor = ArgumentCaptor.forClass(ApplicationAsset.class);
+    verify(applicationAssetRepository).save(applicationAssetCaptor.capture());
+
+    assertThat(applicationAssetCaptor.getValue())
+        .extracting(
+            ApplicationAsset::getApplicationVersion,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getAssetRole
+        ).containsExactly(
+            applicationVersion,
+            AssetType.FACILITY,
+            facilityJson.getId(),
+            assetRole
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void createAssetForApplicationVersion_hub(AssetRole assetRole) {
+    var assetKey = new AssetKey(1, AssetType.HUB);
+    var hubJson = HubWithOperatorJson.from(
+        Hub.newBuilder()
+            .id(1)
+            .name("hub name")
+            .operator(OrganisationUnit.newBuilder()
+                .organisationUnitId(100)
+                .name("hub operator")
+                .build()
+            )
+            .build()
+    );
+
+    when(hubService.getHubWithOperator(eq(assetKey.assetId()), anyString())).thenReturn(hubJson);
+
+    applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
+
+    var applicationAssetCaptor = ArgumentCaptor.forClass(ApplicationAsset.class);
+    verify(applicationAssetRepository).save(applicationAssetCaptor.capture());
+
+    assertThat(applicationAssetCaptor.getValue())
+        .extracting(
+            ApplicationAsset::getApplicationVersion,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getAssetRole
+        ).containsExactly(
+            applicationVersion,
+            AssetType.HUB,
+            hubJson.getId(),
+            assetRole
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetType.class, names = "FIELD", mode = Mode.EXCLUDE)
+  void getShore_nonField(AssetType assetType) {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(assetType);
+
+    assertThatThrownBy(() -> applicationAssetService.getShore(applicationAsset))
+        .isInstanceOf(UnsupportedOperationException.class)
+        .hasMessage("Cannot get shore for non-field asset");
+  }
+
+  @ParameterizedTest
+  @MethodSource("getShore_arguments")
+  void getShore(FieldShore energyPortalFieldShore, Shore shore) {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
+    applicationAsset.setAssetId(1);
+
+    var queryCaptor = ArgumentCaptor.forClass(FieldProjectionRoot.class);
+
+    when(fieldApi.findFieldById(
+        eq(applicationAsset.getAssetId()),
+        queryCaptor.capture(),
+        eq(new RequestPurpose("Looking up shore type for field"))
+    )).thenReturn(Optional.of(
+        Field.newBuilder()
+            .shore(energyPortalFieldShore)
+            .build()
+    ));
+
+    assertThat(applicationAssetService.getShore(applicationAsset)).isEqualTo(shore);
+
+    assertThat(queryCaptor.getValue().getFields())
+        .usingRecursiveComparison()
+        .isEqualTo(new FieldProjectionRoot().shore().root().getFields());
+  }
+
+  private static Stream<Arguments> getShore_arguments() {
+    return Stream.of(
+        arguments(FieldShore.OFFSHORE, Shore.OFFSHORE),
+        arguments(FieldShore.ONSHORE, Shore.ONSHORE),
+        arguments(FieldShore.UNKNOWN, Shore.UNKNOWN)
+    );
+  }
+
+  @Test
+  void getShore_fieldNotFound() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
+    applicationAsset.setAssetId(1);
+
+    when(fieldApi.findFieldById(eq(applicationAsset.getAssetId()), any(), any(RequestPurpose.class))).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> applicationAssetService.getShore(applicationAsset))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Field [%d] not found".formatted(applicationAsset.getAssetId()));
   }
 
   @Test

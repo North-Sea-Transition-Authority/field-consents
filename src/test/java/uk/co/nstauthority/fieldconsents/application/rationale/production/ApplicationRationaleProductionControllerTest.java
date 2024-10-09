@@ -3,9 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.rationale.production;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,6 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
@@ -147,6 +148,9 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     primaryApplicationAsset.setAssetType(AssetType.FIELD);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -155,9 +159,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchAllAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -188,6 +189,9 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -196,9 +200,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -244,6 +245,9 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
+
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -252,9 +256,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .andReturn()
         .getModelAndView()
         .getModel();
-
-    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)).replace("?term", "");
-    assertThat(assetSearchRestUrl).doesNotContain("?term=");
 
     assertThat(model)
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
@@ -305,16 +306,17 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   @Test
   void saveForm_increase() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
-    var productionAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
     var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("productionLocationAssetKeys", String.join(",", productionAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("productionLocationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -327,8 +329,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
-        productionAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.increaseComment().setInputValue(comment);
 
@@ -347,7 +349,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         applicationVersion,
         rationaleType,
         comment,
-        productionAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -355,16 +357,17 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   @Test
   void saveForm_decrease() throws Exception {
     var rationaleType = ApplicationRationaleType.DECREASE;
-    var productionAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
     var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("decreaseComment.inputValue", comment)
-            .param("productionLocationAssetKeys", String.join(",", productionAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("productionLocationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -377,8 +380,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
-        productionAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.decreaseComment().setInputValue(comment);
 
@@ -397,7 +400,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         applicationVersion,
         rationaleType,
         comment,
-        productionAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -405,16 +408,17 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   @Test
   void saveForm_extension() throws Exception {
     var rationaleType = ApplicationRationaleType.EXTENSION;
-    var productionLocationAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
     var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("extensionComment.inputValue", comment)
-            .param("productionLocationAssetKeys", String.join(",", productionLocationAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("productionLocationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -427,8 +431,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
-        productionLocationAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.extensionComment().setInputValue(comment);
 
@@ -448,7 +452,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         applicationVersion,
         rationaleType,
         comment,
-        productionLocationAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -456,16 +460,17 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   @Test
   void saveForm_other() throws Exception {
     var rationaleType = ApplicationRationaleType.OTHER;
-    var productionLocationAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
-    var hostAssetKey = "assetKey1";
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
     var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("otherComment.inputValue", comment)
-            .param("productionLocationAssetKeys", String.join(",", productionLocationAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("productionLocationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
@@ -478,8 +483,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         null,
         null,
         null,
-        productionLocationAssetKeys,
-        hostAssetKey
+        assetKeyStrings,
+        hostAssetKey.toString()
     );
     expectedForm.otherComment().setInputValue(comment);
 
@@ -499,7 +504,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         applicationVersion,
         rationaleType,
         comment,
-        productionLocationAssetKeys,
+        assetKeys,
         hostAssetKey
     );
   }
@@ -508,8 +513,9 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   @EnumSource(ApplicationRationaleType.class)
   void saveForm_validationFailed(ApplicationRationaleType rationaleType) throws Exception {
     var comment = "comment";
-    var productionAssetKeys = List.of("123FIELD");
-    var hostAssetKey = productionAssetKeys.get(0);
+    var assetKeys = List.of(field1AssetJson.getAssetKey(), field2AssetJson.getAssetKey(), terminal1AssetJson.getAssetKey());
+    var assetKeyStrings = assetKeys.stream().map(AssetKey::toString).toList();
+    var hostAssetKey = assetKeys.getFirst();
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
@@ -519,15 +525,18 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .when(applicationRationaleProductionFormValidator)
         .validate(any(ApplicationRationaleProductionForm.class), any(BindingResult.class));
 
-    when(assetService.getAsset(eq(AssetKey.from(hostAssetKey)), anyString())).thenReturn(Optional.empty());
+    when(assetService.findAsset(hostAssetKey)).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+
+    var assetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldsAndTerminals(null));
+    when(applicationRationaleService.getAssetSearchUrl(primaryApplicationAsset)).thenReturn(assetSearchRestUrl);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("otherComment.inputValue", comment)
-            .param("productionLocationAssetKeys", String.join(",", productionAssetKeys))
-            .param("hostLocationAssetKey", hostAssetKey)
+            .param("productionLocationAssetKeys", String.join(",", assetKeyStrings))
+            .param("hostLocationAssetKey", hostAssetKey.toString())
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is2xxSuccessful())

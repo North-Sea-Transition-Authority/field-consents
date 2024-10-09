@@ -4,6 +4,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,10 +13,10 @@ import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.facility.FacilityService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
+import uk.co.nstauthority.fieldconsents.assets.hubs.HubService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalStatus;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
@@ -33,58 +34,51 @@ public class AssetService {
   private final TerminalService terminalService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final TeamService teamService;
+  private final FacilityService facilityService;
+  private final HubService hubService;
 
   AssetService(
       FieldService fieldService,
       TerminalService terminalService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      TeamService teamService
+      TeamService teamService,
+      FacilityService facilityService,
+      HubService hubService
   ) {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
+    this.facilityService = facilityService;
+    this.hubService = hubService;
   }
 
-  @Deprecated
-  public Optional<AssetJson> getAssetFromKey(String assetKey) {
-
-    if (assetKey == null) {
-      return Optional.empty();
-    } else if (assetKey.endsWith(AssetType.FIELD.name())) {
-      var fieldId = Integer.valueOf(assetKey.replace(AssetType.FIELD.name(), ""));
-      FieldJson fieldJson = fieldService.findField(fieldId, "Field asset picked from search selector")
-          .orElse(null);
-      return Optional.ofNullable(fieldJson);
-    } else if (assetKey.endsWith(AssetType.TERMINAL.name())) {
-      var terminalId = Integer.valueOf(assetKey.replace(AssetType.TERMINAL.name(), ""));
-      TerminalJson terminalJson = terminalService.findTerminal(terminalId, "Terminal asset picked from search selector")
-          .orElse(null);
-      return Optional.ofNullable(terminalJson);
-    } else {
-      throw new RuntimeException("Not a valid AssetKey: " + assetKey);
-    }
-  }
-
-  @Deprecated
-  public AssetJson getAsset(String assetKey) {
-    return getAssetFromKey(assetKey)
-        .orElseThrow(() -> new RuntimeException("Asset with key %s not found".formatted(assetKey)));
-  }
-
-  public Optional<? extends AssetJson> getAsset(AssetKey assetKey, String requestPurpose) {
+  @SuppressWarnings("unchecked")
+  public Optional<AssetJson> findAsset(AssetKey assetKey) {
     if (Objects.isNull(assetKey)) {
       return Optional.empty();
     }
 
-    return switch (assetKey.assetType()) {
-      case FIELD -> fieldService.findField(assetKey.assetId(), requestPurpose);
-      case TERMINAL -> terminalService.findTerminal(assetKey.assetId(), requestPurpose);
+    var assetId = assetKey.assetId();
+    var requestPurpose = "looking up asset for asset key";
+
+    var assetJsonOptional = switch (assetKey.assetType()) {
+      case FIELD -> fieldService.findField(assetId, requestPurpose);
+      case TERMINAL -> terminalService.findTerminal(assetId, requestPurpose);
+      case FACILITY -> facilityService.findFacilityWithOperator(assetId, requestPurpose);
+      case HUB -> hubService.findHubWithOperator(assetId, requestPurpose);
     };
+
+    return (Optional<AssetJson>) assetJsonOptional;
+  }
+
+  public AssetJson getAsset(AssetKey assetKey) {
+    return findAsset(assetKey).orElseThrow(() -> new EntityNotFoundException("Asset with key %s not found".formatted(assetKey)));
   }
 
   public void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(AssetKey assetKey, ServiceUserDetail user) {
-    var startApplicationDecision = switch (assetKey.assetType()) {
+    var assetType = assetKey.assetType();
+    var startApplicationDecision = switch (assetType) {
       case FIELD -> getStartApplicationDecisionForField(
           user,
           () -> fieldService.getFieldWithOperatorAndLicences(assetKey.assetId(), FIELD_LOOKUP_PURPOSE)
@@ -93,6 +87,8 @@ public class AssetService {
           user,
           () -> terminalService.getTerminalWithOperator(assetKey.assetId(), TERMINAL_LOOKUP_PURPOSE)
       );
+      default ->
+          StartApplicationDecision.notAllowed(List.of("Cannot start application for %s".formatted(assetType.getDisplayName())));
     };
 
     if (!startApplicationDecision.canBeStarted()) {

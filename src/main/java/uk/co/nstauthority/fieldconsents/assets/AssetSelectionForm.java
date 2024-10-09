@@ -1,45 +1,19 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
-import com.google.common.annotations.VisibleForTesting;
 import jakarta.validation.constraints.NotBlank;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import java.util.Optional;
 
-public class AssetSelectionForm {
+public record AssetSelectionForm(@NotBlank(message = "Select a field or facility") String assetKey) {
 
-  @NotBlank(message = "Select a field or facility")
-  private String assetKey;
-
-  private ApplicationVersion applicationVersion;
-
-  public AssetSelectionForm() {
+  public static AssetSelectionForm empty() {
+    return new AssetSelectionForm(null);
   }
 
-  @VisibleForTesting
-  public AssetSelectionForm(String assetKey, ApplicationVersion applicationVersion) {
-    this.assetKey = assetKey;
-    this.applicationVersion = applicationVersion;
+  public static AssetSelectionForm from(AssetKey assetKey) {
+    return new AssetSelectionForm(assetKey.toString());
   }
 
-  public String getAssetKey() {
-    return assetKey;
-  }
-
-  public void setAssetKey(String assetKey) {
-    this.assetKey = assetKey;
-  }
-
-  public ApplicationVersion getApplicationVersion() {
-    return applicationVersion;
-  }
-
-  public void setApplicationVersion(ApplicationVersion applicationVersion) {
-    this.applicationVersion = applicationVersion;
-  }
-
-  @Override
-  public String toString() {
-    return "AssetSelectionForm{" +
-        "assetKey='" + assetKey + '\'' +
-        '}';
+  public Optional<AssetKey> getAssetKey() {
+    return AssetKey.parse(assetKey);
   }
 }

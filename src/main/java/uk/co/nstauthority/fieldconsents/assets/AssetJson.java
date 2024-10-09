@@ -12,9 +12,13 @@ public interface AssetJson extends SearchSelectable {
 
   AssetType getAssetType();
 
+  default AssetKey getAssetKey() {
+    return new AssetKey(getId(), getAssetType());
+  }
+
   @Override
   default String getSelectionId() {
-    return getId().toString() + getAssetType().name();
+    return getAssetKey().toString();
   }
 
   @Override

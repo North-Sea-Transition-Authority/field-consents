@@ -35,17 +35,16 @@ public record ApplicationContext(
   }
 
   public String getPrimaryAssetPrompt() {
-    return switch (primaryAsset.getAssetType()) {
+    var assetType = primaryAsset.getAssetType();
+    return switch (assetType) {
       case FIELD -> "Primary field";
       case TERMINAL -> "Primary facility";
+      default -> throw new IllegalStateException("%s cannot be primary asset".formatted(assetType.getDisplayName()));
     };
   }
 
   public String getAssetOperatorsPrompt() {
-    var prefix = switch (primaryAsset.getAssetType()) {
-      case FIELD -> "Field";
-      case TERMINAL -> "Facility";
-    };
+    var prefix = primaryAsset.getAssetType().getDisplayName();
 
     if (assetOperators.size() == 1) {
       return "%s operator".formatted(prefix);

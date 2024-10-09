@@ -13,73 +13,80 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.energyportalapi.client.field.FieldApi;
+import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
-import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.assets.facility.FacilityService;
+import uk.co.nstauthority.fieldconsents.assets.facility.FacilityWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.Shore;
+import uk.co.nstauthority.fieldconsents.assets.hubs.HubService;
+import uk.co.nstauthority.fieldconsents.assets.hubs.HubWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 
 @Service
 public class ApplicationAssetService {
 
+  private final FieldApi fieldApi;
   private final FieldService fieldService;
-
   private final TerminalService terminalService;
-
+  private final FacilityService facilityService;
   private final ApplicationAssetRepository applicationAssetRepository;
-
   private final ApplicationFlagService applicationFlagService;
+  private final HubService hubService;
 
-  private final AssetService assetService;
-
-  @Autowired
-  public ApplicationAssetService(FieldService fieldService,
-                                 TerminalService terminalService,
-                                 ApplicationAssetRepository applicationAssetRepository,
-                                 ApplicationFlagService applicationFlagService,
-                                 AssetService assetService) {
+  ApplicationAssetService(
+      FieldApi fieldApi,
+      FieldService fieldService,
+      TerminalService terminalService,
+      FacilityService facilityService,
+      ApplicationAssetRepository applicationAssetRepository,
+      ApplicationFlagService applicationFlagService,
+      HubService hubService
+  ) {
+    this.fieldApi = fieldApi;
     this.fieldService = fieldService;
     this.terminalService = terminalService;
+    this.facilityService = facilityService;
     this.applicationAssetRepository = applicationAssetRepository;
     this.applicationFlagService = applicationFlagService;
-    this.assetService = assetService;
+    this.hubService = hubService;
   }
 
-  private ApplicationAsset createAsset(ApplicationVersion applicationVersion,
-                                       AssetWithOperatorJson asset,
-                                       AssetRole assetRole) {
-    ApplicationAsset applicationAsset = new ApplicationAsset();
+  private ApplicationAsset createAsset(
+      ApplicationVersion applicationVersion,
+      AssetWithOperatorJson asset,
+      AssetRole assetRole
+  ) {
+    var applicationAsset = new ApplicationAsset();
     applicationAsset.setApplicationVersion(applicationVersion);
     applicationAsset.setAssetId(asset.getId());
     applicationAsset.setCachedAssetName(asset.getName());
-
-    if (asset instanceof FieldJson) {
-      applicationAsset.setAssetType(FIELD);
-    } else if (asset instanceof TerminalJson) {
-      applicationAsset.setAssetType(TERMINAL);
-    }
-
+    applicationAsset.setAssetType(asset.getAssetType());
     applicationAsset.setAssetRole(assetRole);
 
-    applicationAsset.setAssetOperatorOuId(asset.getOperatorJson().organisationUnitId());
-    applicationAsset.setCachedAssetOperatorName(asset.getOperatorJson().name());
+    var operatorJson = asset.getOperatorJson();
+    applicationAsset.setAssetOperatorOuId(operatorJson.organisationUnitId());
+    applicationAsset.setCachedAssetOperatorName(operatorJson.name());
 
     return applicationAsset;
   }
 
-  public ApplicationAsset createPrimaryAsset(ApplicationVersion applicationVersion,
-                                             AssetWithOperatorJson asset) {
+  public ApplicationAsset createPrimaryAsset(ApplicationVersion applicationVersion, AssetWithOperatorJson asset) {
     var applicationAsset = createAsset(applicationVersion, asset, AssetRole.PRIMARY);
     return applicationAssetRepository.save(applicationAsset);
   }
@@ -175,6 +182,12 @@ public class ApplicationAssetService {
       case TERMINAL -> terminalService
           .findTerminal(assetId, "Terminal lookup for application asset")
           .orElseGet(() -> TerminalJson.fromCachedInformation(assetId, applicationAsset.getCachedAssetName()));
+      case FACILITY -> facilityService
+          .findFacilityWithOperator(assetId, "Facility lookup for application asset")
+          .orElseGet(() -> FacilityWithOperatorJson.fromCachedInformation(assetId, applicationAsset.getCachedAssetName()));
+      case HUB -> hubService
+          .findHubWithOperator(assetId, "Hub lookup for application asset")
+          .orElseGet(() -> HubWithOperatorJson.fromCachedInformation(assetId, applicationAsset.getCachedAssetName()));
     };
   }
 
@@ -244,26 +257,57 @@ public class ApplicationAssetService {
   }
 
   @Transactional
-  public void createAssetForApplicationVersion(ApplicationVersion applicationVersion, String assetKey,
-                                               AssetRole assetRole) {
+  public void createAssetForApplicationVersion(
+      ApplicationVersion applicationVersion,
+      AssetKey assetKey,
+      AssetRole assetRole
+  ) {
     var purpose = "Adding ApplicationAsset to ApplicationVersion [%s]".formatted(applicationVersion.getId());
-    var asset = assetService.getAsset(assetKey);
+    var assetType = assetKey.assetType();
+    var assetId = assetKey.assetId();
 
-    if (FIELD.equals(asset.getAssetType())) {
-      var field = fieldService.getFieldWithOperator(asset.getId(), purpose);
-      var applicationAsset = createAsset(applicationVersion, field, assetRole);
-      applicationAssetRepository.save(applicationAsset);
-      return;
+    switch (assetType) {
+      case FIELD -> {
+        var field = fieldService.getFieldWithOperator(assetId, purpose);
+        var applicationAsset = createAsset(applicationVersion, field, assetRole);
+        applicationAssetRepository.save(applicationAsset);
+      }
+      case TERMINAL -> {
+        var terminal = terminalService.getTerminalWithOperator(assetId, purpose);
+        var applicationAsset = createAsset(applicationVersion, terminal, assetRole);
+        applicationAssetRepository.save(applicationAsset);
+      }
+      case FACILITY -> {
+        var facility = facilityService.getFacilityWithOperator(assetId, purpose);
+        var applicationAsset = createAsset(applicationVersion, facility, assetRole);
+        applicationAssetRepository.save(applicationAsset);
+      }
+      case HUB -> {
+        var hub = hubService.getHubWithOperator(assetId, purpose);
+        var applicationAsset = createAsset(applicationVersion, hub, assetRole);
+        applicationAssetRepository.save(applicationAsset);
+      }
+      default -> throw new UnsupportedOperationException("Cannot create ApplicationAsset of type [%s]".formatted(assetType));
+    }
+  }
+
+  public Shore getShore(ApplicationAsset applicationAsset) {
+    if (!applicationAsset.isField()) {
+      throw new UnsupportedOperationException("Cannot get shore for non-field asset");
     }
 
-    if (TERMINAL.equals(asset.getAssetType())) {
-      var terminal = terminalService.getTerminalWithOperator(asset.getId(), purpose);
-      var applicationAsset = createAsset(applicationVersion, terminal, assetRole);
-      applicationAssetRepository.save(applicationAsset);
-      return;
-    }
+    var fieldId = applicationAsset.getAssetId();
+    var query = new FieldProjectionRoot().shore().root();
+    var requestPurpose = new RequestPurpose("Looking up shore type for field");
 
-    throw new UnsupportedOperationException("Cannot create ApplicationAsset of role [%s]".formatted(assetRole));
+    return fieldApi.findFieldById(fieldId, query, requestPurpose)
+        .map(Field::getShore)
+        .map(epaFieldShore -> switch (epaFieldShore) {
+          case OFFSHORE -> Shore.OFFSHORE;
+          case ONSHORE -> Shore.ONSHORE;
+          case UNKNOWN -> Shore.UNKNOWN;
+        })
+        .orElseThrow(() -> new IllegalStateException("Field [%d] not found".formatted(fieldId)));
   }
 
   @Transactional
