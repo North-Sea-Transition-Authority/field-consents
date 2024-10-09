@@ -19,7 +19,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasPermission(permissions = RolePermission.MANAGE_ASSETS)
 public class AssetSelectionController {
 
-  public static final String ASSET_SELECTION_TITLE = "Manage fields/facilities";
+  public static final String ASSET_SELECTION_TITLE = "Manage fields or facilities";
 
   @GetMapping
   public ModelAndView getAssetSelection() {

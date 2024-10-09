@@ -102,13 +102,16 @@ backLinkUrl=springUrl(cancelUrl)
     Compared to the previous year “increase” should be selected where:
     <ul>
       <li>
-        there is an increase in the averaged oil or
+        there is an increase in the averaged oil or;
       </li>
       <li>
-        there is an increase in the averaged gas profile or
+        there is an increase in the averaged gas profile or;
       </li>
       <li>
-        any of the years show an increase over the current year's consented volumes
+        any of the years show an increase over the current year's consented volumes or;
+      </li>
+      <li>
+        there is no previous consent as the application is related to an FDP
       </li>
     </ul>
   </p>
@@ -119,10 +122,10 @@ backLinkUrl=springUrl(cancelUrl)
     Compared to the previous year “decrease” should be selected where:
     <ul>
       <li>
-        there is a decrease in the average oil or
+        there is a decrease in the average oil or;
       </li>
       <li>
-        there is a decrease in the averaged gas profile or
+        there is a decrease in the averaged gas profile or;
       </li>
       <li>
         any of the years show a decrease over the current year's consented volumes
@@ -139,6 +142,6 @@ backLinkUrl=springUrl(cancelUrl)
     Other
   </h3>
   <p class="govuk-body">
-    Should be used for applications such as change of operator.
+    Should be selected when this application does not result in an increase, decrease, or extension in production, for example when there is a change of operator.
   </p>
 </#macro>
