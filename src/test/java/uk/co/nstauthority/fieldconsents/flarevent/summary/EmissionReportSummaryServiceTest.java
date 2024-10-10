@@ -53,12 +53,6 @@ import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 @ExtendWith(MockitoExtension.class)
 class EmissionReportSummaryServiceTest {
 
-  @Mock
-  private EmissionsChartDataService emissionsChartDataService;
-
-  @InjectMocks
-  private EmissionReportSummaryService emissionReportSummaryService;
-
   private final EmissionsChartData emissionsChartData = new EmissionsChartData(
       "Example chart title",
       List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
@@ -66,10 +60,26 @@ class EmissionReportSummaryServiceTest {
       "Days in month",
       List.of(new EmissionsChartData.Series(
           "Days",
-          "highcharts-colour-blue",
-          List.of(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+          "highcharts-color-1",
+          List.of(
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 29),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+              new EmissionsChartData.DataPoint("highcharts-color-1", 31))
       ))
   );
+  @Mock
+  private EmissionsChartDataService emissionsChartDataService;
+  @InjectMocks
+  private EmissionReportSummaryService emissionReportSummaryService;
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, mode = EnumSource.Mode.EXCLUDE, names = {"PRODUCTION"})
@@ -90,7 +100,8 @@ class EmissionReportSummaryServiceTest {
                             "Which year do you have %s report data up to?".formatted(appTypeDisplayName.toLowerCase()),
                             String.valueOf(reportPeriod.getReportEndYear())),
                         new SummaryKeyValue(
-                            "Which is the latest full month of %s report data you have?".formatted(appTypeDisplayName.toLowerCase()),
+                            "Which is the latest full month of %s report data you have?".formatted(
+                                appTypeDisplayName.toLowerCase()),
                             DateUtils.formatFull(reportPeriod.getReportEndMonth()))
                     )
                 )
@@ -106,11 +117,11 @@ class EmissionReportSummaryServiceTest {
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 
     var shutDownDaysTotal = reportMonths.stream()
-            .mapToInt(FlareReportMonth::getShutDownDays)
-            .sum();
+        .mapToInt(FlareReportMonth::getShutDownDays)
+        .sum();
     var totalDays = reportMonths.stream()
-            .mapToInt(reportMonth -> YearMonth.of(reportMonth.getYear(), reportMonth.getMonth()).lengthOfMonth())
-            .sum();
+        .mapToInt(reportMonth -> YearMonth.of(reportMonth.getYear(), reportMonth.getMonth()).lengthOfMonth())
+        .sum();
     var categoryATotal = getCategoryATotal(reportMonths);
     var categoryBTotal = getCategoryBTotal(reportMonths);
     var categoryCTotal = getCategoryCTotal(reportMonths);

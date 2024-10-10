@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData.DataPoint;
 import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData.Series;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
@@ -82,12 +83,12 @@ public class EmissionsChartDataService {
       default -> throw unsupportedApplicationTypeException(applicationType);
     };
 
-    var emissionsCartData = getShortTermOrAnnualEmissionChartData(
+    var emissionsChartData = getShortTermOrAnnualEmissionChartData(
         emissionMonths,
         applicationVersion,
         EmissionsChartType.REPORT
     );
-    return Optional.of(emissionsCartData);
+    return Optional.of(emissionsChartData);
   }
 
   public Optional<EmissionsChartData> getConsentChartData(ApplicationVersion applicationVersion) {
@@ -124,12 +125,12 @@ public class EmissionsChartDataService {
       default -> throw unsupportedApplicationTypeException(applicationType);
     };
 
-    var emissionsCartData = getShortTermOrAnnualEmissionChartData(
+    var emissionsChartData = getShortTermOrAnnualEmissionChartData(
         emissionMonths,
         applicationVersion,
         EmissionsChartType.CONSENT
     );
-    return Optional.of(emissionsCartData);
+    return Optional.of(emissionsChartData);
   }
 
   private EmissionsChartData getShortTermOrAnnualEmissionChartData(
@@ -150,14 +151,26 @@ public class EmissionsChartDataService {
 
     var series = new ArrayList<Series>();
 
-    var categoryA = flareVentRows.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList();
-    series.add(new Series("Category A", HighchartsColour.LIGHT_BLUE, categoryA));
+    var categoryA = flareVentRows.stream()
+        .map(FlareVentRow::getCategoryA)
+        .map(BigDecimal::floatValue)
+        .map(catAValue -> new DataPoint(HighchartsColour.DARK_BLUE, catAValue))
+        .toList();
+    series.add(new Series("Category A", HighchartsColour.DARK_BLUE, categoryA));
 
-    var categoryB = flareVentRows.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList();
+    var categoryB = flareVentRows.stream()
+        .map(FlareVentRow::getCategoryB)
+        .map(BigDecimal::floatValue)
+        .map(catBValue -> new DataPoint(HighchartsColour.BLUE, catBValue))
+        .toList();
     series.add(new Series("Category B", HighchartsColour.BLUE, categoryB));
 
-    var categoryC = flareVentRows.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList();
-    series.add(new Series("Category C", HighchartsColour.DARK_BLUE, categoryC));
+    var categoryC = flareVentRows.stream()
+        .map(FlareVentRow::getCategoryC)
+        .map(BigDecimal::floatValue)
+        .map(catCValue -> new DataPoint(HighchartsColour.LIGHT_BLUE, catCValue))
+        .toList();
+    series.add(new Series("Category C", HighchartsColour.LIGHT_BLUE, categoryC));
 
     var chartHeading = chartType.getHeading(
         applicationVersion.getApplication().getType(),

@@ -19,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.production.summary.ProductionSumm
 import java.time.YearMonth;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.charts.ProductionChartData;
+import uk.co.nstauthority.fieldconsents.charts.ProductionChartDataService;
+import uk.co.nstauthority.fieldconsents.charts.ProductionType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
@@ -49,6 +53,156 @@ import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 @ExtendWith(MockitoExtension.class)
 class ProductionSummaryServiceTest {
 
+  private final ProductionChartData oilProductionChartData = new ProductionChartData(
+      "Example chart title",
+      List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
+      "Month",
+      "Days in month",
+      List.of(new ProductionChartData.Series(
+              "Days",
+              "highcharts-color-1",
+              "columnrange",
+              List.of(
+                  new ProductionChartData.DataPoint(
+                      0,
+                      1,
+                      5,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      1,
+                      2,
+                      10,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      2,
+                      3,
+                      15,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      3,
+                      4,
+                      20,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      4,
+                      5,
+                      25,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      5,
+                      6,
+                      30,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      6,
+                      7,
+                      35,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      7,
+                      8,
+                      40,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      8,
+                      9,
+                      45,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      9,
+                      10,
+                      50,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      10,
+                      11,
+                      55,
+                      "highcharts-color-1"),
+                  new ProductionChartData.DataPoint(
+                      11,
+                      12,
+                      60,
+                      "highcharts-color-1")
+              )
+          )
+      )
+  );
+
+  private final ProductionChartData gasProductionChartData = new ProductionChartData(
+      "Example chart title2",
+      List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"),
+      "Month2",
+      "Days in month2",
+      List.of(new ProductionChartData.Series(
+              "Days",
+              "highcharts-color-2",
+              "columnrange",
+              List.of(
+                  new ProductionChartData.DataPoint(
+                      0,
+                      1,
+                      5,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      1,
+                      2,
+                      10,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      2,
+                      3,
+                      15,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      3,
+                      4,
+                      20,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      4,
+                      5,
+                      25,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      5,
+                      6,
+                      30,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      6,
+                      7,
+                      35,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      7,
+                      8,
+                      40,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      8,
+                      9,
+                      45,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      9,
+                      10,
+                      50,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      10,
+                      11,
+                      55,
+                      "highcharts-color-2"),
+                  new ProductionChartData.DataPoint(
+                      11,
+                      12,
+                      60,
+                      "highcharts-color-2")
+              )
+          )
+      )
+  );
+
   @Mock
   private ShortTermProductionService shortTermProductionService;
 
@@ -60,6 +214,9 @@ class ProductionSummaryServiceTest {
 
   @Mock
   private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private ProductionChartDataService productionChartDataService;
 
   @InjectMocks
   private ProductionSummaryService productionSummaryService;
@@ -347,5 +504,19 @@ class ProductionSummaryServiceTest {
         bigDecimalToFormattedString(productionYear.getGasMinValue()),
         bigDecimalToFormattedString(productionYear.getGasMaxValue())
     ));
+  }
+
+  @Test
+  void getProductionConsentChartSummaryCards() {
+    when(productionChartDataService.getProductionChartData(applicationVersion, ProductionType.OIL))
+        .thenReturn(Optional.of(oilProductionChartData));
+    when(productionChartDataService.getProductionChartData(applicationVersion, ProductionType.GAS))
+        .thenReturn(Optional.of(gasProductionChartData));
+
+    assertThat(productionSummaryService.getProductionConsentChartSummaryCards(applicationVersion))
+        .contains(
+            SummaryCard.floatingBarChartSummaryCard(oilProductionChartData),
+            SummaryCard.floatingBarChartSummaryCard(gasProductionChartData)
+        );
   }
 }

@@ -89,7 +89,8 @@ class EmissionsChartDataServiceTest {
 
     applicationVersion.getApplication().setType(applicationType);
 
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_ABC);
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(
+        EmissionCategoryType.CATEGORY_ABC);
     when(flareReportService.flareReportMonthsComplete(applicationVersion)).thenReturn(true);
     when(flareReportService.getFlareReportMonths(applicationVersion)).thenReturn(reportMonths);
     when(applicationUnitService.getEmissionCategoryUnit(applicationVersion)).thenReturn(emissionCategoryUnit);
@@ -101,24 +102,37 @@ class EmissionsChartDataServiceTest {
                 reportMonths.getFirst().getYearMonth(),
                 reportMonths.getLast().getYearMonth()
             ),
-            reportMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            reportMonths.stream().map(FlareVentRow::getMonth).map(
+                month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));
@@ -132,7 +146,8 @@ class EmissionsChartDataServiceTest {
 
     applicationVersion.getApplication().setType(applicationType);
 
-    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(EmissionCategoryType.CATEGORY_ABC);
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(
+        EmissionCategoryType.CATEGORY_ABC);
     when(ventReportService.ventReportMonthsComplete(applicationVersion)).thenReturn(true);
     when(ventReportService.getVentReportMonths(applicationVersion)).thenReturn(reportMonths);
     when(applicationUnitService.getEmissionCategoryUnit(applicationVersion)).thenReturn(emissionCategoryUnit);
@@ -144,24 +159,37 @@ class EmissionsChartDataServiceTest {
                 reportMonths.getFirst().getYearMonth(),
                 reportMonths.getLast().getYearMonth()
             ),
-            reportMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            reportMonths.stream().map(FlareVentRow::getMonth).map(
+                month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    reportMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    reportMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));
@@ -181,16 +209,17 @@ class EmissionsChartDataServiceTest {
     var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     var emissionCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
-    var consentMonths = FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion, LocalDate.now().minusDays(7), LocalDate.now());
+    var consentMonths = FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
+        LocalDate.now().minusDays(7), LocalDate.now());
 
     applicationVersion.getApplication().setType(applicationType);
     consentLengthDetails.setConsentLength(consentLengthType);
 
     when(applicationUnitService.getEmissionCategoryType(applicationVersion)).thenReturn(emissionsCategoryType);
+    when(applicationUnitService.getEmissionCategoryUnit(applicationVersion)).thenReturn(emissionCategoryUnit);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(flareShortTermService.flareShortTermMonthsExist(applicationVersion)).thenReturn(true);
     when(flareShortTermService.getFlareShortTermMonths(applicationVersion)).thenReturn(consentMonths);
-    when(applicationUnitService.getEmissionCategoryUnit(applicationVersion)).thenReturn(emissionCategoryUnit);
 
     assertThat(emissionsChartDataService.getConsentChartData(applicationVersion))
         .contains(new EmissionsChartData(
@@ -199,24 +228,39 @@ class EmissionsChartDataServiceTest {
                 consentMonths.getFirst().getYearMonth(),
                 consentMonths.getLast().getYearMonth()
             ),
-            consentMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            consentMonths.stream()
+                .map(FlareVentRow::getMonth)
+                .map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK))
+                .toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));
@@ -247,24 +291,37 @@ class EmissionsChartDataServiceTest {
                 consentMonths.getFirst().getYearMonth(),
                 consentMonths.getLast().getYearMonth()
             ),
-            consentMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            consentMonths.stream().map(FlareVentRow::getMonth).map(
+                month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));
@@ -292,7 +349,8 @@ class EmissionsChartDataServiceTest {
     var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     var emissionCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
-    var consentMonths = VentShortTermTestUtil.getVentShortTermMonthsForPeriod(applicationVersion, LocalDate.now().minusDays(7), LocalDate.now());
+    var consentMonths = VentShortTermTestUtil.getVentShortTermMonthsForPeriod(applicationVersion,
+        LocalDate.now().minusDays(7), LocalDate.now());
 
     applicationVersion.getApplication().setType(applicationType);
     consentLengthDetails.setConsentLength(consentLengthType);
@@ -310,24 +368,37 @@ class EmissionsChartDataServiceTest {
                 consentMonths.getFirst().getYearMonth(),
                 consentMonths.getLast().getYearMonth()
             ),
-            consentMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            consentMonths.stream().map(FlareVentRow::getMonth).map(
+                month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));
@@ -358,24 +429,37 @@ class EmissionsChartDataServiceTest {
                 consentMonths.getFirst().getYearMonth(),
                 consentMonths.getLast().getYearMonth()
             ),
-            consentMonths.stream().map(FlareVentRow::getMonth).map(month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
+            consentMonths.stream().map(FlareVentRow::getMonth).map(
+                month -> month.getDisplayName(TextStyle.SHORT, Locale.UK)).toList(),
             "Month",
             "Volume (%s)".formatted(emissionCategoryUnit.getDisplayName()),
             List.of(
                 new EmissionsChartData.Series(
                     "Category A",
-                    HighchartsColour.LIGHT_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryA).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.DARK_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryA)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.DARK_BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category B",
                     HighchartsColour.BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryB).map(BigDecimal::floatValue).toList()
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryB)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.BLUE, y))
+                        .toList()
                 ),
                 new EmissionsChartData.Series(
                     "Category C",
-                    HighchartsColour.DARK_BLUE,
-                    consentMonths.stream().map(FlareVentRow::getCategoryC).map(BigDecimal::floatValue).toList()
+                    HighchartsColour.LIGHT_BLUE,
+                    consentMonths.stream()
+                        .map(FlareVentRow::getCategoryC)
+                        .map(BigDecimal::floatValue)
+                        .map(y -> new EmissionsChartData.DataPoint(HighchartsColour.LIGHT_BLUE, y))
+                        .toList()
                 )
             )
         ));

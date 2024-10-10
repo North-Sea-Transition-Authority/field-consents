@@ -2,6 +2,7 @@ import SelectableResultsAndActionsContainer from "./selectableResultsAndActionsC
 import TableWithPastableContent from "./tableWithPastableContent";
 import RichTextEditor from "./richTextEditor";
 import StackedBarChart from "./highcharts/stackedBarChart";
+import FloatingBarChart from "./highcharts/floatingBarChart";
 
 const selectableResultsAndActionsContainer = document.querySelector("[data-module='fcs-selectable-results-and-actions-container']");
 if (selectableResultsAndActionsContainer) {
@@ -18,4 +19,8 @@ for (const element of document.querySelectorAll("[data-module='rich-text-editor'
 
 for (const element of document.querySelectorAll("[data-module='fcs-stacked-bar-chart']")) {
   new StackedBarChart(element);
+}
+
+for (const element of document.querySelectorAll("[data-module='fcs-floating-bar-chart']")) {
+  new FloatingBarChart(element);
 }

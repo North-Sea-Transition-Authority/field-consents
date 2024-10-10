@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionForm;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionMonth;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionMonthForm;
@@ -28,11 +30,11 @@ import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProduction
  */
 public class ProductionTestUtils {
 
-  static public final Integer START_YEAR_LT = LocalDate.now().getYear();
+  public static final Integer START_YEAR_LT = LocalDate.now().getYear();
 
-  static public final Integer END_YEAR_LT = START_YEAR_LT + 4;
+  public static final Integer END_YEAR_LT = START_YEAR_LT + 4;
 
-  static public final String PRODUCTION_YEAR = "2022";
+  public static final String PRODUCTION_YEAR = "2022";
 
   public static final LocalDate START_DATE = LocalDate.of(2022, Month.OCTOBER, 31);
 
@@ -107,7 +109,7 @@ public class ProductionTestUtils {
 
     var allMonths = Month.values();
 
-    for(int index = 0; index < Month.values().length; index++) {
+    for (int index = 0; index < Month.values().length; index++) {
       Month monthName = allMonths[index];
       AnnualProductionMonth annualProductionMonth = getAnnualProductionMonth(applicationVersion, index, monthName);
       annualProductionMonths.add(annualProductionMonth);
@@ -216,9 +218,9 @@ public class ProductionTestUtils {
     shortTermProductionMonths.add(startProductionMonth);
 
     // Initialise other months
-    for(LocalDate date = START_DATE.plusMonths(1);
-        date.isBefore(END_DATE) && date.getMonth() != END_DATE.getMonth();
-        date = date.plusMonths(1)) {
+    for (LocalDate date = START_DATE.plusMonths(1);
+         date.isBefore(END_DATE) && date.getMonth() != END_DATE.getMonth();
+         date = date.plusMonths(1)) {
 
       LocalDate startDate = LocalDate.of(date.getYear(), date.getMonth(), 1);
       LocalDate endDate = LocalDate.of(date.getYear(), date.getMonth(), date.lengthOfMonth());
@@ -277,8 +279,29 @@ public class ProductionTestUtils {
   public static List<LongTermProductionYear> getLongTermProductionYearsData(ApplicationVersion applicationVersion) {
 
     List<LongTermProductionYear> longTermProductionYears = new ArrayList<>();
-    for(Integer year = START_YEAR_LT; year <= END_YEAR_LT; year++) {
+    for (Integer year = START_YEAR_LT; year <= END_YEAR_LT; year++) {
       longTermProductionYears.add(getLongTermProductionYear(applicationVersion, year - START_YEAR_LT + 1, year));
+    }
+
+    return longTermProductionYears;
+  }
+
+  public static List<LongTermProductionYear> getLongTermProductionYearsBetweenYears(
+      ApplicationVersion applicationVersion,
+      Integer startYear,
+      Integer endYear
+  ) {
+    List<LongTermProductionYear> longTermProductionYears = new ArrayList<>();
+    for (Integer year = startYear; year <= endYear; year++) {
+      var longTermProductionYear = new LongTermProductionYear();
+      longTermProductionYear.setId(year - startYear + 1);
+      longTermProductionYear.setApplicationVersion(applicationVersion);
+      longTermProductionYear.setYear(year);
+      longTermProductionYear.setOilMinValue(BigDecimal.valueOf((year - startYear + 1)));
+      longTermProductionYear.setOilMaxValue(BigDecimal.valueOf((year - startYear + 1) * 100L));
+      longTermProductionYear.setGasMinValue(BigDecimal.valueOf((year - startYear + 1) * 10000L));
+      longTermProductionYear.setGasMaxValue(BigDecimal.valueOf((year - startYear + 1) * 1000000L));
+      longTermProductionYears.add(longTermProductionYear);
     }
 
     return longTermProductionYears;
@@ -320,10 +343,55 @@ public class ProductionTestUtils {
     );
   }
 
+  public static List<ShortTermProductionMonth> getShortTermProductionMonthsForPeriod(
+      ApplicationVersion applicationVersion,
+      LocalDate startDate,
+      LocalDate endDate
+  ) {
+    List<ShortTermProductionMonth> shortTermProductionMonths = new ArrayList<>();
+
+    int rowNumber = 1;
+    for (Pair<LocalDate, LocalDate> shortTermMonth : ShortTermUtil.getExpectedMonthTerms(startDate, endDate)) {
+      var shortTermProductionMonth = new ShortTermProductionMonth();
+      shortTermProductionMonth.setApplicationVersion(applicationVersion);
+      shortTermProductionMonth.setStartDate(shortTermMonth.getLeft());
+      shortTermProductionMonth.setEndDate(shortTermMonth.getRight());
+      shortTermProductionMonth.setYear(shortTermProductionMonth.getStartDate().getYear());
+      shortTermProductionMonth.setMonth(shortTermProductionMonth.getStartDate().getMonth());
+      shortTermProductionMonth.setOilMinValue(BigDecimal.valueOf(rowNumber));
+      shortTermProductionMonth.setOilMaxValue(BigDecimal.valueOf(rowNumber * 10L));
+      shortTermProductionMonth.setGasMinValue(BigDecimal.valueOf(rowNumber * 100L));
+      shortTermProductionMonth.setGasMaxValue(BigDecimal.valueOf(rowNumber * 1000L));
+
+      shortTermProductionMonths.add(shortTermProductionMonth);
+      rowNumber++;
+    }
+    return shortTermProductionMonths;
+  }
+
   private static void setProductionRowDetails(ProductionRow productionRow) {
     productionRow.setOilMinValue(new BigDecimal("0.5"));
     productionRow.setOilMaxValue(new BigDecimal("2.3"));
     productionRow.setGasMinValue(new BigDecimal("1.72"));
     productionRow.setGasMaxValue(new BigDecimal("4.25"));
+  }
+
+  public static List<AnnualProductionMonth> getAnnualProductionMonthsForYear(ApplicationVersion applicationVersion,
+                                                                             int year) {
+    List<AnnualProductionMonth> annualProductionMonths = new ArrayList<>();
+
+    for (Month month : Month.values()) {
+      var annualProductionMonth = new AnnualProductionMonth();
+      annualProductionMonth.setApplicationVersion(applicationVersion);
+      annualProductionMonth.setYear(year);
+      annualProductionMonth.setMonth(month);
+      annualProductionMonth.setOilMinValue(BigDecimal.valueOf(month.getValue()));
+      annualProductionMonth.setOilMaxValue(BigDecimal.valueOf(month.getValue() * 10));
+      annualProductionMonth.setGasMinValue(BigDecimal.valueOf(month.getValue() * 100));
+      annualProductionMonth.setGasMaxValue(BigDecimal.valueOf(month.getValue() * 1000));
+
+      annualProductionMonths.add(annualProductionMonth);
+    }
+    return annualProductionMonths;
   }
 }

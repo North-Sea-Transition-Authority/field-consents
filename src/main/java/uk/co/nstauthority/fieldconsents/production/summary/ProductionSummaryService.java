@@ -1,11 +1,15 @@
 package uk.co.nstauthority.fieldconsents.production.summary;
 
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.charts.ProductionChartDataService;
+import uk.co.nstauthority.fieldconsents.charts.ProductionType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
@@ -36,15 +40,21 @@ public class ProductionSummaryService {
 
   private final ApplicationUnitService applicationUnitService;
 
+  private final ProductionChartDataService productionChartDataService;
+
   @Autowired
-  public ProductionSummaryService(ShortTermProductionService shortTermProductionService,
-                                  AnnualProductionService annualProductionService,
-                                  LongTermProductionService longTermProductionService,
-                                  ApplicationUnitService applicationUnitService) {
+  public ProductionSummaryService(
+      ShortTermProductionService shortTermProductionService,
+      AnnualProductionService annualProductionService,
+      LongTermProductionService longTermProductionService,
+      ApplicationUnitService applicationUnitService,
+      ProductionChartDataService productionChartDataService
+  ) {
     this.shortTermProductionService = shortTermProductionService;
     this.annualProductionService = annualProductionService;
     this.longTermProductionService = longTermProductionService;
     this.applicationUnitService = applicationUnitService;
+    this.productionChartDataService = productionChartDataService;
   }
 
   public SummaryCard getShortTermConsentSummaryCard(ApplicationVersion applicationVersion) {
@@ -196,5 +206,16 @@ public class ProductionSummaryService {
     }
 
     return SummaryCard.tableSummaryCard(summaryTable);
+  }
+
+  public List<SummaryCard> getProductionConsentChartSummaryCards(ApplicationVersion applicationVersion) {
+    var summaryCards = new ArrayList<SummaryCard>();
+    productionChartDataService.getProductionChartData(applicationVersion, ProductionType.OIL)
+        .map(SummaryCard::floatingBarChartSummaryCard)
+        .ifPresent(summaryCards::add);
+    productionChartDataService.getProductionChartData(applicationVersion, ProductionType.GAS)
+        .map(SummaryCard::floatingBarChartSummaryCard)
+        .ifPresent(summaryCards::add);
+    return summaryCards;
   }
 }

@@ -13,7 +13,13 @@ public record EmissionsChartData(
   public record Series(
       String name,
       String className,
-      List<? extends Number> data
+      List<DataPoint> data
+  ) {
+  }
+
+  public record DataPoint(
+      String className,
+      Number y
   ) {
   }
 

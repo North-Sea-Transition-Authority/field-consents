@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
+import uk.co.nstauthority.fieldconsents.charts.ProductionChartData;
 
 public record SummaryCard(
     String displayName,
@@ -36,8 +37,10 @@ public record SummaryCard(
     return List.of(emptySummaryCard());
   }
 
-  public static SummaryCard tableSummaryCardWithHeading(String displayName,
-                                                        SummaryTableView summaryData) {
+  public static SummaryCard tableSummaryCardWithHeading(
+      String displayName,
+      SummaryTableView summaryData
+  ) {
     return new SummaryCard(
         displayName,
         SummaryCardType.TABLE_SUMMARY,
@@ -61,7 +64,19 @@ public record SummaryCard(
     var objectMapper = new ObjectMapper();
     try {
       var chartDataJson = objectMapper.writeValueAsString(emissionsChartData);
-      return new SummaryCard(null, SummaryCardType.STACKED_BAR_CHART_SUMMARY, chartDataJson);
+      var summaryChart = new SummaryChart(SummaryChartType.STACKED_BAR_CHART, chartDataJson);
+      return new SummaryCard(null, SummaryCardType.CHART_SUMMARY, summaryChart);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Failed to serialise chart data into JSON");
+    }
+  }
+
+  public static SummaryCard floatingBarChartSummaryCard(ProductionChartData productionChartData) {
+    var objectMapper = new ObjectMapper();
+    try {
+      var chartDataJson = objectMapper.writeValueAsString(productionChartData);
+      var summaryChart = new SummaryChart(SummaryChartType.FLOATING_BAR_CHART, chartDataJson);
+      return new SummaryCard(null, SummaryCardType.CHART_SUMMARY, summaryChart);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Failed to serialise chart data into JSON");
     }

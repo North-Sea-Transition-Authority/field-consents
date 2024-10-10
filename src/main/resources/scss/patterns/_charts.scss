@@ -14,16 +14,84 @@
 }
 
 .highcharts-color {
-  &-0 {
-    fill: govuk-colour("dark-blue");
-    stroke: govuk-colour("dark-blue");
+  &-red {
+    fill: govuk-colour("red");
+    stroke: govuk-colour("red");
   }
-  &-1 {
+  &-yellow {
+    fill: govuk-colour("yellow");
+    stroke: govuk-colour("yellow");
+  }
+  &-green {
+    fill: govuk-colour("green");
+    stroke: govuk-colour("green");
+  }
+  &-blue {
     fill: govuk-colour("blue");
     stroke: govuk-colour("blue");
   }
-  &-2 {
+  &-dark-blue {
+    fill: govuk-colour("dark-blue");
+    stroke: govuk-colour("dark-blue");
+  }
+  &-light-blue {
     fill: govuk-colour("light-blue");
     stroke: govuk-colour("light-blue");
+  }
+  &-purple {
+    fill: govuk-colour("purple");
+    stroke: govuk-colour("purple");
+  }
+  &-black {
+    fill: govuk-colour("black");
+    stroke: govuk-colour("black");
+  }
+  &-dark-grey {
+    fill: govuk-colour("dark-grey");
+    stroke: govuk-colour("dark-grey");
+  }
+  &-mid-grey {
+    fill: govuk-colour("mid-grey");
+    stroke: govuk-colour("mid-grey");
+  }
+  &-light-grey {
+    fill: govuk-colour("light-grey");
+    stroke: govuk-colour("light-grey");
+  }
+  &-white {
+    fill: govuk-colour("white");
+    stroke: govuk-colour("white");
+  }
+  &-light-purple {
+    fill: govuk-colour("light-purple");
+    stroke: govuk-colour("light-purple");
+  }
+  &-bright-purple {
+    fill: govuk-colour("bright-purple");
+    stroke: govuk-colour("bright-purple");
+  }
+  &-pink {
+    fill: govuk-colour("pink");
+    stroke: govuk-colour("pink");
+  }
+  &-light-pink {
+    fill: govuk-colour("light-pink");
+    stroke: govuk-colour("light-pink");
+  }
+  &-orange {
+    fill: govuk-colour("orange");
+    stroke: govuk-colour("orange");
+  }
+  &-brown {
+    fill: govuk-colour("brown");
+    stroke: govuk-colour("brown");
+  }
+  &-light-green {
+    fill: govuk-colour("light-green");
+    stroke: govuk-colour("light-green");
+  }
+  &-turquoise {
+    fill: govuk-colour("turquoise");
+    stroke: govuk-colour("turquoise");
   }
 }

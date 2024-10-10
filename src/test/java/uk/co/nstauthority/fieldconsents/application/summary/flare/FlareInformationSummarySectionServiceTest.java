@@ -109,10 +109,23 @@ class FlareInformationSummarySectionServiceTest {
       "Month",
       "Days in month",
       List.of(new EmissionsChartData.Series(
-          "Days",
-          "highcharts-colour-blue",
-          List.of(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-      ))
+              "Days",
+              "highcharts-color-1",
+              List.of(
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 29),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 30),
+                  new EmissionsChartData.DataPoint("highcharts-color-1", 31))
+          )
+      )
   );
 
   @BeforeEach
