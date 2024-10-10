@@ -18,7 +18,9 @@
       <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
-      <@dataItemFilter.operatorGroupFilter form=form prefilledOperatorGroup=prefilledOperatorGroup operatorGroupSearchRestUrl=operatorGroupSearchRestUrl/>
+      <#if canFilterByPrimaryOperatorGroup>
+        <@dataItemFilter.operatorGroupFilter form=form prefilledOperatorGroup=prefilledOperatorGroup operatorGroupSearchRestUrl=operatorGroupSearchRestUrl/>
+      </#if>
       <@dataItemFilter.submittedYearFilter form=form/>
       <@consentStartYearFilter form=form/>
       <@consentEndYearFilter form=form/>

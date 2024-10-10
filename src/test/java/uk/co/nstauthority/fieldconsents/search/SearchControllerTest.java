@@ -49,6 +49,9 @@ class SearchControllerTest extends AbstractControllerTest {
   private static final String SEARCH_VIEW_NAME = "fcs/search/search";
 
   private static final String EXPECTED_REDIRECT_URL = ReverseRouter.route(on(SearchController.class).getSearch(null, null));
+  public static final String CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP = "canFilterByPrimaryOperatorGroup";
+  public static final String ACE_STATUSES = "aceStatuses";
+  public static final String SEARCH_RESULTS_LIMITED = "searchResultsLimited";
 
   @MockBean
   private SearchService searchService;
@@ -125,7 +128,9 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @Test
   void getSearch_IndustryUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    var isRegulator = false;
+
+    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     when(teamService.isIndustryUser(user)).thenReturn(true);
     when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(applicationDataItemViews);
@@ -142,7 +147,8 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
     assertSearchModel(model);
   }
 
@@ -163,7 +169,7 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
-        .andExpect(model().attribute("searchResultsLimited", false));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, false));
   }
 
   @Test
@@ -183,12 +189,14 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
-        .andExpect(model().attribute("searchResultsLimited", true));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, true));
   }
 
   @Test
   void getSearch_RegulatorUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var isRegulator = true;
+
+    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(applicationDataItemViews);
     searchSession.update(form);
@@ -205,7 +213,8 @@ class SearchControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
-        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
+        .containsEntry(ACE_STATUSES, AceFlagStatus.getDisplayableOptions())
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
     assertSearchModel(model);
   }
 
@@ -226,7 +235,7 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
-        .andExpect(model().attribute("searchResultsLimited", false));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, false));
   }
 
   @Test
@@ -246,12 +255,14 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
-        .andExpect(model().attribute("searchResultsLimited", true));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, true));
   }
 
   @Test
   void getSearch_ConsulteeUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    var isRegulator = false;
+
+    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     when(teamService.isIndustryUser(user)).thenReturn(false);
     when(teamService.isConsulteeUser(user)).thenReturn(true);
     when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
@@ -270,7 +281,8 @@ class SearchControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
-        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
+        .containsEntry(ACE_STATUSES, AceFlagStatus.getDisplayableOptions())
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
     assertSearchModel(model);
   }
 
@@ -291,7 +303,7 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews))
-        .andExpect(model().attribute("searchResultsLimited", false));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, false));
   }
 
   @Test
@@ -311,12 +323,14 @@ class SearchControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andExpect(model().attribute(SEARCH_RESULT_ITEMS, applicationDataItemViews.subList(0, 300)))
-        .andExpect(model().attribute("searchResultsLimited", true));
+        .andExpect(model().attribute(SEARCH_RESULTS_LIMITED, true));
   }
 
   @Test
   void getSearch_userNotRecognised() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    var isRegulator = false;
+
+    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     when(teamService.isIndustryUser(user)).thenReturn(false);
     when(teamService.isConsulteeUser(user)).thenReturn(false);
     applicationDataItemViews = Collections.emptyList();
@@ -333,13 +347,16 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
     assertSearchModel(model);
   }
 
   @Test
   void getSearch_withSearchNotInvoked() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var isRegulator = true;
+
+    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
@@ -356,6 +373,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator)
         .doesNotContainEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
     assertSearchModel(model);
   }

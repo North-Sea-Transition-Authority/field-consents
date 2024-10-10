@@ -99,6 +99,7 @@ public class SearchController {
         .addObject("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .addObject("prefilledOperatorGroup", prefilledOperatorGroup)
+        .addObject("canFilterByPrimaryOperatorGroup", isRegulator)
         .addObject("operatorGroupSearchRestUrl",
             ReverseRouter.route(on(OrganisationGroupRestController.class).getOrganisationGroupSearchResults(null)))
         .addObject("prefilledField", prefilledField)
