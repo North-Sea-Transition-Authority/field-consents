@@ -12,10 +12,11 @@
     Once the application is closed, no further processing is allowed. This action cannot be undone.
   </@fdsWarning.warning>
 
-  <@fdsForm.htmlForm actionUrl=springUrl(closureUrl)>
-    <@fdsDetails.summaryDetails summaryTitle="View the application to be closed">
+  <@fdsDetails.summaryDetails summaryTitle="View the application to be closed">
       <@applicationSummary.applicationSummary accordionId=accordionId/>
-    </@fdsDetails.summaryDetails>
+  </@fdsDetails.summaryDetails>
+
+  <@fdsForm.htmlForm actionUrl=springUrl(closureUrl)>
     <@fdsAction.submitButtons
       primaryButtonText="Close application"
       secondaryLinkText="Cancel"
