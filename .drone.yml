@@ -136,8 +136,6 @@ steps:
     volumes:
       - name: docker-sock
         path: /var/run/docker.sock
-      - name: drone-trivy-cache
-        path: /root/trivy-cache
       - name: webfiles
         path: /var/webfiles
     commands:
@@ -214,10 +212,6 @@ volumes:
   - name: docker-sock
     host:
       path: /var/run/docker.sock
-
-  - name: drone-trivy-cache
-    host:
-      path: /root/.cache/
 
   - name: docker-cache-overlay2
     host:
