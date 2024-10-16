@@ -3,7 +3,9 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +35,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
@@ -134,66 +137,169 @@ class ConsentServiceTest {
     verify(consentRepository).save(consent);
   }
 
-  @Test
-  void shouldCheckProductionConsentExists_production() {
-    var applicationVersion = new ApplicationVersion();
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class)
+  void shouldCheckProductionConsentExists_production(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
 
-    var application = new Application();
-    application.setType(ApplicationType.PRODUCTION);
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.PRODUCTION);
 
-    applicationVersion.setApplication(application);
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
 
-    assertThat(consentService.shouldCheckProductionConsentExists(applicationVersion)).isFalse();
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isFalse();
+    verify(applicationAssetService, never()).getPrimaryAsset(any());
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class)
-  void shouldCheckProductionConsentExists_flare(ApplicationVersionStatus applicationVersionStatus) {
-    var applicationVersion = new ApplicationVersion();
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.INCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_flareApplicableStatusField(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
 
-    var application = new Application();
-    application.setType(ApplicationType.FLARE);
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.FLARE);
 
-    applicationVersion.setApplication(application);
-    applicationVersion.setStatus(applicationVersionStatus);
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
 
-    var shouldCheckProductionConsentExists = switch (applicationVersionStatus) {
-      case IN_PROGRESS, AWAITING_PAYMENT, SUBMITTED -> true;
-      default -> false;
-    };
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
 
-    assertThat(consentService.shouldCheckProductionConsentExists(applicationVersion)).isEqualTo(shouldCheckProductionConsentExists);
+    when(applicationAssetService.getPrimaryAsset(testApplicationVersion))
+        .thenReturn(applicationAsset);
+
+    var shouldCheckProductionConsentExists = true;
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isEqualTo(shouldCheckProductionConsentExists);
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class)
-  void shouldCheckProductionConsentExists_vent(ApplicationVersionStatus applicationVersionStatus) {
-    var applicationVersion = new ApplicationVersion();
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.INCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_flareApplicableStatusFacility(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
 
-    var application = new Application();
-    application.setType(ApplicationType.VENT);
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.FLARE);
 
-    applicationVersion.setApplication(application);
-    applicationVersion.setStatus(applicationVersionStatus);
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
 
-    var shouldCheckProductionConsentExists = switch (applicationVersionStatus) {
-      case IN_PROGRESS, AWAITING_PAYMENT, SUBMITTED -> true;
-      default -> false;
-    };
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.TERMINAL);
 
-    assertThat(consentService.shouldCheckProductionConsentExists(applicationVersion)).isEqualTo(shouldCheckProductionConsentExists);
+    when(applicationAssetService.getPrimaryAsset(testApplicationVersion))
+        .thenReturn(applicationAsset);
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_flareNonApplicableStatus(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
+
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.FLARE);
+
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isFalse();
+    verify(applicationAssetService, never()).getPrimaryAsset(any());
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.INCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_ventApplicableStatusField(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
+
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.VENT);
+
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
+
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
+
+    when(applicationAssetService.getPrimaryAsset(testApplicationVersion))
+        .thenReturn(applicationAsset);
+
+    var shouldCheckProductionConsentExists = true;
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isEqualTo(shouldCheckProductionConsentExists);
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.INCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_ventApplicableStatusFacility(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
+
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.VENT);
+
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
+
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.TERMINAL);
+
+    when(applicationAssetService.getPrimaryAsset(testApplicationVersion))
+        .thenReturn(applicationAsset);
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names= { "IN_PROGRESS", "AWAITING_PAYMENT", "SUBMITTED"}
+  )
+  void shouldCheckProductionConsentExists_ventNonApplicableStatus(ApplicationVersionStatus applicationVersionStatus) {
+    var testApplicationVersion = new ApplicationVersion();
+
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.VENT);
+
+    testApplicationVersion.setApplication(testApplication);
+    testApplicationVersion.setStatus(applicationVersionStatus);
+
+    assertThat(consentService.shouldCheckProductionConsentExists(testApplicationVersion)).isFalse();
+    verify(applicationAssetService, never()).getPrimaryAsset(any());
   }
 
   @Test
   void checkProductionConsentExistsForInProgressApplication_noConsentLengthDetailsExist() {
-    var applicationVersion = new ApplicationVersion();
-    var application = new Application();
-    application.setType(ApplicationType.FLARE);
-    applicationVersion.setApplication(application);
+    var testApplicationVersion = new ApplicationVersion();
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.FLARE);
+    testApplicationVersion.setApplication(testApplication);
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.findConsentLengthDetails(testApplicationVersion)).thenReturn(Optional.empty());
 
-    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(testApplicationVersion))
         .isEqualTo(ProductionConsentCheckResult.CONSENT_DETAILS_DO_NOT_EXIST);
   }
 
@@ -206,21 +312,21 @@ class ConsentServiceTest {
       Map<Integer, List<ConsentData>> consentDataListByFieldId,
       ProductionConsentCheckResult expectedResult
   ) {
-    var applicationVersion = new ApplicationVersion();
-    var application = new Application();
-    application.setType(ApplicationType.FLARE);
-    applicationVersion.setApplication(application);
+    var testApplicationVersion = new ApplicationVersion();
+    var testApplication = new Application();
+    testApplication.setType(ApplicationType.FLARE);
+    testApplicationVersion.setApplication(testApplication);
 
     var fieldApplicationAssets = fieldIds.stream().map(fieldId -> ApplicationAssetTestUtil.newBuilder().withAssetId(fieldId).build()).toList();
     var consentLengthDetails = new ConsentLengthDetails();
 
-    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
-    when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(applicationVersion, AssetType.FIELD, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(fieldApplicationAssets);
+    when(consentLengthService.findConsentLengthDetails(testApplicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(testApplicationVersion, AssetType.FIELD, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(fieldApplicationAssets);
     when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedStartDate);
     when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedEndDate);
     when(consentDataService.getConsentDataListInRangeForConsentedProductionApplicationsByFieldId(proposedStartDate, proposedEndDate, fieldIds)).thenReturn(consentDataListByFieldId);
 
-    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(testApplicationVersion))
         .isEqualTo(expectedResult);
   }
 

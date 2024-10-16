@@ -91,15 +91,9 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     var productionConsentCheckResult = ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
 
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
-        .thenReturn(true);
-    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
-        .thenReturn(productionConsentCheckResult);
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID, null)))
@@ -115,20 +109,154 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
   }
 
   @Test
+  void getTaskList_withFlareApplication_fieldWithoutActiveConsent() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var productionConsentCheckResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion))
+        .thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Flare application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
+        .andExpect(model().attribute("warning", productionConsentCheckResult.getWarning()))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
+  void getTaskList_withFlareApplication_facilityWithoutActiveConsent() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var productionConsentCheckResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Flare application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
+        .andExpect(model().attributeDoesNotExist("warning"))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
+  void getTaskList_withFlareApplication_doesntHavePermissionToDelete() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var productionConsentCheckResult = ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Flare application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", false))
+        .andExpect(model().attributeDoesNotExist("warning"))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
   void getTaskList_withVentApplication() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var productionConsentCheckResult = ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Vent application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
+        .andExpect(model().attributeDoesNotExist("warning"))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
+  void getTaskList_withVentApplication_fieldWithoutActiveConsent() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     var productionConsentCheckResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
 
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
-    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion))
+        .thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Vent application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
+        .andExpect(model().attribute("warning", productionConsentCheckResult.getWarning()))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
+  void getTaskList_withVentApplication_facilityWithoutActiveConsent() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var productionConsentCheckResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, true);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion))
         .thenReturn(false);
-    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
-        .thenReturn(productionConsentCheckResult);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andExpect(model().attribute("pageTitle", "Vent application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
+        .andExpect(model().attributeDoesNotExist("warning"))
+        .andExpect(model().attributeExists("taskListSections"));
+  }
+
+  @Test
+  void getTaskList_withVentApplication_doesntHavePermissionToDelete() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var productionConsentCheckResult = ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
+
+    stubBaseServiceCalls(applicationVersion);
+    stubProductionConsentCheck(applicationVersion, productionConsentCheckResult);
+    stubPermissionCheckToDeleteApplication(applicationVersion, false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID, null)))
@@ -139,19 +267,22 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .andExpect(model().attribute("pageTitle", "Vent application"))
         .andExpect(model().attribute("applicationContext", applicationContext))
         .andExpect(model().attribute("hasPermissionToDeleteApplication", false))
-        .andExpect(model().attribute("warning", productionConsentCheckResult.getWarning()))
+        .andExpect(model().attributeDoesNotExist("warning"))
         .andExpect(model().attributeExists("taskListSections"));
   }
 
   @Test
   void getTaskList_withProductionApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
+        ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
+        applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
+        RolePermission.CREATE_FCS_APPLICATIONS))
         .thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
@@ -177,13 +308,16 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @Test
   void getTaskList_withApplicationUpdateInProgress() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
+        ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
+        applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
+        RolePermission.CREATE_FCS_APPLICATIONS))
         .thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
@@ -213,17 +347,20 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @Test
   void getTaskList_withLicenceExpiringWithinDuration() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
+        ApplicationType.PRODUCTION);
 
-    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var licenceView = new LicenceView("Test123", "25th of December 2024");
     var expiringLicences = List.of(licenceView);
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
+        applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
+        RolePermission.CREATE_FCS_APPLICATIONS))
         .thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(false);
@@ -241,16 +378,19 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @Test
   void getTaskList_withoutLicenceExpiringWithinDuration() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
+        ApplicationType.PRODUCTION);
 
     List<LicenceView> expiringLicences = List.of();
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
+        applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
+        RolePermission.CREATE_FCS_APPLICATIONS))
         .thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(false);
@@ -264,5 +404,31 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
         .andExpect(model().attribute("expiringLicences", List.of()));
+  }
+
+  private void stubPermissionCheckToDeleteApplication(
+      ApplicationVersion applicationVersion,
+      boolean canDeleteApplication
+  ) {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
+        RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(canDeleteApplication);
+  }
+
+  private void stubProductionConsentCheck(
+      ApplicationVersion applicationVersion,
+      ProductionConsentCheckResult productionConsentCheckResult
+  ) {
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(productionConsentCheckResult);
+  }
+
+  private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
+        applicationVersion);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
   }
 }

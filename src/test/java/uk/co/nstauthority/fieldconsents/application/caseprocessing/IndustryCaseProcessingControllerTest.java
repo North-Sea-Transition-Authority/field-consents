@@ -507,7 +507,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   }
 
   @Test
-  void getIndustryCaseProcessing_notWithinProductionPeriodWarning() throws Exception {
+  void getIndustryCaseProcessing_fieldNotWithinProductionPeriodWarning() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     stubBaseServiceCalls(applicationVersion);
@@ -523,6 +523,25 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .getIndustryCaseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
             .with(user(user)))
         .andExpect(model().attribute("warning", ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT.getWarning()));
+  }
+
+  @Test
+  void getIndustryCaseProcessing_facilityNoNotWithinProductionPeriodWarning() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    stubBaseServiceCalls(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
   }
 
   @Test

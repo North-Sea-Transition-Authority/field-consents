@@ -85,7 +85,7 @@ public class ConsentService {
     }
 
     return switch (applicationVersion.getStatus()) {
-      case IN_PROGRESS, AWAITING_PAYMENT, SUBMITTED -> true;
+      case IN_PROGRESS, AWAITING_PAYMENT, SUBMITTED -> applicationAssetService.getPrimaryAsset(applicationVersion).isField();
       default -> false;
     };
   }

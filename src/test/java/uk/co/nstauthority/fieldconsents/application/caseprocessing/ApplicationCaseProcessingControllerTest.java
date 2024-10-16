@@ -289,9 +289,60 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attribute("warning", checkResult.getWarning()));
   }
 
+  @ParameterizedTest
+  @EnumSource(
+      value = ProductionConsentCheckResult.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = "NOT_WITHIN_ACTIVE_CONSENT"
+  )
+  void caseProcessing_checkProductionConsentWarning_ignoredResults(ProductionConsentCheckResult checkResult) throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(
+        checkResult);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
+  }
+
+  @Test
+  void caseProcessing_checkProductionConsentWarning_facilityNotField() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    var checkResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(
+        checkResult);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
+  }
+
+  @Test
+  void caseProcessing_checkProductionConsentWarning_activeConsentExists() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
+  }
+
   @Test
   void getIndustryCaseProcessing_withLicenceExpiringWithinDuration() throws Exception {
-    var licenceView = new LicenceView("Test123","25th of December 2024");
+    var licenceView = new LicenceView("Test123", "25th of December 2024");
     var expiringLicences = List.of(licenceView);
 
     stubBaseServiceCalls();
@@ -334,41 +385,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attribute("expiringLicences", List.of()));
   }
 
-
-  @ParameterizedTest
-  @EnumSource(
-      value = ProductionConsentCheckResult.class,
-      mode = EnumSource.Mode.EXCLUDE,
-      names = "NOT_WITHIN_ACTIVE_CONSENT"
-  )
-  void caseProcessing_checkProductionConsentWarning_ignoredResults(ProductionConsentCheckResult checkResult) throws Exception {
-    stubBaseServiceCalls();
-    stubTaskListServiceCall();
-
-    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(
-        checkResult);
-
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)))
-            .with(user(user)))
-        .andExpect(model().attributeDoesNotExist("warning"));
-  }
-
-  @Test
-  void caseProcessing_checkProductionConsentWarning_activeConsentExists() throws Exception {
-    stubBaseServiceCalls();
-    stubTaskListServiceCall();
-
-    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
-        .thenReturn(ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT);
-
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null, null)))
-            .with(user(user)))
-        .andExpect(model().attributeDoesNotExist("warning"));
-  }
 
   @Test
   void caseProcessing_isTechnicalReviewer_checkTechnicalReviewBannerExists() throws Exception {
@@ -466,11 +482,13 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubSummaryServiceCall(applicationVersion);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
-    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(
+        Optional.empty());
     when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.of(consentIssuingApprovalSummaryView));
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(
+        Optional.of(consentIssuingApprovalSummaryView));
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
@@ -588,24 +606,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
-  }
-
-  @Test
-  void caseProcessing_viewApplication() throws Exception {
-    stubBaseServiceCalls();
-    stubSummaryServiceCall(applicationVersion);
-
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
-            .with(user(user)))
-        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
-        .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
-        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
-        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
-        .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
-
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(),
-        eq(user));
   }
 
   @Test
@@ -761,7 +761,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     })
         .when(consentTabService)
         .addConsentTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
-}
+  }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
