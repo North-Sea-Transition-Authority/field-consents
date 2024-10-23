@@ -47,8 +47,8 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
-import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
-import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsFormValidator;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
@@ -74,7 +74,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
-  private ApplicationRationaleFormValidator applicationRationaleFormValidator;
+  private ApplicationRationaleEmissionsFormValidator applicationRationaleEmissionsFormValidator;
 
   @MockBean
   private ApplicationRationaleService applicationRationaleService;
@@ -178,9 +178,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleForm.empty());
+        .isEqualTo(ApplicationRationaleEmissionsForm.empty());
   }
 
   @Test
@@ -220,9 +220,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleForm.empty());
+        .isEqualTo(ApplicationRationaleEmissionsForm.empty());
   }
 
   @Test
@@ -266,7 +266,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -278,7 +278,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
         .isEqualTo(expectedForm);
   }
@@ -322,7 +322,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -333,9 +333,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     expectedForm.increaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
-    verify(applicationRationaleFormValidator).validate(
+    verify(applicationRationaleEmissionsFormValidator).validate(
         argThat(o -> {
-          var form = (ApplicationRationaleForm) o;
+          var form = (ApplicationRationaleEmissionsForm) o;
           return Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
               && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
               && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
@@ -373,7 +373,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -384,9 +384,9 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     expectedForm.decreaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
-    verify(applicationRationaleFormValidator).validate(
+    verify(applicationRationaleEmissionsFormValidator).validate(
         argThat(o -> {
-          var form = (ApplicationRationaleForm) o;
+          var form = (ApplicationRationaleEmissionsForm) o;
           return Objects.equals(expectedForm.decreaseComment().getInputValue(), form.decreaseComment().getInputValue())
               && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
               && expectedForm.locationAssetKeys().containsAll(form.locationAssetKeys())
@@ -417,8 +417,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
       bindingResult.rejectValue("rationaleType", "errorCode", "message");
       return null;
     })
-        .when(applicationRationaleFormValidator)
-        .validate(any(ApplicationRationaleForm.class), any(BindingResult.class));
+        .when(applicationRationaleEmissionsFormValidator)
+        .validate(any(ApplicationRationaleEmissionsForm.class), any(BindingResult.class));
 
     when(assetService.findAsset(hostAssetKey)).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);

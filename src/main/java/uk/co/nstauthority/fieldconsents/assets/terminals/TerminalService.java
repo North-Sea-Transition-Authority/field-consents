@@ -13,6 +13,9 @@ import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 @Service
 public class TerminalService {
 
+  public static final String TERMINAL_INACTIVE_VALIDATION_MESSAGE
+      = "is an inactive facility";
+
   static final TerminalsProjectionRoot terminalsProjectionRoot =
       new TerminalsProjectionRoot()
           .terminalId()

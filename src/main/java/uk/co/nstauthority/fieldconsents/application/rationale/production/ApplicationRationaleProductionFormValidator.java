@@ -28,21 +28,23 @@ class ApplicationRationaleProductionFormValidator {
     );
 
     var rationaleType = form.rationaleType();
-    switch (rationaleType) {
-      case INCREASE:
-        StringInputValidator.builder().validate(form.increaseComment(), errors);
-        break;
-      case DECREASE:
-        StringInputValidator.builder().validate(form.decreaseComment(), errors);
-        break;
-      case EXTENSION:
-        StringInputValidator.builder().validate(form.extensionComment(), errors);
-        break;
-      case OTHER:
-        StringInputValidator.builder().validate(form.otherComment(), errors);
-        break;
-      default:
-        break;
+    if (rationaleType != null) {
+      switch (rationaleType) {
+        case INCREASE:
+          StringInputValidator.builder().validate(form.increaseComment(), errors);
+          break;
+        case DECREASE:
+          StringInputValidator.builder().validate(form.decreaseComment(), errors);
+          break;
+        case EXTENSION:
+          StringInputValidator.builder().validate(form.extensionComment(), errors);
+          break;
+        case OTHER:
+          StringInputValidator.builder().validate(form.otherComment(), errors);
+          break;
+        default:
+          break;
+      }
     }
 
     validatorHelper.validateLocationAssets(

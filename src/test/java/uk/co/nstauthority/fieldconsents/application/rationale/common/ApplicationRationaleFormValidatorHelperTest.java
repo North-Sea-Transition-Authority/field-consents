@@ -12,8 +12,15 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field4JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field5JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_4;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_5;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal4Json;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal4JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal5Json;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal5JsonWithOperator;
 
 import java.util.Collections;
 import java.util.List;
@@ -156,6 +163,46 @@ class ApplicationRationaleFormValidatorHelperTest {
                 "%s %s".formatted(field4JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE)),
             tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
                 "%s %s".formatted(field5JsonWithOperatorAndLicences.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
+        );
+  }
+
+  @Test
+  void validateLocationAssets_terminalDoesntHaveAllowedStatus() {
+    var locations = List.of(terminal4Json.getSelectionId(), "1FIELD");
+    var form = new Form(locations, null);
+    var bindingResult = getBindingResult(form);
+
+    when(terminalService.findTerminalsWithOperator(eq(Collections.singletonList(TERMINAL_ID_4)), anyString()))
+        .thenReturn(Collections.singletonList(terminal4JsonWithOperator));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(terminal4JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
+        );
+  }
+
+  @Test
+  void validateLocationAssets_terminalsDontHaveAllowedStatuses() {
+    var locations = List.of(terminal4Json.getSelectionId(), "1FIELD", terminal5Json.getSelectionId());
+    var form = new Form(locations, null);
+    var bindingResult = getBindingResult(form);
+
+    when(terminalService.findTerminalsWithOperator(eq(List.of(TERMINAL_ID_4, TERMINAL_ID_5)), anyString()))
+        .thenReturn(List.of(terminal4JsonWithOperator, terminal5JsonWithOperator));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(terminal4JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE)),
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
+                "%s %s".formatted(terminal5JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
         );
   }
 

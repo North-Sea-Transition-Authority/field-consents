@@ -22,7 +22,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ContextConfiguration(classes = AssetRestController.class)
-public class AssetRestControllerTest extends AbstractControllerTest {
+class AssetRestControllerTest extends AbstractControllerTest {
 
   AssetWithOperatorJson brentAssetJson = new FieldWithOperatorJson(1, "BRENT",
       FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE,

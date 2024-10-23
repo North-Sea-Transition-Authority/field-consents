@@ -28,6 +28,45 @@ class ApplicationRationaleProductionFormValidatorTest {
   private ApplicationRationaleProductionFormValidator validator;
 
   @Test
+  void validate_withoutRationale() {
+    var hostLocationAssetKey = "hostKey";
+    var nonHostLocationAssetKeys = List.of("first", "second", "third");
+    var nonHostLocationAssetKeysSelectorField = "productionLocationAssetKeysSelector";
+
+    var form = new ApplicationRationaleProductionForm(
+        null,
+        null,
+        null,
+        null,
+        null,
+        nonHostLocationAssetKeysSelectorField,
+        nonHostLocationAssetKeys,
+        hostLocationAssetKey
+    );
+    var bindingResult = getBindingResult(form);
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("rationaleType", "required", "Select whether this application is for an increase, decrease, extension or other")
+        );
+
+    verify(validatorHelper).validateLocationAssets(
+        nonHostLocationAssetKeys,
+        nonHostLocationAssetKeysSelectorField,
+        bindingResult
+    );
+
+    verify(validatorHelper).validateHostLocationAsset(
+        hostLocationAssetKey,
+        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        bindingResult
+    );
+  }
+
+  @Test
   void validate_increase_withoutComment() {
     var hostLocationAssetKey = "hostKey";
     var nonHostLocationAssetKeys = List.of("first", "second", "third");

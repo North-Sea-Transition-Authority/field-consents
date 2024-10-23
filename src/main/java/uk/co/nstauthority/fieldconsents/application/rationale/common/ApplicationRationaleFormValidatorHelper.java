@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.rationale.common;
 
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -16,7 +17,10 @@ import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalStatus;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 
 @Component
 public class ApplicationRationaleFormValidatorHelper {
@@ -55,7 +59,7 @@ public class ApplicationRationaleFormValidatorHelper {
       return;
     }
 
-    var fields = getFieldsFromAssetKeys(assetKeys);
+    var fields = getFieldsWithOperatorAndLicencesJsonsFromAssetKeys(assetKeys);
 
     addFieldStatusErrors(fields, formField, errors);
 
@@ -63,7 +67,15 @@ public class ApplicationRationaleFormValidatorHelper {
       return;
     }
 
-    if (!assetsContainOperatorAndLicenses(fields, assetKeys)) {
+    var terminals = getTerminalsWithOperatorJsonsFromAssetKeys(assetKeys);
+
+    addTerminalStatusErrors(terminals, formField, errors);
+
+    if (errors.hasFieldErrors(formField)) {
+      return;
+    }
+
+    if (!assetsContainOperatorAndLicences(fields, terminals)) {
       errors.rejectValue(formField, INVALID, "One or more locations don't have an operator or licenses");
     }
   }
@@ -92,7 +104,7 @@ public class ApplicationRationaleFormValidatorHelper {
       return;
     }
 
-    var fields = getFieldsFromAssetKeys(Collections.singletonList(hostLocationAssetKey));
+    var fields = getFieldsWithOperatorAndLicencesJsonsFromAssetKeys(Collections.singletonList(hostLocationAssetKey));
 
     addFieldStatusErrors(fields, HOST_LOCATION_ASSET_KEY, errors);
 
@@ -100,12 +112,20 @@ public class ApplicationRationaleFormValidatorHelper {
       return;
     }
 
-    if (!assetsContainOperatorAndLicenses(fields, Collections.singletonList(hostLocationAssetKey))) {
+    var terminals = getTerminalsWithOperatorJsonsFromAssetKeys(Collections.singletonList(hostLocationAssetKey));
+
+    addTerminalStatusErrors(terminals, HOST_LOCATION_ASSET_KEY, errors);
+
+    if (errors.hasFieldErrors(HOST_LOCATION_ASSET_KEY)) {
+      return;
+    }
+
+    if (!assetsContainOperatorAndLicences(fields, terminals)) {
       errors.rejectValue(HOST_LOCATION_ASSET_KEY, INVALID, "Select a location with an operator");
     }
   }
 
-  private List<FieldWithOperatorAndLicencesJson> getFieldsFromAssetKeys(List<AssetKey> assetKeys) {
+  private List<FieldWithOperatorAndLicencesJson> getFieldsWithOperatorAndLicencesJsonsFromAssetKeys(List<AssetKey> assetKeys) {
     var fieldIds = assetKeys.stream()
         .filter(assetKey -> AssetType.FIELD.equals(assetKey.assetType()))
         .map(AssetKey::assetId)
@@ -114,27 +134,26 @@ public class ApplicationRationaleFormValidatorHelper {
     return fieldService.findFieldsWithOperatorAndLicences(fieldIds, ASSET_VALIDATION_REQUEST_PURPOSE);
   }
 
-  private boolean assetsContainOperatorAndLicenses(
-      List<FieldWithOperatorAndLicencesJson> fields,
-      List<AssetKey> assetKeys
-  ) {
-    var allFieldsHaveOperatorsAndLicenses = fields
-        .stream()
-        .allMatch(field -> field.operatorExists() && field.licencesExist());
-
-    if (!allFieldsHaveOperatorsAndLicenses) {
-      return false;
-    }
-
+  private List<TerminalWithOperatorJson> getTerminalsWithOperatorJsonsFromAssetKeys(List<AssetKey> assetKeys) {
     var terminalIds = assetKeys.stream()
         .filter(assetKey -> AssetType.TERMINAL.equals(assetKey.assetType()))
         .map(AssetKey::assetId)
         .toList();
 
-    return terminalService
-        .findTerminalsWithOperator(terminalIds, ASSET_VALIDATION_REQUEST_PURPOSE)
+    return terminalService.findTerminalsWithOperator(terminalIds, ASSET_VALIDATION_REQUEST_PURPOSE);
+  }
+
+  private static boolean assetsContainOperatorAndLicences(
+      List<FieldWithOperatorAndLicencesJson> fields,
+      List<TerminalWithOperatorJson> terminals
+  ) {
+    var allFieldsContainOperatorAndLicences = fields
+        .stream()
+        .allMatch(field -> field.operatorExists() && field.licencesExist());
+    var allTerminalsContainOperators = terminals
         .stream()
         .allMatch(AssetWithOperatorJson::operatorExists);
+    return allFieldsContainOperatorAndLicences && allTerminalsContainOperators;
   }
 
   private void addFieldStatusErrors(List<? extends FieldJson> fields, String formField, Errors errors) {
@@ -144,6 +163,16 @@ public class ApplicationRationaleFormValidatorHelper {
         .forEach(field ->
             errors.rejectValue(formField, INVALID,
                 "%s %s".formatted(field.getName(), FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
+        );
+  }
+
+  private void addTerminalStatusErrors(List<? extends TerminalJson> terminalJsons, String formField, Errors errors) {
+    terminalJsons
+        .stream()
+        .filter(terminal -> !TerminalStatus.ACTIVE.equals(terminal.getStatus()))
+        .forEach(terminal ->
+            errors.rejectValue(formField, INVALID,
+                "%s %s".formatted(terminal.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
         );
   }
 }

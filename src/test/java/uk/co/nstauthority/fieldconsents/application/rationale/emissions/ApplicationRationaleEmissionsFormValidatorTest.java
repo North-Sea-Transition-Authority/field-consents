@@ -22,13 +22,50 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationRationaleFormValidatorTest {
+class ApplicationRationaleEmissionsFormValidatorTest {
 
   @Mock
   private ApplicationRationaleFormValidatorHelper validatorHelper;
 
   @InjectMocks
-  private ApplicationRationaleFormValidator validator;
+  private ApplicationRationaleEmissionsFormValidator validator;
+
+  @Test
+  void validate_withoutRationale() {
+    var hostLocationAssetKey = "hostKey";
+    var nonHostLocationAssetKeys = List.of("first", "second", "third");
+    var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
+
+    var form = new ApplicationRationaleEmissionsForm(
+        null,
+        null,
+        null,
+        nonHostLocationAssetKeysSelectorField,
+        nonHostLocationAssetKeys,
+        hostLocationAssetKey
+    );
+    var bindingResult = getBindingResult(form);
+
+    validator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("rationaleType", "required", "Select whether this application is for an increase, decrease or no change")
+        );
+
+    verify(validatorHelper).validateLocationAssets(
+        nonHostLocationAssetKeys,
+        nonHostLocationAssetKeysSelectorField,
+        bindingResult
+    );
+
+    verify(validatorHelper).validateHostLocationAsset(
+        hostLocationAssetKey,
+        nonHostLocationAssetKeys.stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        bindingResult
+    );
+  }
 
   @Test
   void validate_increase_withoutComment() {
@@ -36,7 +73,7 @@ class ApplicationRationaleFormValidatorTest {
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
     var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
 
-    var form = new ApplicationRationaleForm(
+    var form = new ApplicationRationaleEmissionsForm(
         ApplicationRationaleType.INCREASE,
         null,
         null,
@@ -73,7 +110,7 @@ class ApplicationRationaleFormValidatorTest {
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
     var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
 
-    var form = new ApplicationRationaleForm(
+    var form = new ApplicationRationaleEmissionsForm(
         ApplicationRationaleType.DECREASE,
         null,
         null,
@@ -111,7 +148,7 @@ class ApplicationRationaleFormValidatorTest {
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
     var nonHostLocationAssetKeysSelectorField = "locationAssetKeysSelector";
 
-    var form = new ApplicationRationaleForm(
+    var form = new ApplicationRationaleEmissionsForm(
         applicationRationaleType,
         null,
         null,

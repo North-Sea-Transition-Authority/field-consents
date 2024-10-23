@@ -9,15 +9,15 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @Component
-public class ApplicationRationaleFormValidator {
+public class ApplicationRationaleEmissionsFormValidator {
 
   private final ApplicationRationaleFormValidatorHelper validatorHelper;
 
-  ApplicationRationaleFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
+  ApplicationRationaleEmissionsFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
     this.validatorHelper = validatorHelper;
   }
 
-  public void validate(ApplicationRationaleForm form, Errors errors) {
+  public void validate(ApplicationRationaleEmissionsForm form, Errors errors) {
     ValidationUtils.rejectIfEmpty(
         errors,
         "rationaleType",
@@ -26,16 +26,18 @@ public class ApplicationRationaleFormValidator {
     );
 
     var rationaleType = form.rationaleType();
-    switch (rationaleType) {
-      case INCREASE:
-        StringInputValidator.builder().validate(form.increaseComment(), errors);
-        break;
-      case DECREASE:
-        StringInputValidator.builder().validate(form.decreaseComment(), errors);
-        break;
-      case NO_CHANGE:
-      default:
-        break;
+    if (rationaleType != null) {
+      switch (rationaleType) {
+        case INCREASE:
+          StringInputValidator.builder().validate(form.increaseComment(), errors);
+          break;
+        case DECREASE:
+          StringInputValidator.builder().validate(form.decreaseComment(), errors);
+          break;
+        case NO_CHANGE:
+        default:
+          break;
+      }
     }
 
     validatorHelper.validateLocationAssets(

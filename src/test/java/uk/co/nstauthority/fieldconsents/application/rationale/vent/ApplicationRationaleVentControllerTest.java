@@ -48,8 +48,8 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionService;
 import uk.co.nstauthority.fieldconsents.application.rationale.emissions.EmissionDailyAverage;
-import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleForm;
-import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleFormValidator;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsFormValidator;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -74,7 +74,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
-  private ApplicationRationaleFormValidator validator;
+  private ApplicationRationaleEmissionsFormValidator validator;
 
   @MockBean
   private ApplicationRationaleService applicationRationaleService;
@@ -178,9 +178,9 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleForm.empty());
+        .isEqualTo(ApplicationRationaleEmissionsForm.empty());
   }
 
   @Test
@@ -218,9 +218,9 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleForm.empty());
+        .isEqualTo(ApplicationRationaleEmissionsForm.empty());
   }
 
   @Test
@@ -263,7 +263,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -276,7 +276,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleForm.class))
+        .asInstanceOf(type(ApplicationRationaleEmissionsForm.class))
         .usingRecursiveComparison()
         .isEqualTo(expectedForm);
   }
@@ -320,7 +320,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -369,7 +369,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
-    var expectedForm = new ApplicationRationaleForm(
+    var expectedForm = new ApplicationRationaleEmissionsForm(
         rationaleType,
         null,
         null,
@@ -413,7 +413,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
       return null;
     })
         .when(validator)
-        .validate(any(ApplicationRationaleForm.class), any(BindingResult.class));
+        .validate(any(ApplicationRationaleEmissionsForm.class), any(BindingResult.class));
 
     when(assetService.findAsset(hostAssetKey)).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);

@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets;
 
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -137,7 +138,8 @@ public class AssetService {
     getOperatorPermissionCheckReason(terminalJson, user).ifPresent(reasonsWhyApplicationCannotBeStarted::add);
 
     if (!TerminalStatus.ACTIVE.equals(terminalJson.getStatus())) {
-      reasonsWhyApplicationCannotBeStarted.add("This facility is inactive");
+      reasonsWhyApplicationCannotBeStarted.add(
+          "%s %s".formatted(terminalJson.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE));
     }
 
     return reasonsWhyApplicationCannotBeStarted.isEmpty()

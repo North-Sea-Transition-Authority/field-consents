@@ -18,8 +18,7 @@ class TerminalJsonTest {
             new TerminalJson(
                 terminal1.getTerminalId(),
                 terminal1.getTerminalName(),
-                Boolean.TRUE.equals(terminal1.getTerminalActive()) ? TerminalStatus.ACTIVE : TerminalStatus.INACTIVE
-            )
+                TerminalStatus.ACTIVE)
         );
 
     // the asserts below check the getters in FieldJson

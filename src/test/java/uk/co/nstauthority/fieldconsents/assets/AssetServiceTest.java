@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
@@ -51,7 +52,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
-public class AssetServiceTest {
+class AssetServiceTest {
 
   private static final String FIELD_LOOKUP_PURPOSE = "Determining whether an application can be started for this field";
   private static final String TERMINAL_LOOKUP_PURPOSE = "Determining whether an application can be started for this terminal";
@@ -89,7 +90,7 @@ public class AssetServiceTest {
   void getAssetFromKey_nullAssetKey() {
 
     Optional<AssetJson> assetJson = assetService.findAsset(null);
-    assertThat(assetJson).isEqualTo(Optional.empty());
+    assertThat(assetJson).isEmpty();
 
   }
 
@@ -484,7 +485,9 @@ public class AssetServiceTest {
     var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
-            List.of("This facility is inactive")
+            List.of(
+                "%s %s".formatted(terminal.getTerminalName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE)
+            )
         ));
   }
 
@@ -505,7 +508,9 @@ public class AssetServiceTest {
     var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
-            List.of("This facility is inactive")
+            List.of(
+                "%s %s".formatted(terminal.getTerminalName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE)
+            )
         ));
   }
 

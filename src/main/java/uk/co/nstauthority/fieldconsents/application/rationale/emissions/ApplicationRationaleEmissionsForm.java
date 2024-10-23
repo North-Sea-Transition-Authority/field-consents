@@ -6,7 +6,7 @@ import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
 
-public record ApplicationRationaleForm(
+public record ApplicationRationaleEmissionsForm(
     ApplicationRationaleType rationaleType,
     StringInput increaseComment,
     StringInput decreaseComment,
@@ -15,13 +15,13 @@ public record ApplicationRationaleForm(
     String hostLocationAssetKey
 ) {
 
-  public ApplicationRationaleForm {
+  public ApplicationRationaleEmissionsForm {
     increaseComment = new StringInput("increaseComment", "why you are requesting an increase");
     decreaseComment = new StringInput("decreaseComment", "why you are requesting a decrease");
   }
 
-  public static ApplicationRationaleForm empty() {
-    return new ApplicationRationaleForm(
+  public static ApplicationRationaleEmissionsForm empty() {
+    return new ApplicationRationaleEmissionsForm(
         null,
         null,
         null,
@@ -31,8 +31,8 @@ public record ApplicationRationaleForm(
     );
   }
 
-  public static ApplicationRationaleForm from(ApplicationRationale applicationRationale) {
-    var form = new ApplicationRationaleForm(
+  public static ApplicationRationaleEmissionsForm from(ApplicationRationale applicationRationale) {
+    var form = new ApplicationRationaleEmissionsForm(
         applicationRationale.getRationaleType(),
         null,
         null,
