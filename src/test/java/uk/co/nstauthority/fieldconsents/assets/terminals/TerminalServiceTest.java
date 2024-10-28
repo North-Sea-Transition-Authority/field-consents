@@ -7,16 +7,20 @@ import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalProjectionRoot;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalWithOperatorProjectionRoot;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalsWithOperatorProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3WithOperator;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +35,7 @@ import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 
 @ExtendWith(MockitoExtension.class)
-public class TerminalServiceTest {
+class TerminalServiceTest {
 
   private static final String REQUEST_PURPOSE = "Terminal service test";
 
@@ -75,7 +79,7 @@ public class TerminalServiceTest {
         .thenReturn(Optional.empty());
 
     var terminalJsonOptional = terminalService.findTerminal(0, REQUEST_PURPOSE);
-    assertThat(terminalJsonOptional).isEqualTo(Optional.empty());
+    assertThat(terminalJsonOptional).isNotPresent();
   }
 
   @Test
@@ -141,45 +145,41 @@ public class TerminalServiceTest {
   @Test
   void findTerminalsWithOperator() {
     var ids = List.of(1, 2, 3, 4);
-    var requestPurpose = new RequestPurpose("request purpose");
 
-    when(terminalApi.findTerminalById(anyInt(), eq(terminalWithOperatorProjectionRoot), eq(requestPurpose))).thenReturn(Optional.of(terminal1WithOperator));
+    when(terminalApi.getTerminalsByIds(ids, terminalsWithOperatorProjectionRoot, requestPurpose))
+        .thenReturn(List.of(terminal1WithOperator, terminal2WithOperator, terminal3WithOperator));
 
     assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
         .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(terminal1JsonWithOperator, terminal1JsonWithOperator, terminal1JsonWithOperator, terminal1JsonWithOperator);
+        .containsExactly(terminal1JsonWithOperator, terminal2JsonWithOperator, terminal3JsonWithOperator);
 
-    // TODO: FCS-427 (remove n+1)
-    verify(terminalApi).findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose);
-    verify(terminalApi).findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose);
-    verify(terminalApi).findTerminalById(3, terminalWithOperatorProjectionRoot, requestPurpose);
-    verify(terminalApi).findTerminalById(4, terminalWithOperatorProjectionRoot, requestPurpose);
+    //No n+1
+    verify(terminalApi, never())
+        .findTerminalById(anyInt(), any(TerminalProjectionRoot.class), any(RequestPurpose.class));
   }
 
   @Test
   void findTerminalsWithOperator_someIdsNotFound() {
     var ids = List.of(1, 2);
-    var requestPurpose = new RequestPurpose("request purpose");
 
-    when(terminalApi.findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal1WithOperator));
-    when(terminalApi.findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose)).thenReturn(Optional.empty());
+    when(terminalApi.getTerminalsByIds(ids, terminalsWithOperatorProjectionRoot, requestPurpose))
+        .thenReturn(List.of(terminal1WithOperator));
 
     assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
         .usingRecursiveFieldByFieldElementComparator()
         .containsExactly(terminal1JsonWithOperator);
 
-    // TODO: FCS-427 (remove n+1)
-    verify(terminalApi).findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose);
-    verify(terminalApi).findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose);
+    //No n+1
+    verify(terminalApi, never())
+        .findTerminalById(anyInt(), any(TerminalProjectionRoot.class), any(RequestPurpose.class));
   }
 
   @Test
   void getTerminals() {
     var terminalIds = List.of(1, 2, 3);
 
-    when(terminalApi.findTerminalById(1, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal1));
-    when(terminalApi.findTerminalById(2, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal2));
-    when(terminalApi.findTerminalById(3, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.empty());
+    when(terminalApi.getTerminalsByIds(terminalIds, terminalsWithOperatorProjectionRoot, requestPurpose))
+        .thenReturn(List.of(terminal1, terminal2));
 
     assertThat(terminalService.getTerminals(terminalIds, requestPurpose.purpose()))
         .extracting(
@@ -190,6 +190,10 @@ public class TerminalServiceTest {
             tuple(terminal1.getTerminalId(), terminal1.getTerminalName()),
             tuple(terminal2.getTerminalId(), terminal2.getTerminalName())
         );
+
+    //No n+1
+    verify(terminalApi, never())
+        .findTerminalById(anyInt(), any(TerminalProjectionRoot.class), any(RequestPurpose.class));
   }
 
   @Test

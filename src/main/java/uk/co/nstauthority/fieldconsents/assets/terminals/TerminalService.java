@@ -58,16 +58,13 @@ public class TerminalService {
         .orElseThrow(() -> new EntityNotFoundException("Terminal not found for terminal id %s".formatted(terminalId)));
   }
 
-  // TODO: FCS-427 (remove n+1)
   public List<TerminalJson> getTerminals(List<Integer> terminalIds, String requestPurpose) {
     if (terminalIds.isEmpty()) {
       return Collections.emptyList();
     }
 
-    return terminalIds
+    return terminalApi.getTerminalsByIds(terminalIds, terminalsProjectionRoot, new RequestPurpose(requestPurpose))
         .stream()
-        .map(id -> terminalApi.findTerminalById(id, terminalProjectionRoot, new RequestPurpose(requestPurpose)))
-        .flatMap(Optional::stream)
         .map(TerminalJson::from)
         .toList();
   }
@@ -77,16 +74,13 @@ public class TerminalService {
         .orElseThrow(() -> new EntityNotFoundException("Terminal not found for terminal id %s".formatted(terminalId)));
   }
 
-  // TODO: FCS-427 (remove n+1)
   public List<TerminalWithOperatorJson> findTerminalsWithOperator(List<Integer> terminalIds, String epaRequestPurpose) {
     if (terminalIds.isEmpty()) {
       return Collections.emptyList();
     }
 
-    return terminalIds
+    return terminalApi.getTerminalsByIds(terminalIds, terminalsProjectionRoot, new RequestPurpose(epaRequestPurpose))
         .stream()
-        .map(id -> terminalApi.findTerminalById(id, terminalWithOperatorProjectionRoot, new RequestPurpose(epaRequestPurpose)))
-        .flatMap(Optional::stream)
         .map(TerminalWithOperatorJson::from)
         .toList();
   }
