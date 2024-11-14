@@ -56,7 +56,10 @@ public class ApplicationContextService {
   }
 
   public SummaryCard getApplicationContextSummaryCard(ApplicationVersion applicationVersion) {
-    var applicationContext = getApplicationContext(applicationVersion);
+    var applicationContextBuilder = ApplicationContext.newBuilder();
+    addPrimaryAsset(applicationVersion, applicationContextBuilder);
+    addPrimaryOperator(applicationVersion, applicationContextBuilder);
+    var applicationContext = applicationContextBuilder.build();
 
     var summaryData = SummaryDataView
         .newWithKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName())
@@ -153,6 +156,13 @@ public class ApplicationContextService {
     addAssetOperators(applicationAssets, builder);
     addAdditionalFields(secondaryFields, builder);
     addLicences(applicationAssets, builder);
+  }
+
+  void addPrimaryAsset(ApplicationVersion applicationVersion, ApplicationContext.Builder builder) {
+    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+    var primaryAssetJson = applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset);
+
+    builder.withPrimaryAsset(primaryAssetJson);
   }
 
   void addPrimaryAsset(

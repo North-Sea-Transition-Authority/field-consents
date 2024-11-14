@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
@@ -93,34 +92,40 @@ class ApplicationContextServiceTest {
 
   @Test
   void getApplicationContextSummaryCard_terminal() {
-    var applicationContext = ApplicationContext.newBuilder()
-        .withPrimaryAsset(terminal1Json)
-        .withPrimaryOperator("Smooth operator")
-        .build();
+    var primaryAsset = new ApplicationAsset();
 
-    doReturn(applicationContext)
-        .when(applicationContextService)
-        .getApplicationContext(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+    when(applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset)).thenReturn(terminal1Json);
+    when(
+        organisationUnitService.getOrganisationUnitByIdOrFallback(
+            applicationVersion.getPrimaryOperatorOuId(),
+            "Organisation lookup for application context information",
+            applicationVersion.getCachedPrimaryOperatorName()
+        )
+    ).thenReturn(primaryOperator);
 
     assertThat(applicationContextService.getApplicationContextSummaryCard(applicationVersion))
         .isEqualTo(SummaryCard.simpleSummaryCard(
             new SummaryDataView(List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
-                new SummaryKeyValue("Primary facility", applicationContext.primaryAsset().getName()),
-                new SummaryKeyValue("Primary operator", applicationContext.primaryOperator())
+                new SummaryKeyValue("Primary facility", terminal1Json.getName()),
+                new SummaryKeyValue("Primary operator", primaryOperator.name())
             ))));
   }
 
   @Test
   void getApplicationContextSummaryCard_field() {
-    var applicationContext = ApplicationContext.newBuilder()
-        .withPrimaryAsset(field1Json)
-        .withPrimaryOperator("Smooth operator")
-        .build();
+    var primaryAsset = new ApplicationAsset();
 
-    doReturn(applicationContext)
-        .when(applicationContextService)
-        .getApplicationContext(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+    when(applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset)).thenReturn(field1Json);
+    when(
+        organisationUnitService.getOrganisationUnitByIdOrFallback(
+            applicationVersion.getPrimaryOperatorOuId(),
+            "Organisation lookup for application context information",
+            applicationVersion.getCachedPrimaryOperatorName()
+        )
+    ).thenReturn(primaryOperator);
 
     var summaryCard = applicationContextService.getApplicationContextSummaryCard(applicationVersion);
 
@@ -128,8 +133,8 @@ class ApplicationContextServiceTest {
         .isEqualTo(SummaryCard.simpleSummaryCard(
             new SummaryDataView(List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
-                new SummaryKeyValue("Primary field", applicationContext.primaryAsset().getName()),
-                new SummaryKeyValue("Primary operator", applicationContext.primaryOperator())
+                new SummaryKeyValue("Primary field", field1Json.getName()),
+                new SummaryKeyValue("Primary operator", primaryOperator.name())
             ))));
   }
 
@@ -297,7 +302,21 @@ class ApplicationContextServiceTest {
   }
 
   @Test
-  void addPrimaryAsset_field() {
+  void addPrimaryAsset_withApplicationVersion() {
+    var builder = ApplicationContext.newBuilder();
+
+    var primaryAsset = new ApplicationAsset();
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+    when(applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset)).thenReturn(field1Json);
+
+    applicationContextService.addPrimaryAsset(applicationVersion, builder);
+
+    assertThat(builder.build()).extracting(ApplicationContext::primaryAsset).isEqualTo(field1Json);
+  }
+
+  @Test
+  void addPrimaryAsset_withApplicationAssets_field() {
     var primaryAsset = new ApplicationAsset();
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     primaryAsset.setAssetType(AssetType.FIELD);
@@ -314,7 +333,7 @@ class ApplicationContextServiceTest {
   }
 
   @Test
-  void addPrimaryAsset_terminal() {
+  void addPrimaryAsset_withApplicationAssets_terminal() {
     var primaryAsset = new ApplicationAsset();
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     primaryAsset.setAssetType(AssetType.TERMINAL);
@@ -331,7 +350,7 @@ class ApplicationContextServiceTest {
   }
 
   @Test
-  void addPrimaryAsset_noPrimaryAsset() {
+  void addPrimaryAsset_withApplicationAssets_noPrimaryAsset() {
     var applicationAssets = Collections.<ApplicationAsset>emptyList();
     var assetJsonList = Collections.<AssetJson>emptyList();
     var builder = ApplicationContext.newBuilder();
