@@ -7,6 +7,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.configuration.ErrorConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ControllerAdviceService;
@@ -55,6 +56,14 @@ class ErrorService {
   private void addErrorReference(ModelAndView modelAndView, Throwable throwable) {
     if (throwable == null) {
       return;
+    }
+
+    if (throwable instanceof ResponseStatusException responseStatusException) {
+      var statusCode = responseStatusException.getStatusCode();
+
+      if (statusCode.is4xxClientError()) {
+        return; // don't print an error log message
+      }
     }
 
     var errorReference = generateErrorReference();
