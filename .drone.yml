@@ -132,7 +132,10 @@ steps:
       - docker build -t quay.io/fivium/field-consents:trivy-scan-target .
 
   - name: trivy-scan
-    image: aquasec/trivy:0.37.3
+    image: aquasec/trivy:0.57.0
+    environment:
+      TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,aquasec/trivy-db,ghcr.io/aquasecurity/trivy-db
+      TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db,aquasec/trivy-java-db,ghcr.io/aquasecurity/trivy-java-db
     volumes:
       - name: docker-sock
         path: /var/run/docker.sock
