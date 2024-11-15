@@ -200,8 +200,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenConsentedStatus_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Set.of());
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
@@ -220,8 +221,10 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenDeletedStatus_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationVersion.setStatus(ApplicationVersionStatus.DELETED);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
 
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)
@@ -239,8 +242,10 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenWithdrawnStatus_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
 
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)
@@ -257,8 +262,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @SecurityTest
   void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermissionAndPayAndSubmitPermissionAndViewFcsConsentsPermission_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(
         user,
         applicationVersion,

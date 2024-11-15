@@ -13,6 +13,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationInterceptorSecurityRule;
@@ -35,7 +36,6 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public boolean preHandle(
       @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
@@ -46,8 +46,6 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
     }
 
     var handlerMethod = (HandlerMethod) handler;
-    var pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-
     var annotation = findMethodOrClassAnnotation(Security.class, handlerMethod);
 
     if (annotation == null) {
@@ -58,19 +56,17 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
       return true;
     }
 
-    var user = userDetailService.getUserDetail();
-    var applicationId = pathVariables.get("applicationId");
+    var applicationId = findPathVariableInt(request, "applicationId");
+    var applicationVersionId = findPathVariableInt(request, "applicationVersionId");
 
-    if (applicationId == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "Received request with no applicationId present");
-    }
+    ApplicationVersion applicationVersion;
 
-    var applicationVersionOptional = applicationVersionService.findLatestApplicationVersion(
-        Integer.valueOf(applicationId));
-    if (applicationVersionOptional.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-          "Received request with non-existent application id %s".formatted(applicationId));
+    if (applicationId != null) {
+      applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    } else if (applicationVersionId != null) {
+      applicationVersion = applicationVersionService.getApplicationVersionById(applicationVersionId);
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find application version");
     }
 
     for (var securityRule : securityRules) {
@@ -84,8 +80,8 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
           annotationObject,
           request,
           response,
-          user,
-          applicationVersionOptional.get()
+          userDetailService.getUserDetail(),
+          applicationVersion
       );
 
       var hasRulePassed = processRedirectsAndReturnResult(result, response);
@@ -95,4 +91,17 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
     }
     return true;
   }
+
+  @SuppressWarnings("unchecked")
+  private Integer findPathVariableInt(HttpServletRequest request, String pathVariable) {
+    var pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+    var value = pathVariables.get(pathVariable);
+
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
 }

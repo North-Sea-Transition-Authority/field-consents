@@ -86,7 +86,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(isMemberOfTeamTypeInterceptor)
         .addPathPatterns("/applications/**");
     registry.addInterceptor(applicationHandlerInterceptor)
-        .addPathPatterns("/applications/**");
+        .addPathPatterns("/applications/**", "/application-versions/**");
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(ASSETS_PATH);
     registry.addInterceptor(hasAssetPermissionInterceptor)

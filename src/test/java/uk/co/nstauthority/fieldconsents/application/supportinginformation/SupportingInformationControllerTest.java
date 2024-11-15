@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -93,7 +95,20 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(supportingInformationService.getSupportingInformationForm(applicationVersion))
         .thenReturn(form);
 
-    when(fileControllerHelperService.fileUploadComponentAttributes(eq(EXISTING_DOCUMENTS), eq(SupportingInformationFileController.class), any(), any()))
+    var supportingInformationFileController = mock(SupportingInformationFileController.class);
+
+    when(fileControllerHelperService.fileUploadComponentAttributes(
+        eq(EXISTING_DOCUMENTS),
+        eq(SupportingInformationFileController.class),
+        assertArg(downloadFunction -> {
+          downloadFunction.apply(supportingInformationFileController);
+          verify(supportingInformationFileController).download(applicationVersion.getId(), null, null);
+        }),
+        assertArg(deleteFunction -> {
+          deleteFunction.apply(supportingInformationFileController);
+          verify(supportingInformationFileController).delete(applicationVersion.getId(), null, null);
+        })
+    ))
         .thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)

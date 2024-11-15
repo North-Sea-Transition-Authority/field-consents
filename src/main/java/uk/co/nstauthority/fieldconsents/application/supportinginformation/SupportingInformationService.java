@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
-import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
@@ -80,10 +79,7 @@ public class SupportingInformationService {
   Optional<SummaryCard> getSupportingDocumentsSummaryCard(ApplicationVersion applicationVersion) {
     var filesSummary = fieldConsentsFileService.getUploadedFiles(getFileUsage(applicationVersion))
         .stream()
-        .map(uploadedFile -> SummaryFileView.from(
-            uploadedFile,
-            getDownloadUrl(applicationVersion.getApplication(), uploadedFile))
-        )
+        .map(uploadedFile -> SummaryFileView.from(uploadedFile, getDownloadUrl(applicationVersion, uploadedFile)))
         .toList();
 
     if (filesSummary.isEmpty()) {
@@ -97,9 +93,9 @@ public class SupportingInformationService {
     return ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
   }
 
-  private String getDownloadUrl(Application application, UploadedFile uploadedFile) {
+  private String getDownloadUrl(ApplicationVersion applicationVersion, UploadedFile uploadedFile) {
     return ReverseRouter.route(on(SupportingInformationFileController.class)
-        .download(application.getId(), uploadedFile.getId(), null));
+        .download(applicationVersion.getId(), uploadedFile.getId(), null));
   }
 
 }

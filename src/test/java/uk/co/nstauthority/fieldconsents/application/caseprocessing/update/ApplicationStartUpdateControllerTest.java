@@ -65,8 +65,9 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
   @SecurityTest
   void startUpdateEntryPoint_checkEndPointSecurityOnly_forbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Set.of());
 
@@ -160,8 +161,9 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
   @SecurityTest
   void renderStartUpdate_checkEndPointSecurityOnly_forbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Set.of());
 
@@ -232,8 +234,9 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
   @SecurityTest
   void startUpdate_checkEndPointSecurityOnly_forbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Set.of());
 

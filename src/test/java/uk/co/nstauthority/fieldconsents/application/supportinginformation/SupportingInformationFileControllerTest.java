@@ -8,11 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -62,12 +60,12 @@ class SupportingInformationFileControllerTest extends AbstractApplicationControl
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     application = applicationVersion.getApplication();
 
-    downloadUrl = ReverseRouter.route(on(supportingInformationFileControllerClass).download(application.getId(), fileId, null));
-    deleteUrl = ReverseRouter.route(on(supportingInformationFileControllerClass).delete(application.getId(), fileId, null));
+    downloadUrl = ReverseRouter.route(on(supportingInformationFileControllerClass).download(applicationVersion.getId(), fileId, null));
+    deleteUrl = ReverseRouter.route(on(supportingInformationFileControllerClass).delete(applicationVersion.getId(), fileId, null));
 
     // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getApplicationVersionById(applicationVersion.getId()))
+        .thenReturn(applicationVersion);
   }
 
   @SecurityTest

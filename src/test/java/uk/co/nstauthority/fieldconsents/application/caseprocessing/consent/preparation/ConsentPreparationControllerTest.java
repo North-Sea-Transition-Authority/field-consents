@@ -83,7 +83,8 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     application = applicationVersion.getApplication();
 
     // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
   }
 
   @SecurityTest

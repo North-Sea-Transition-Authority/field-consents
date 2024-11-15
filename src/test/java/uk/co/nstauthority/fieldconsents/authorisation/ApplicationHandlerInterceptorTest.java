@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,7 +14,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
@@ -27,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionNotFoundException;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -60,27 +61,28 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
             .noApplicationIdOnEndpoint()))
             .with(user(user))
         )
-        .andExpect(status().isBadRequest())
-        .andExpect(status().reason("Received request with no applicationId present"));
+        .andExpect(status().isNotFound());
   }
 
   @SecurityTest
   void noApplicationExists() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.empty());
+    // this is called in ApplicationHandlerInterceptor
+    doThrow(new ApplicationVersionNotFoundException(":("))
+        .when(applicationVersionService)
+        .getLatestApplicationVersionByApplicationId(APPLICATION_ID);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
             .noApplicationExists(APPLICATION_ID)))
             .with(user(user)))
-        .andExpect(status().isNotFound())
-        .andExpect(status().reason("Received request with non-existent application id %s".formatted(APPLICATION_ID)));
+        .andExpect(status().isNotFound());
   }
 
   @SecurityTest
   void applicationStatusInvalid() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -100,8 +102,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void applicationStatusValid() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -112,8 +115,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void userDoesntHavePermission() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
 
     when(applicationAccessService
         .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
@@ -128,8 +132,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void userHasPermission() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
 
     when(applicationAccessService
         .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
@@ -144,8 +149,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void actionEndPointForbidden() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.userHasAnyAction(applicationVersionSubmitted, user, CASE_OFFICER_RELEASE_OWNERSHIP))
         .thenReturn(false);
@@ -160,8 +166,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void actionEndPointAllowed() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.userHasAnyAction(
         applicationVersionSubmitted,
@@ -180,8 +187,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void getAssigmentEndpointAllowed() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.userHasAnyAction(
         applicationVersionSubmitted,
@@ -199,8 +207,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void getAssigmentEndpointForbidden() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
         .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));
@@ -214,8 +223,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void postAssigmentEndpointAllowed() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.userHasAnyAction(
         applicationVersionSubmitted,
@@ -234,8 +244,9 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void postAssigmentEndpointForbidden() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionSubmitted));
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionSubmitted);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
         .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));

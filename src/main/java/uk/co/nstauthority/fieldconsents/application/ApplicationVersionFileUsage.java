@@ -10,6 +10,14 @@ public record ApplicationVersionFileUsage(
 
   private static final String USAGE_TYPE = "ApplicationVersion";
 
+  public static ApplicationVersionFileUsage supportingDocumentFrom(Integer applicationVersionId) {
+    return new ApplicationVersionFileUsage(
+        applicationVersionId.toString(),
+        USAGE_TYPE,
+        "supporting-document"
+    );
+  }
+
   public static ApplicationVersionFileUsage supportingDocumentFrom(ApplicationVersion applicationVersion) {
     return new ApplicationVersionFileUsage(
         applicationVersion.getId().toString(),

@@ -24,7 +24,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
@@ -80,7 +79,8 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
     application = applicationVersion.getApplication();
 
     // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
   }
 
   @SecurityTest

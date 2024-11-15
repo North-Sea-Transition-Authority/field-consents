@@ -88,13 +88,13 @@ public class SupportingInformationController {
 
   private ModelAndView getSupportingInformationModelAndView(ApplicationVersion applicationVersion,
                                                             SupportingInformationForm form) {
-    var applicationId = applicationVersion.getApplication().getId();
     var fileUploadAttributes = fileControllerHelperService.fileUploadComponentAttributes(
         form.getDocuments(),
         SupportingInformationFileController.class,
-        controller -> controller.download(applicationId, null, null),
-        controller -> controller.delete(applicationId, null, null)
+        controller -> controller.download(applicationVersion.getId(), null, null),
+        controller -> controller.delete(applicationVersion.getId(), null, null)
     );
+    var applicationId = applicationVersion.getApplication().getId();
     var applicationType = applicationService.getApplicationById(applicationId).getType();
     var applicationTypeString = switch (applicationType) {
       case VENT -> "venting";

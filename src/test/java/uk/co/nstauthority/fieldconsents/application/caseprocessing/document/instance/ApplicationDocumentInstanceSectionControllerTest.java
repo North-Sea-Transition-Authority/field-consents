@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +74,8 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     application = applicationVersion.getApplication();
 
     // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
   }
 
   @SecurityTest

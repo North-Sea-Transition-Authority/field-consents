@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,8 +95,11 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     technicalReview.setDeadlineDateTime(TECHNICAL_REVIEW_DEADLINE);
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_TEXT);
 
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of(TECHNICAL_REVIEWER_SUBMIT_REVIEW));
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
   }
 
   @SecurityTest

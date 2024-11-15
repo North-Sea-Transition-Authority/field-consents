@@ -118,8 +118,10 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
   @SecurityTest
   void getApplicationUpdateRequest_checkEndPointSecurityOnly_forbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Set.of());

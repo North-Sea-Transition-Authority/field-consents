@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -22,14 +21,16 @@ public class ApplicationVersionService {
   public ApplicationVersion getApplicationVersionById(Integer applicationVersionId) {
     return applicationVersionRepository.findById(applicationVersionId)
         .orElseThrow(() ->
-            new EntityNotFoundException("Application version with id %s not found".formatted(applicationVersionId))
+            new ApplicationVersionNotFoundException("Application version with id %s not found"
+                .formatted(applicationVersionId))
         );
   }
 
   public ApplicationVersion getLatestApplicationVersionByApplicationId(Integer applicationId) {
     return findLatestApplicationVersion(applicationId)
         .orElseThrow(() ->
-            new EntityNotFoundException("Application version not found for application with id %s".formatted(applicationId))
+            new ApplicationVersionNotFoundException("Application version not found for application with id %s"
+                .formatted(applicationId))
         );
   }
 
