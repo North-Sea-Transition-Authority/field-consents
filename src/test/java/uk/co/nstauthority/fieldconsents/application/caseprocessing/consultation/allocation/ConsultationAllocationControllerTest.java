@@ -20,7 +20,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,7 +31,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCaseProcessingController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -107,8 +105,6 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
     when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
     when(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)).thenReturn(TEAM_MEMBER_VIEWS);
     when(teamMemberViewService.getUsersMap(TEAM_MEMBER_VIEWS)).thenReturn(TEAM_MEMBER_VIEWS_AS_MAP);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of(CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER));
   }
 
   @SecurityTest

@@ -14,7 +14,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -211,9 +210,6 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersionSubmitted);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));
-
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
                 .getAssignmentEndpoint(APPLICATION_ID)))
@@ -247,9 +243,6 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersionSubmitted);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)

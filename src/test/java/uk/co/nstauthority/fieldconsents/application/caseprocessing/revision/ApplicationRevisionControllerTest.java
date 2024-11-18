@@ -13,7 +13,6 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -60,8 +59,6 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void getStartRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -122,8 +119,6 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void startRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))
             .with(csrf())
             .with(user(user)))

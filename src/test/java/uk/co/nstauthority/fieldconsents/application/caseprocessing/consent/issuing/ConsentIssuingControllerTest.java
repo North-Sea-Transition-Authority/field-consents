@@ -19,7 +19,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -119,8 +118,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getConsentIssuing_userDoesNotHaveConsentIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -251,8 +248,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void approveForIssuing_userDoesNotHaveApproveForIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).approveForIssuing(APPLICATION_ID, null, null)))
             .with(csrf())
             .with(user(user)))
@@ -287,8 +282,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getIssueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -360,8 +353,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void unapproveForIssuing_userDoesNotHaveUnapproveForIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(APPLICATION_ID, null)))
             .with(csrf())
             .with(user(user)))
@@ -398,8 +389,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void issueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))
             .with(csrf())
             .with(user(user)))

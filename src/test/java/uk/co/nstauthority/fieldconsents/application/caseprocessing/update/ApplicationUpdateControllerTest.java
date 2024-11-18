@@ -73,7 +73,6 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
 
   @SecurityTest
   void getApplicationUpdates_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getApplicationUpdates(APPLICATION_ID, null)))
             .with(user(user)))

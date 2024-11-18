@@ -398,18 +398,42 @@ public class CaseProcessingActionService {
     return !getAvailableUserActions(applicationVersion, user, Set.of(actions)).isEmpty();
   }
 
-  // TODO: FCS-863 - this method looks up all actions, which the caller may not care about.
-  //  consider passing in only the actions which are applicable
-  public Set<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var actions = EnumSet.allOf(CaseProcessingActionItem.class);
+  /**
+   * Gets the actions which are available on the top-level of the case processing action page for the given user.
+   * Top-level excludes buttons which are present in pages that are a click away. E.g. requesting an application update.
+   * Unlike the method below, this includes actions which are grouped by a task list section.
+   *
+   * @param applicationVersion The application version to contextualise buttons around
+   * @param user The user to contextualise actions around
+   * @return A list of action items
+   */
+  public Set<CaseProcessingActionItem> getTaskListActionItems(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var actions = EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .filter(actionsToTaskListSection::containsKey)
+        .collect(toSet());
+
     return getAvailableUserActions(applicationVersion, user, actions);
   }
 
-  public List<CaseProcessingActionView> getUserActionViews(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+  /**
+   * Gets the actions which are available on the top-level of the case processing action page for the given user.
+   * Top-level excludes buttons which are present in pages that are a click away. It also excludes any actions which
+   * are put under the 'Case tasks' and 'Optional case tasks'. For example, requesting an application update, will be
+   * removed since it's grouped by one of the above.
+   *
+   * @param applicationVersion The application version to contextualise buttons around
+   * @param user The user to contextualise actions around
+   * @return A list of action views
+   */
+  public List<CaseProcessingActionView> getTopLevelActionItemViews(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user
+  ) {
     var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
         .stream()
-        .filter(action -> !actionsToTaskListSection.containsKey(action)) // not task list action
-        .filter(action -> !actionsToCaseProcessingActionGroup.containsKey(action)) // not action group (page) action
+        .filter(action -> !actionsToTaskListSection.containsKey(action)) // ignore task list actions
+        .filter(action -> !actionsToCaseProcessingActionGroup.containsKey(action)) // ignore actions within a task list group
         .collect(toSet());
 
     var availableActions = getAvailableUserActions(applicationVersion, user, applicableActions);

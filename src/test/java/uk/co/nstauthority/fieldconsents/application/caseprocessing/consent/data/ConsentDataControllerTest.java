@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -91,7 +90,6 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void editConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
             .editConsentData(APPLICATION_ID)))
             .with(user(user)))
@@ -108,7 +106,6 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void submitConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
             .submitConsentData(APPLICATION_ID, null, null, null)))
             .with(user(user))

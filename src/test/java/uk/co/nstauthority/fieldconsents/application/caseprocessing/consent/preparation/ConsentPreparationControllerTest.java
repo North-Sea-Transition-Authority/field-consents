@@ -13,7 +13,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -96,7 +95,6 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void viewConsentPreparationPage_userDoesNotHaveConsentPreparationCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
             .viewConsentPreparationPage(APPLICATION_ID, null)))
             .with(user(user)))

@@ -708,7 +708,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         applicationVersion);
     when(caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion)).thenReturn(
         caseProcessingTabs);
-    when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(
+    when(caseProcessingActionService.getTopLevelActionItemViews(applicationVersion, user)).thenReturn(
         caseProcessingActionViews);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)

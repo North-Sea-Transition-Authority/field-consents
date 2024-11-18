@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_ID_1;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
@@ -26,7 +25,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -95,8 +93,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     technicalReview.setDeadlineDateTime(TECHNICAL_REVIEW_DEADLINE);
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_TEXT);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of(TECHNICAL_REVIEWER_SUBMIT_REVIEW));
-
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
@@ -111,9 +107,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
 
   @SecurityTest
   void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID, user)))
             .with(user(user)))
@@ -162,9 +155,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
 
   @SecurityTest
   void submitForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .submitForm(APPLICATION_ID, null, null, null, null)))
             .with(user(user)))

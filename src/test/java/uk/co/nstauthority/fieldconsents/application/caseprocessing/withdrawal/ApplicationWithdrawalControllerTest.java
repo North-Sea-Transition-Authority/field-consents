@@ -22,7 +22,6 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -73,8 +72,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalRequest(APPLICATION_ID)))
@@ -227,8 +224,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalResponse(APPLICATION_ID)))

@@ -92,7 +92,6 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void editDocuments_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
             .editDocuments(APPLICATION_ID)))
             .with(user(user)))

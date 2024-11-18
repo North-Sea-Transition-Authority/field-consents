@@ -136,7 +136,7 @@ public class IndustryCaseProcessingController {
             ReverseRouter.route(on(IndustryCaseProcessingController.class)
                 .getIndustryCaseProcessing(application.getId(), null, null, null))
         )
-        .addObject("actionList", caseProcessingActionService.getUserActionViews(latestApplicationVersion, user))
+        .addObject("actionList", caseProcessingActionService.getTopLevelActionItemViews(latestApplicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(latestApplicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))

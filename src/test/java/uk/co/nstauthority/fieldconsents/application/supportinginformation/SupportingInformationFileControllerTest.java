@@ -76,7 +76,6 @@ class SupportingInformationFileControllerTest extends AbstractApplicationControl
 
   @SecurityTest
   void download_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(downloadUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -91,7 +90,6 @@ class SupportingInformationFileControllerTest extends AbstractApplicationControl
 
   @SecurityTest
   void delete_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(post(deleteUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());

@@ -58,7 +58,7 @@ class CaseProcessingTaskListServiceTest {
   @ParameterizedTest
   @EnumSource(CaseProcessingTaskListSection.class)
   void getTaskListSections_singleSection(CaseProcessingTaskListSection caseProcessingTaskListSection) {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, USER)).thenReturn(actionItems);
+    when(caseProcessingActionService.getTaskListActionItems(applicationVersion, USER)).thenReturn(actionItems);
 
     var groupedActionItems = Map.of(caseProcessingTaskListSection, actionItems);
     when(caseProcessingActionService.groupActionItemsByTaskListSection(actionItems)).thenReturn(groupedActionItems);
@@ -73,7 +73,7 @@ class CaseProcessingTaskListServiceTest {
 
   @Test
   void getTaskListSections_multipleSections_inCorrectOrder() {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, USER)).thenReturn(actionItems);
+    when(caseProcessingActionService.getTaskListActionItems(applicationVersion, USER)).thenReturn(actionItems);
 
     var groupedActionItems = Map.of(CASE_TASKS, actionItems, OPTIONAL_CASE_TASKS, actionItems);
     when(caseProcessingActionService.groupActionItemsByTaskListSection(actionItems)).thenReturn(groupedActionItems);

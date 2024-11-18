@@ -19,7 +19,6 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -68,8 +67,6 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -164,8 +161,6 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -237,8 +232,6 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .startUpdate(APPLICATION_ID, null)))

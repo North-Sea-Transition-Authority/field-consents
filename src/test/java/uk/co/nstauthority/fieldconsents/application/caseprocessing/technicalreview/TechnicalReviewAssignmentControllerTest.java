@@ -27,7 +27,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Clock;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -90,9 +89,6 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
             .getTechnicalReviewAssignment(APPLICATION_ID, null)))

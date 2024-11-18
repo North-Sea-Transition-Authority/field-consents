@@ -26,7 +26,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -102,9 +101,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getNewCaseNote_checkEndPointSecurityOnly_forbidden() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
             .with(user(user))
@@ -138,8 +134,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.getApplicationReference(any(ApplicationVersion.class), any(String.class)))
         .thenReturn(DUMMY_CAPTION_TITLE);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -172,8 +166,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -199,8 +191,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -228,8 +218,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNoteFileController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 

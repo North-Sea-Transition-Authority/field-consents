@@ -74,7 +74,6 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getConsultations_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getConsultations(APPLICATION_ID, null)))
             .with(user(user)))

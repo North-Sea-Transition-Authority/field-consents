@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -88,8 +87,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getViewDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
@@ -169,8 +166,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getPreviewDocumentInstance_userDoesNotHaveConsentPreparationOrConsentIssuingCaseProcessingActionItems() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true, null)))
             .with(user(user)))
@@ -256,8 +251,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getReloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
@@ -301,8 +294,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void reloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .reloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, null)))
             .with(csrf())

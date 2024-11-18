@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -87,8 +86,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
@@ -142,8 +139,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -293,8 +288,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
@@ -348,8 +341,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -499,8 +490,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
@@ -554,8 +543,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -660,8 +647,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getEditDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getEditDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
@@ -715,8 +700,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void editDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -818,8 +801,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getRemoveDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getRemoveDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
@@ -860,8 +841,6 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void removeDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .removeDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null)))
             .with(csrf())

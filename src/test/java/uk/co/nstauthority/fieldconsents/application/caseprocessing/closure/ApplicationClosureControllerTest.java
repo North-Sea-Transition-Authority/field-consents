@@ -17,7 +17,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -71,9 +70,6 @@ class ApplicationClosureControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void getConfirmation_hasNoPermission_forbidden() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(APPLICATION_VERSION, user))
-        .thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationClosureController.class)
             .getConfirmation(APPLICATION_ID, user)))
             .with(user(user)))
@@ -89,9 +85,6 @@ class ApplicationClosureControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void closeApplication_hasNoPermission_forbidden() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(APPLICATION_VERSION, user))
-        .thenReturn(Set.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationClosureController.class)
             .closeApplication(APPLICATION_ID, null)))
             .with(user(user)))

@@ -165,7 +165,7 @@ public class ApplicationCaseProcessingController {
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null,
             null
         )))
-        .addObject("actionList", caseProcessingActionService.getUserActionViews(latestApplicationVersion, user))
+        .addObject("actionList", caseProcessingActionService.getTopLevelActionItemViews(latestApplicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(latestApplicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
