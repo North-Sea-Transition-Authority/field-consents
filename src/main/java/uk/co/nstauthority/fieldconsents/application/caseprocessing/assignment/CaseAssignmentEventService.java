@@ -59,7 +59,6 @@ public class CaseAssignmentEventService implements CaseEventService<Application>
       var previousApplicationVersionAudit = index > 0 ? applicationVersionAudits.get(index - 1) : null;
       var previousAuditAssignment = getAuditEventAssignment(previousApplicationVersionAudit);
       var currentAuditAssignment = getAuditEventAssignment(applicationVersionAudit);
-      var auditUserIsCurrentCaseOfficer = applicationVersionAudit.auditUserWuaId().equals(currentAuditAssignment.caseOfficer());
       // first assignment / reassignment from CAM
       // release ownership / CAM assignment
       // case officer assignment change - previous and current case officer both non null and different
@@ -109,7 +108,9 @@ public class CaseAssignmentEventService implements CaseEventService<Application>
               getCamReassignmentEvent(applicationVersionAudit, applicationVersion)
           );
         }
-      } else if (currentAuditAssignment.caseOfficerAssigned && auditUserIsCurrentCaseOfficer) {
+      } else if (currentAuditAssignment.caseOfficerAssigned
+          && applicationVersionAudit.auditUserWuaId() != null
+          && applicationVersionAudit.auditUserWuaId().equals(currentAuditAssignment.caseOfficer())) {
         // take ownership event
         caseAssignmentEvents.add(
             getCaseOwnershipEvent(applicationVersionAudit, applicationVersion, CASE_OFFICER_OWNERSHIP_TAKEN)
