@@ -10,22 +10,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_2;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService.USER_NOT_IN_CAM_ROLE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CAM_ASSIGN_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
+import static uk.co.nstauthority.fieldconsents.teams.Role.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,12 +36,12 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMember;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class CamAssignmentServiceTest {
@@ -61,26 +53,13 @@ class CamAssignmentServiceTest {
   
   private static final WebUserAccountId WEB_CAM_USER_ACCOUNT_ID = WebUserAccountId.from(CAM_USER);
 
-  private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
+  private static final Team REGULATOR_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build();
 
-  private static final TeamMember CAM_USER_1 = TeamMemberTestUtil.Builder()
-      .withWebUserAccountId(1L)
-      .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
-      .build();
-
-  private static final TeamMember CAM_USER_2 = TeamMemberTestUtil.Builder()
-      .withWebUserAccountId(2L)
-      .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
-      .build();
-  
   @Mock
   private ApplicationVersionRepository applicationVersionRepository;
 
   @Mock
-  private RegulatorTeamService regulatorTeamService;
-
-  @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private TeamQueryService teamQueryService;
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
@@ -93,22 +72,16 @@ class CamAssignmentServiceTest {
 
   private ApplicationVersion applicationVersion;
 
-  private Collection<WebUserAccountId> allCamUsersWuaIds;
-
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationVersion.setCaseOfficerWuaId(WEB_USER_ACCOUNT_ID.id());
-    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
-    allCamUsersWuaIds = new HashSet<>();
-    allCamUsersWuaIds.add(CAM_USER_1.wuaId());
-    allCamUsersWuaIds.add(CAM_USER_2.wuaId());
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
   }
 
   @Test
   void assignCamUser_whenNotInCamRole_thenThrowException() {
-    when(regulatorTeamService.isCamUser(WEB_CAM_USER_ACCOUNT_ID))
-        .thenReturn(false);
+    when(teamQueryService.userHasStaticRole(CAM_USER, TeamType.REGULATOR, CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(false);
 
     assertThatThrownBy(() ->
         camAssignmentService.assignCamUser(applicationVersion, CAM_USER, USER))
@@ -120,8 +93,7 @@ class CamAssignmentServiceTest {
 
   @Test
   void assignCamUser_whenInCamRole_thenApplicationVersionCamWuaId() {
-    when(regulatorTeamService.isCamUser(WEB_CAM_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CAM_USER, TeamType.REGULATOR, CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     camAssignmentService.assignCamUser(applicationVersion, CAM_USER, USER);
 
@@ -152,8 +124,7 @@ class CamAssignmentServiceTest {
 
   @Test
   void assignCamUser_whenSendCamAssignmentEmailFails_thenApplicationVersionCamDetailsAreStillUpdated() {
-    when(regulatorTeamService.isCamUser(WEB_CAM_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CAM_USER, TeamType.REGULATOR, CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))
@@ -196,57 +167,40 @@ class CamAssignmentServiceTest {
 
   @Test
   void getCamUserAssignmentCandidates_whenUserNotRegulatorTeam_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.empty());
-
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getCamUserAssignmentCandidates_whenRegulatorUserAndCamUsersExist() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
-
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
-        .containsExactly(CAM_USER_TEAM_MEMBER_VIEW_1, CAM_USER_TEAM_MEMBER_VIEW_2);
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion)).isEmpty();
   }
 
   @Test
   void getCamUserAssignmentCandidates_whenRegulatorUserAndCurrentlyAssignedCamUserIsExcluded() {
-    applicationVersion.setCamWuaId(CAM_USER_TEAM_MEMBER_VIEW_1.wuaId().id());
+    applicationVersion.setCamWuaId(CAM_USER_TEAM_MEMBER_VIEW_1.wuaId());
 
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(REGULATOR_TEAM)
+            .withWuaId(CAM_USER_TEAM_MEMBER_VIEW_1.wuaId())
+            .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(REGULATOR_TEAM)
+            .withWuaId(CAM_USER_TEAM_MEMBER_VIEW_2.wuaId())
+            .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
+            .build()
+    );
 
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(List.of(teamRoles.getLast())))
+        .thenReturn(List.of(CAM_USER_TEAM_MEMBER_VIEW_2));
+
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .containsExactly(CAM_USER_TEAM_MEMBER_VIEW_2);
   }
 
   @Test
   void getCamUserAssignmentCandidates_whenRegulatorUserButNoMembersExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getCamUserAssignmentCandidates_whenRegulatorUserAndCamUsersDontExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(List.of(VIEWER_TEAM_MEMBER_VIEW, ACCESS_MANGER_TEAM_MEMBER_VIEW));
-
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion)).isEmpty();
   }
 
   @Test

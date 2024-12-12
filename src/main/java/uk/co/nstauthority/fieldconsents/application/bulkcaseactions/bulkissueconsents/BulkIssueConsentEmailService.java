@@ -6,12 +6,9 @@ import static java.util.stream.Collectors.toSet;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService.ORGANISATION_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +34,11 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Service
@@ -62,10 +62,9 @@ class BulkIssueConsentEmailService {
   private final EnergyPortalUserService energyPortalUserService;
   private final ApplicationService applicationService;
   private final OrganisationUnitService organisationUnitService;
-  private final TeamMemberViewService teamMemberViewService;
-  private final IndustryTeamService industryTeamService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
   private final ConsentEmailService consentEmailService;
+  private final TeamQueryService teamQueryService;
 
   BulkIssueConsentEmailService(
       EmailService emailService,
@@ -73,20 +72,18 @@ class BulkIssueConsentEmailService {
       EnergyPortalUserService energyPortalUserService,
       ApplicationService applicationService,
       OrganisationUnitService organisationUnitService,
-      TeamMemberViewService teamMemberViewService,
-      IndustryTeamService industryTeamService,
       ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
-      ConsentEmailService consentEmailService
+      ConsentEmailService consentEmailService,
+      TeamQueryService teamQueryService
   ) {
     this.emailService = emailService;
     this.absoluteUrlService = absoluteUrlService;
     this.energyPortalUserService = energyPortalUserService;
     this.applicationService = applicationService;
     this.organisationUnitService = organisationUnitService;
-    this.teamMemberViewService = teamMemberViewService;
-    this.industryTeamService = industryTeamService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
     this.consentEmailService = consentEmailService;
+    this.teamQueryService = teamQueryService;
   }
 
   void sendBulkConsentIssuedEmailToRegulators(BulkIssueConsentRun run, List<BulkIssueConsentsTask> tasks) {
@@ -240,22 +237,21 @@ class BulkIssueConsentEmailService {
   }
 
   Set<Long> getDistinctOperatorEmailRecipientWuaIds(OrganisationGroupDto organisationGroupDto) {
-    var teamOptional = industryTeamService.getTeamByOrganisationGroupId(organisationGroupDto.getOrganisationGroupId());
-    var emailRecipientWuaIds = new HashSet<Long>();
-
-    if (teamOptional.isPresent()) {
-      var teamMemberViewWuaIds = teamMemberViewService
-          .getTeamMemberViewsWithRolesForTeam(
-              teamOptional.get(),
-              Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR))
-          .stream()
-          .map(tmv -> tmv.wuaId().id())
-          .toList();
-
-      emailRecipientWuaIds.addAll(teamMemberViewWuaIds);
-    }
-
-    return emailRecipientWuaIds;
+    return teamQueryService.getTeamRoles(
+        TeamType.INDUSTRY,
+        TeamScopeReference.ORGANISATION_GROUP_ID,
+        Collections.singleton(organisationGroupDto.getOrganisationGroupId().toString())
+    )
+        .stream()
+        .filter(teamRole -> {
+          var role = teamRole.getRole();
+          return role == Role.CREATOR
+              || role == Role.EDITOR
+              || role == Role.SUBMITTER
+              || role == Role.CONSENT_RECIPIENT;
+        })
+        .map(TeamRole::getWuaId)
+        .collect(toSet());
   }
 
   public void sendBulkConsentIssuedEmailToFieldEquityPartners(BulkIssueConsentRun run,

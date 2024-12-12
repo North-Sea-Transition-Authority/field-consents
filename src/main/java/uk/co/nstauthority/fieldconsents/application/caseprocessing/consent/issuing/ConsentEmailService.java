@@ -1,13 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
@@ -19,12 +16,15 @@ import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitWithGroupsJson;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class ConsentEmailService {
@@ -32,35 +32,33 @@ public class ConsentEmailService {
   public static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for consent issuing notification";
 
   private final EmailService emailService;
-  private final IndustryTeamService industryTeamService;
-  private final TeamMemberViewService teamMemberViewService;
   private final OrganisationUnitService organisationUnitService;
   private final EnergyPortalUserService energyPortalUserService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
   private final FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
+  private final TeamQueryService teamQueryService;
 
-  public ConsentEmailService(
+  ConsentEmailService(
       EmailService emailService,
-      IndustryTeamService industryTeamService,
-      TeamMemberViewService teamMemberViewService,
       OrganisationUnitService organisationUnitService,
       EnergyPortalUserService energyPortalUserService,
       ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
-      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService
+      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService,
+      TeamQueryService teamQueryService
   ) {
     this.emailService = emailService;
-    this.industryTeamService = industryTeamService;
-    this.teamMemberViewService = teamMemberViewService;
     this.organisationUnitService = organisationUnitService;
     this.energyPortalUserService = energyPortalUserService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
     this.fieldConsentsEmailRecipientService = fieldConsentsEmailRecipientService;
+    this.teamQueryService = teamQueryService;
   }
 
   public void sendConsentIssuedEmailToOperator(ApplicationVersion applicationVersion) {
     var primaryOperator = organisationUnitService.getOrganisationUnitWithGroupsById(
         applicationVersion.getPrimaryOperatorOuId(),
-        ORGANISATION_LOOKUP_PURPOSE);
+        ORGANISATION_LOOKUP_PURPOSE
+    );
 
     var emailRecipients = getConsentIssuedEmailRecipientsForOperator(applicationVersion, primaryOperator);
 
@@ -78,32 +76,36 @@ public class ConsentEmailService {
         ));
   }
 
-  private Set<FieldConsentsEmailRecipient> getConsentIssuedEmailRecipientsForOperator(
+  Set<FieldConsentsEmailRecipient> getConsentIssuedEmailRecipientsForOperator(
       ApplicationVersion applicationVersion,
-      OrganisationUnitWithGroupsJson primaryOperator) {
-    var applicationSubmitter = FieldConsentsEmailRecipient.from(
-        energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getSubmittedByWuaId()))
-    );
+      OrganisationUnitWithGroupsJson primaryOperator
+  ) {
+    var teamScopeIds = primaryOperator.organisationGroups().stream()
+        .map(OrganisationGroupDto::getOrganisationGroupId)
+        .map(String::valueOf)
+        .collect(Collectors.toSet());
 
-    var emailRecipients = new HashSet<FieldConsentsEmailRecipient>();
-    emailRecipients.add(applicationSubmitter);
+    var emailRecipientTeamRoles = new HashSet<TeamRole>();
 
-    primaryOperator.organisationGroups().forEach(organisationGroupDto -> {
-      var teamOptional = industryTeamService.getTeamByOrganisationGroupId(organisationGroupDto.getOrganisationGroupId());
+    teamQueryService
+        .getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds)
+        .stream()
+        .filter(teamrole ->
+            teamrole.getRole() == Role.CONSENT_RECIPIENT
+            || teamrole.getRole() == Role.CREATOR
+            || teamrole.getRole() == Role.SUBMITTER
+            || teamrole.getRole() == Role.EDITOR
+        )
+        .forEach(emailRecipientTeamRoles::add);
 
-      if (teamOptional.isPresent()) {
-        var teamConsentRecipients = teamMemberViewService
-            .getTeamMemberViewsWithRolesForTeam(
-                teamOptional.get(),
-                Set.of(CONSENT_RECIPIENT, CREATOR, SUBMITTER, EDITOR))
-            .stream()
-            .map(FieldConsentsEmailRecipient::from)
-            .toList();
+    // also include the user who submitted the application, in case their role changed and is no longer part of the above
+    var applicationSubmitter = applicationVersion.getSubmittedByWuaId();
+    emailRecipientTeamRoles.addAll(teamQueryService.getTeamRoles(WebUserAccountId.from(applicationSubmitter)));
 
-        emailRecipients.addAll(teamConsentRecipients);
-      }
-    });
-    return emailRecipients;
+    return teamQueryService.getTeamMemberViews(emailRecipientTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .collect(Collectors.toSet());
   }
 
   public void sendConsentIssuedEmailToCaseOfficer(ApplicationVersion applicationVersion) {
@@ -147,9 +149,10 @@ public class ConsentEmailService {
       DomainReference domainReference,
       MergedTemplate mergedTemplate
   ) {
-
     var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitWithGroupsJson, Set.of(IndustryTeamRole.CONSENT_RECIPIENT));
+        organisationUnitWithGroupsJson,
+        Set.of(Role.CONSENT_RECIPIENT)
+    );
 
     // iterate over the list of field equity partner consent recipients to notify about the consent being issued
     distinctEmailRecipients.forEach(recipient ->

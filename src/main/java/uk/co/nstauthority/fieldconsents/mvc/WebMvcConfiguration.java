@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.mvc;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +14,13 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetOrRegulatorRoleInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.UserCanManageAssetsInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.role.StaticRoleHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.teams.management.access.TeamManagementHandlerInterceptor;
 
 @Configuration
 public class WebMvcConfiguration implements WebMvcConfigurer {
@@ -29,39 +31,35 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final ResponseBufferSizeHandlerInterceptor responseBufferSizeHandlerInterceptor;
 
-  private final PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor;
-
-  private final HasPermissionInterceptor hasPermissionInterceptor;
-
-  private final HasTeamPermissionInterceptor hasTeamPermissionInterceptor;
-
   private final ApplicationHandlerInterceptor applicationHandlerInterceptor;
 
   private final ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver;
 
-  private final HasAssetPermissionInterceptor hasAssetPermissionInterceptor;
+  private final TeamManagementHandlerInterceptor teamManagementHandlerInterceptor;
 
-  private final IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor;
+  private final StaticRoleHandlerInterceptor staticRoleHandlerInterceptor;
+
+  private final UserCanManageAssetsInterceptor userCanManageAssetsInterceptor;
+
+  private final HasAssetOrRegulatorRoleInterceptor hasAssetOrRegulatorRoleInterceptor;
 
   @Autowired
   WebMvcConfiguration(ErrorListHandlerInterceptor errorListHandlerInterceptor,
                       ResponseBufferSizeHandlerInterceptor responseBufferSizeHandlerInterceptor,
-                      PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
-                      HasPermissionInterceptor hasPermissionInterceptor,
-                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
                       ApplicationHandlerInterceptor applicationHandlerInterceptor,
                       ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver,
-                      HasAssetPermissionInterceptor hasAssetPermissionInterceptor,
-                      IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor) {
+                      TeamManagementHandlerInterceptor teamManagementHandlerInterceptor,
+                      StaticRoleHandlerInterceptor staticRoleHandlerInterceptor,
+                      UserCanManageAssetsInterceptor userCanManageAssetsInterceptor,
+                      HasAssetOrRegulatorRoleInterceptor hasAssetOrRegulatorRoleInterceptor) {
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
     this.responseBufferSizeHandlerInterceptor = responseBufferSizeHandlerInterceptor;
-    this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
-    this.hasPermissionInterceptor = hasPermissionInterceptor;
-    this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
     this.applicationHandlerInterceptor = applicationHandlerInterceptor;
     this.serviceUserDetailArgumentResolver = serviceUserDetailArgumentResolver;
-    this.hasAssetPermissionInterceptor = hasAssetPermissionInterceptor;
-    this.isMemberOfTeamTypeInterceptor = isMemberOfTeamTypeInterceptor;
+    this.teamManagementHandlerInterceptor = teamManagementHandlerInterceptor;
+    this.hasAssetOrRegulatorRoleInterceptor = hasAssetOrRegulatorRoleInterceptor;
+    this.staticRoleHandlerInterceptor = staticRoleHandlerInterceptor;
+    this.userCanManageAssetsInterceptor = userCanManageAssetsInterceptor;
   }
 
   @Override
@@ -79,20 +77,16 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         .excludePathPatterns(ASSETS_PATH);
     registry.addInterceptor(errorListHandlerInterceptor)
         .excludePathPatterns(ASSETS_PATH);
-    registry.addInterceptor(permissionManagementHandlerInterceptor)
-        .addPathPatterns("/permission-management/**");
-    registry.addInterceptor(hasTeamPermissionInterceptor)
-        .addPathPatterns("/permission-management/**");
-    registry.addInterceptor(isMemberOfTeamTypeInterceptor)
-        .addPathPatterns("/applications/**");
     registry.addInterceptor(applicationHandlerInterceptor)
         .addPathPatterns("/applications/**", "/application-versions/**");
-    registry.addInterceptor(hasPermissionInterceptor)
-        .excludePathPatterns(ASSETS_PATH);
-    registry.addInterceptor(hasAssetPermissionInterceptor)
-        .addPathPatterns("/manage-asset/fields/**");
-    registry.addInterceptor(hasAssetPermissionInterceptor)
-        .addPathPatterns("/manage-asset/facilities/**");
+    registry.addInterceptor(userCanManageAssetsInterceptor)
+        .addPathPatterns(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()));
+    registry.addInterceptor(hasAssetOrRegulatorRoleInterceptor)
+        .addPathPatterns("/manage-asset/fields/**", "/manage-asset/facilities/**");
+    registry.addInterceptor(teamManagementHandlerInterceptor)
+        .addPathPatterns("/team-management/**");
+    registry.addInterceptor(staticRoleHandlerInterceptor)
+        .excludePathPatterns(ASSETS_PATH, "/api/v1/logout/*", "/error");
   }
 
   @Bean

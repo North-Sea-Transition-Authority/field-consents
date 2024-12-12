@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,14 +79,15 @@ import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.Formatted
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = ApplicationCaseProcessingController.class)
 class ApplicationCaseProcessingControllerTest extends AbstractApplicationControllerTest {
@@ -129,9 +131,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private TechnicalReviewService technicalReviewService;
-
-  @MockBean
-  private RegulatorTeamService regulatorTeamService;
 
   @MockBean
   private ConsultationService consultationService;
@@ -260,8 +259,17 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
     );
 
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    // this is called in the StaticRoleHandlerInterceptor
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        user,
+        TeamType.REGULATOR,
+        Set.of(Role.CASE_OFFICER,
+          Role.CASE_MANAGER,
+          Role.TECHNICAL_REVIEWER,
+          Role.CONSENTS_AND_AUTHORISATIONS_MANAGER,
+          Role.VIEWER
+        )
+    )).thenReturn(true);
   }
 
   @ParameterizedSecurityTest
@@ -350,8 +358,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubSummaryServiceCall(applicationVersion);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
@@ -372,8 +378,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubSummaryServiceCall(applicationVersion);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
@@ -391,7 +395,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubBaseServiceCalls();
     stubSummaryServiceCall(applicationVersion);
 
-    when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    var teamRoles = Set.of(Role.TECHNICAL_REVIEWER);
+
+    when(teamQueryService.getStaticRoles(user, TeamType.REGULATOR)).thenReturn(teamRoles);
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
@@ -406,7 +412,13 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   void caseProcessing_isNotTechnicalReviewer_checkTechnicalReviewBannerDoesNotExist() throws Exception {
     stubBaseServiceCalls();
 
-    when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -421,11 +433,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubBaseServiceCalls();
     stubSummaryServiceCall(applicationVersion);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
-    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(
-        Optional.of(consultation));
-    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(
-        Optional.of(furtherInformation));
+    var teamRoles = Set.of(Role.CASE_OFFICER);
+
+    when(teamQueryService.getStaticRoles(user, TeamType.REGULATOR)).thenReturn(teamRoles);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
     when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
@@ -441,7 +453,13 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubBaseServiceCalls();
     stubSummaryServiceCall(applicationVersion);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.TECHNICAL_REVIEWER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -456,14 +474,17 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubBaseServiceCalls();
     stubSummaryServiceCall(applicationVersion);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
-    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(
-        Optional.empty());
-    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
 
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
-    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
-        .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.of(consentIssuingApprovalSummaryView));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
@@ -481,7 +502,13 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubBaseServiceCalls();
     stubSummaryServiceCall(applicationVersion);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(
         Optional.empty());
     when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
@@ -706,7 +733,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
         applicationVersion);
-    when(caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion)).thenReturn(
+    when(caseProcessingTabService.getRegulatorTabsAvailableToUser(user)).thenReturn(
         caseProcessingTabs);
     when(caseProcessingActionService.getTopLevelActionItemViews(applicationVersion, user)).thenReturn(
         caseProcessingActionViews);

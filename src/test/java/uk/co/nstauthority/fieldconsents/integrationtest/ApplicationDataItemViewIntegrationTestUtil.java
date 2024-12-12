@@ -28,17 +28,12 @@ public class ApplicationDataItemViewIntegrationTestUtil {
   public static final LocalDate SHORT_TERM_START_DATE = LocalDate.now();
   public static final LocalDate SHORT_TERM_END_DATE = LocalDate.now().plusMonths(6);
 
-  public static final Team REGULATOR_TEAM = TeamTestUtil.Builder()
+  public static final Team REGULATOR_TEAM = TeamTestUtil.newBuilder()
       .withTeamType(TeamType.REGULATOR)
       .build();
 
-  public static final Team INDUSTRY_TEAM = TeamTestUtil.Builder()
+  public static final Team INDUSTRY_TEAM = TeamTestUtil.newBuilder()
       .withTeamType(TeamType.INDUSTRY)
-      .build();
-
-  public static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
-      .withId(1)
-      .withTeamType(TeamType.OPRED)
       .build();
 
   public static final ServiceUserDetail USER_DETAIL = ServiceUserDetailTestUtil.Builder()

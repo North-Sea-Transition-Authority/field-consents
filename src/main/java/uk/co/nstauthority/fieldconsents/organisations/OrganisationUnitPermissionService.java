@@ -1,58 +1,57 @@
 package uk.co.nstauthority.fieldconsents.organisations;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupDto;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class OrganisationUnitPermissionService {
 
-  private final TeamService teamService;
   private final OrganisationUnitService organisationUnitService;
   private final OrganisationGroupQueryService organisationGroupQueryService;
-  private final PermissionService permissionService;
+  private final TeamQueryService teamQueryService;
 
   OrganisationUnitPermissionService(
-      TeamService teamService,
       OrganisationUnitService organisationUnitService,
       OrganisationGroupQueryService organisationGroupQueryService,
-      PermissionService permissionService
+      TeamQueryService teamQueryService
   ) {
-    this.teamService = teamService;
     this.organisationUnitService = organisationUnitService;
     this.organisationGroupQueryService = organisationGroupQueryService;
-    this.permissionService = permissionService;
+    this.teamQueryService = teamQueryService;
   }
 
-
-  public boolean hasOperatorPermission(
+  public boolean hasOperatorRole(
       ServiceUserDetail user,
-      Integer operatorOuId,
-      RolePermission... requiredPermissions
+      AssetWithOperatorJson assetWithOperatorJson,
+      Collection<Role> requiredRoles
   ) {
-    return hasOperatorPermission(user, operatorOuId, Set.of(requiredPermissions));
+    return CollectionUtils.containsAny(getUserRolesForOperator(user, assetWithOperatorJson), requiredRoles);
   }
 
-  public boolean hasOperatorPermission(
-      ServiceUserDetail user,
-      Integer operatorOuId,
-      Set<RolePermission> requiredPermissions
-  ) {
-    return CollectionUtils.containsAny(getUserPermissionsForOperator(user, operatorOuId), requiredPermissions);
+  public Set<Role> getUserRolesForOperator(ServiceUserDetail user, AssetWithOperatorJson assetWithOperatorJson) {
+    return getUserRolesForOperator(user, assetWithOperatorJson.getOperatorJson().organisationUnitId());
   }
 
-  public Set<RolePermission> getUserPermissionsForOperator(ServiceUserDetail user,
-                                                           Integer operatorOuId) {
+  public Set<Role> getUserRolesForOperator(ServiceUserDetail user, ApplicationVersion applicationVersion) {
+    return getUserRolesForOperator(user, applicationVersion.getPrimaryOperatorOuId());
+  }
+
+  private Set<Role> getUserRolesForOperator(ServiceUserDetail userDetail, Integer operatorOuId) {
     var organisationUnitWithGroups = organisationUnitService.getOrganisationUnitWithGroupsById(
         operatorOuId,
         "Lookup organisation unit with groups for application security lookup"
@@ -63,29 +62,32 @@ public class OrganisationUnitPermissionService {
       return Collections.emptySet();
     }
 
-    var userRolePermissions = new HashSet<RolePermission>();
+    var teamScopeIds = organisationUnitWithGroups.organisationGroups()
+        .stream()
+        .map(OrganisationGroupDto::getOrganisationGroupId)
+        .map(String::valueOf)
+        .collect(Collectors.toSet());
 
-    for (var orgGroup : organisationUnitWithGroups.organisationGroups()) {
-      var teamOptional = teamService.getTeamByOrganisationGroupId(orgGroup.getOrganisationGroupId());
-      if (teamOptional.isEmpty()) {
-        continue;
-      }
-      userRolePermissions.addAll(permissionService.getUserPermissionsForTeam(teamOptional.get(), user));
-    }
-
-    return userRolePermissions;
+    return teamQueryService.getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds)
+        .stream()
+        .filter(teamRole -> teamRole.getWuaId().equals(userDetail.wuaId()))
+        .map(TeamRole::getRole)
+        .collect(Collectors.toSet());
   }
 
-  public List<OrganisationUnitJson> getOperatorsUserHasPermissionsFor(
+  public List<OrganisationUnitJson> getOperatorsUserHasRoleFor(
       ServiceUserDetail user,
-      Set<RolePermission> requiredPermissions
+      Collection<Role> requiredRoles
   ) {
-    var organisationGroupIds = teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.INDUSTRY)
+    var operatorsUserHasRoleFor = teamQueryService.getTeamRoles(user)
         .stream()
-        .filter(team -> permissionService.hasPermissionForTeam(team, user, requiredPermissions))
-        .map(Team::getOrganisationGroupId)
+        .filter(teamRole -> teamRole.getTeam().getTeamType() == TeamType.INDUSTRY)
+        .filter(teamRole -> requiredRoles.contains(teamRole.getRole()))
+        .map(teamRole -> teamRole.getTeam().getScopeId())
+        .map(Integer::parseInt)
+        .distinct()
         .toList();
 
-    return organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
+    return organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(operatorsUserHasRoleFor);
   }
 }

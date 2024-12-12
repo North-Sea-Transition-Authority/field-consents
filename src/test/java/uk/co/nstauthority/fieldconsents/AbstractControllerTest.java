@@ -25,12 +25,10 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailArgument
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.AssetAccessService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetOrRegulatorRoleInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.UserCanManageAssetsInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.role.StaticRoleHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
@@ -56,9 +54,9 @@ import uk.co.nstauthority.fieldconsents.mvc.ResponseBufferSizeHandlerInterceptor
 import uk.co.nstauthority.fieldconsents.mvc.WebMvcConfiguration;
 import uk.co.nstauthority.fieldconsents.mvc.WithDefaultPageControllerAdvice;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementService;
+import uk.co.nstauthority.fieldconsents.teams.management.access.TeamManagementHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
 import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingService;
@@ -74,17 +72,15 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     ErrorListHandlerInterceptor.class,
     FormErrorSummaryService.class,
     ResponseBufferSizeHandlerInterceptor.class,
-    PermissionManagementHandlerInterceptor.class,
-    HasTeamPermissionInterceptor.class,
-    HasPermissionInterceptor.class,
-    HasAssetPermissionInterceptor.class,
+    HasAssetOrRegulatorRoleInterceptor.class,
     ApplicationHandlerInterceptor.class,
-    PermissionService.class,
     WebSecurityConfiguration.class,
     ServiceUserDetailArgumentResolver.class,
     RequestLogFilter.class,
     PostAuthenticationRequestMdcFilter.class,
-    IsMemberOfTeamTypeInterceptor.class
+    TeamManagementHandlerInterceptor.class,
+    StaticRoleHandlerInterceptor.class,
+    UserCanManageAssetsInterceptor.class
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
@@ -100,22 +96,22 @@ public abstract class AbstractControllerTest {
   protected MockMvc mockMvc;
 
   @MockBean
+  protected TeamManagementService teamManagementService;
+
+  @MockBean
+  protected TeamQueryService teamQueryService;
+
+  @MockBean
   protected TopNavigationService topNavigationService;
 
   @MockBean
-  protected PermissionService permissionService;
+  protected FieldConsentsAccessService fieldConsentsAccessService;
 
   @Autowired
   protected FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   protected ValidationErrorOrderingService validationErrorOrderingService;
-
-  @MockBean
-  protected TeamMemberService teamMemberService;
-
-  @MockBean
-  protected TeamService teamService;
 
   @MockBean
   protected OrganisationUnitService organisationUnitService;
@@ -143,9 +139,6 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected TerminalService terminalService;
-
-  @MockBean
-  protected AssetAccessService assetAccessService;
 
   @MockBean
   protected JooqStatisticsListener jooqStatisticsListener;

@@ -25,16 +25,15 @@ import uk.co.nstauthority.fieldconsents.application.rationale.emissions.Applicat
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/application-rationale/vent")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+@UserCanEditApplication
 public class ApplicationRationaleVentController {
 
   private final ApplicationRationaleVentService applicationRationaleVentService;

@@ -23,7 +23,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
@@ -35,22 +36,19 @@ public class CamAssignmentController {
   private final CamAssignmentService camAssignmentService;
   private final CamAssignmentFormValidator camAssignmentFormValidator;
   private final EnergyPortalUserService energyPortalUserService;
-  private final TeamMemberViewService teamMemberViewService;
 
   CamAssignmentController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       CamAssignmentService camAssignmentService,
       CamAssignmentFormValidator camAssignmentFormValidator,
-      EnergyPortalUserService energyPortalUserService,
-      TeamMemberViewService teamMemberViewService
+      EnergyPortalUserService energyPortalUserService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.camAssignmentService = camAssignmentService;
     this.camAssignmentFormValidator = camAssignmentFormValidator;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamMemberViewService = teamMemberViewService;
   }
 
   @GetMapping("assign-to-cam")
@@ -116,8 +114,12 @@ public class CamAssignmentController {
   ) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
-    var camUserAssignmentCandidatesMap = teamMemberViewService
-        .getUsersMap(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user));
+    var camUserAssignmentCandidatesMap = camAssignmentService.getCamUserAssignmentCandidates(applicationVersion)
+        .stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            teamMemberView -> teamMemberView.wuaId().toString(),
+            TeamMemberView::getDisplayName
+        ));
 
     return new ModelAndView("fcs/application/camAssignment")
         .addObject("applicationReference", applicationReference)

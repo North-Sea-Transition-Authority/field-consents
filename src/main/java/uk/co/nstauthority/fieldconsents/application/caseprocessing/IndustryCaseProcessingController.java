@@ -27,12 +27,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -44,20 +42,18 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
     ApplicationVersionStatus.WITHDRAWN,
     ApplicationVersionStatus.CLOSED
 })
-@HasApplicationPermission(permissions = {
-    RolePermission.EDIT_FCS_APPLICATIONS,
-    RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
-    RolePermission.VIEW_FCS_CONSENTS
-})
-@IsMemberOfTeamType(teamType = TeamType.INDUSTRY)
+// should match RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES
+@HasApplicationOrRegulatorRole(
+    industryRoles = {
+        Role.CREATOR,
+        Role.EDITOR,
+        Role.SUBMITTER,
+        Role.FINANCE_ADMINISTRATOR,
+        Role.VIEWER,
+        Role.CONSENT_RECIPIENT
+    }
+)
 public class IndustryCaseProcessingController {
-
-  // The list of permissions here must match the permissions used in @HasApplicationPermission above
-  public static final RolePermission[] INDUSTRY_PROCESSING_REQUIRED_PERMISSIONS = {
-      RolePermission.EDIT_FCS_APPLICATIONS,
-      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
-      RolePermission.VIEW_FCS_CONSENTS
-  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;

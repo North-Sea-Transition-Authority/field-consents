@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +26,18 @@ class FooterLinkControllerTest extends AbstractControllerTest {
 
   @Test
   void accessibilityStatement() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).accessibilityStatement())))
+    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).accessibilityStatement()))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/accessibility/accessibilityStatement"));
   }
 
   @Test
   void contactUs() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).contactUs())))
+    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).contactUs()))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/contact/contact"));
   }
@@ -42,7 +47,9 @@ class FooterLinkControllerTest extends AbstractControllerTest {
     var expectedServiceAnalyticIdentifier = FooterLinkController.stripGoogleCharactersFromIdentifier(analyticsConfigurationProperties.serviceAnalyticIdentifier());
     var expectedEnergyPortalAnalyticIdentifier = FooterLinkController.stripGoogleCharactersFromIdentifier(analyticsConfigurationProperties.energyPortalAnalyticIdentifier());
 
-    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).cookies())))
+    mockMvc.perform(get(ReverseRouter.route(on(FooterLinkController.class).cookies()))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/cookies/cookies"))
         .andExpect(model().attribute("serviceAnalyticIdentifier", expectedServiceAnalyticIdentifier))

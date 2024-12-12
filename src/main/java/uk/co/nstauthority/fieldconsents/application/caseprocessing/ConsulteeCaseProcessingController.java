@@ -2,8 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 
 import java.util.Optional;
 import org.springframework.stereotype.Controller;
@@ -23,12 +21,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consultation-case-processing")
@@ -40,15 +36,9 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
     ApplicationVersionStatus.WITHDRAWN,
     ApplicationVersionStatus.CLOSED
 })
-@HasApplicationPermission(permissions = {ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION})
-@IsMemberOfTeamType(teamType = TeamType.OPRED)
+// should match RoleGroup.CONSULTEE_VIEW_CASE_PROCESSING_ROLES
+@HasApplicationOrRegulatorRole(consulteeRoles = {Role.ALLOCATOR, Role.RESPONDER})
 public class ConsulteeCaseProcessingController {
-
-  // The list of permissions here must match the permissions used in @HasApplicationPermission above
-  public static final RolePermission[] CONSULTEE_PROCESSING_REQUIRED_PERMISSIONS = {
-      ALLOCATE_CONSULTATION,
-      RESPOND_TO_CONSULTATION
-  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;

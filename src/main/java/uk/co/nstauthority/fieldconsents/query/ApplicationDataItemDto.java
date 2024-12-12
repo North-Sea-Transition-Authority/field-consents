@@ -7,7 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 public record ApplicationDataItemDto(
     Integer applicationId,
@@ -32,7 +32,7 @@ public record ApplicationDataItemDto(
     Boolean aceFlag,
     Long caseOfficerWuaId,
     Long camWuaId,
-    RegulatorTeamRole currentCaseOwner,
+    Role currentCaseOwner,
     Boolean withdrawalOpen,
     Long technicalReviewerWuaId,
     Boolean technicalReviewOpen,

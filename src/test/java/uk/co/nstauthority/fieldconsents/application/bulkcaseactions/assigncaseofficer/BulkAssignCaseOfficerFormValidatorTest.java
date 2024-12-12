@@ -20,7 +20,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class BulkAssignCaseOfficerFormValidatorTest {
@@ -34,7 +36,7 @@ class BulkAssignCaseOfficerFormValidatorTest {
   private static final String SELECT_AT_LEAST_ONE_APPLICATION = "Select at least one application";
 
   @Mock
-  private RegulatorTeamService regulatorTeamService;
+  private TeamQueryService teamQueryService;
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
@@ -85,7 +87,7 @@ class BulkAssignCaseOfficerFormValidatorTest {
 
     var webUserAccountId = WebUserAccountId.valueOf(form.caseOfficerWuaId());
 
-    when(regulatorTeamService.isCaseOfficer(webUserAccountId)).thenReturn(false);
+    when(teamQueryService.userHasStaticRole(webUserAccountId, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(false);
 
     validator.validateCaseOfficerWuaId(form, bindingResult);
 
@@ -101,7 +103,7 @@ class BulkAssignCaseOfficerFormValidatorTest {
 
     var webUserAccountId = WebUserAccountId.valueOf(form.caseOfficerWuaId());
 
-    when(regulatorTeamService.isCaseOfficer(webUserAccountId)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(webUserAccountId, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
     when(energyPortalUserService.findByWuaId(WebUserAccountId.from(1L))).thenReturn(Optional.empty());
 
     validator.validateCaseOfficerWuaId(form, bindingResult);
@@ -118,7 +120,7 @@ class BulkAssignCaseOfficerFormValidatorTest {
 
     var webUserAccountId = WebUserAccountId.valueOf(form.caseOfficerWuaId());
 
-    when(regulatorTeamService.isCaseOfficer(webUserAccountId)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(webUserAccountId, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
     when(energyPortalUserService.findByWuaId(WebUserAccountId.from(1L))).thenReturn(Optional.of(ENERGY_PORTAL_USER_1));
 
     validator.validateCaseOfficerWuaId(form, bindingResult);

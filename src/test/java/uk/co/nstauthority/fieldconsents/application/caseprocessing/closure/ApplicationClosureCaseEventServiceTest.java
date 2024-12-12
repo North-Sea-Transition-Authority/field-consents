@@ -21,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationClosureCaseEventServiceTest {
@@ -60,7 +60,7 @@ class ApplicationClosureCaseEventServiceTest {
         100L,
         ApplicationVersionStatus.SUBMITTED,
         200L,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
     applicationVersion1ClosureAudit = new ApplicationVersionAudit(
         applicationVersion1.getId(),
@@ -69,7 +69,7 @@ class ApplicationClosureCaseEventServiceTest {
         100L,
         ApplicationVersionStatus.CLOSED,
         200L,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
     applicationVersion2CreationAudit = new ApplicationVersionAudit(
         applicationVersion2.getId(),
@@ -78,7 +78,7 @@ class ApplicationClosureCaseEventServiceTest {
         100L,
         ApplicationVersionStatus.SUBMITTED,
         200L,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
 
     caseEvent = CaseEvent.builder(applicationVersion1)

@@ -1,311 +1,163 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
-import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationAccessServiceTest {
-
-  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Mock
-  private TeamService teamService;
-
-  @Mock
   private ConsultationService consultationService;
 
   @Mock
-  private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
 
+  @Mock
+  private TeamQueryService teamQueryService;
+
   @InjectMocks
-  @Spy
   private ApplicationAccessService applicationAccessService;
 
-  private ApplicationVersion applicationVersion;
+  private final ServiceUserDetail user = ServiceUserDetailTestUtil.Builder().build();
+  private final ApplicationVersion applicationVersion = new ApplicationVersion();
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = { true, false })
-  void hasApplicationPermission_withVarargs(boolean hasApplicationPermission) {
-    doReturn(hasApplicationPermission)
-        .when(applicationAccessService)
-        .hasApplicationPermission(USER, applicationVersion, Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS));
-
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, PAY_AND_SUBMIT_FCS_APPLICATIONS))
-        .isEqualTo(hasApplicationPermission);
+    applicationVersion.setPrimaryOperatorOuId(1);
+    applicationVersion.setApplication(new Application());
   }
 
   @Test
-  void hasApplicationPermission_withSet_userDoesNotHaveRequiredPermission() {
-    var requiredPermissions = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS);
+  void userHasAnyIndustryRole_fieldApplication_isFieldEquityPartner() {
+    var operatorRoles = Set.of(Role.CREATOR, Role.SUBMITTER);
+    var fieldEquityPartnerRole = Role.CONSENT_RECIPIENT;
 
-    var applicationPermissionsForUser = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
 
-    doReturn(applicationPermissionsForUser)
-        .when(applicationAccessService)
-        .getApplicationPermissionsForUser(applicationVersion, USER);
+    when(organisationUnitPermissionService.getUserRolesForOperator(user, applicationVersion))
+        .thenReturn(operatorRoles);
 
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions)).isTrue();
-  }
+    when(applicationAssetService.getPrimaryAsset(applicationVersion))
+        .thenReturn(applicationAsset);
 
-  @Test
-  void hasApplicationPermission_withSet_userHasRequiredPermission() {
-    var requiredPermissions = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS);
-
-    var applicationPermissionsForUser = Set.of(VIEW_FCS_APPLICATIONS);
-
-    doReturn(applicationPermissionsForUser)
-        .when(applicationAccessService)
-        .getApplicationPermissionsForUser(applicationVersion, USER);
-
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions)).isFalse();
-  }
-
-  @Test
-  void getApplicationPermissionsForUser_whenIndustryAndNoOperatorPermissions_thenEmpty() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Collections.emptySet());
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
-
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsContainsViewFcsConsents() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Set.of(VIEW_FCS_CONSENTS));
-
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsExactly(VIEW_FCS_CONSENTS);
-
-    verify(fieldEquityPartnerPermissionService, never())
-        .userHasPermissionForFieldInFieldEquityPartnerTeam(any(), any(ApplicationVersion.class), any());
-  }
-
-  @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsTerminal() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Set.of());
-
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
-
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .isEmpty();
-
-    verify(fieldEquityPartnerPermissionService, never())
-        .userHasPermissionForFieldInFieldEquityPartnerTeam(any(), any(ApplicationVersion.class), any());
-  }
-
-  @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsFieldAndUserDoesNotHaveViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Set.of());
-
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-
-    when(fieldEquityPartnerPermissionService
-        .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
-        .thenReturn(false);
-
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsFieldAndUserHasViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Set.of());
-
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-
-    when(fieldEquityPartnerPermissionService
-        .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
+    when(fieldEquityPartnerAccessService.userIsFieldEquityPartner(user, applicationVersion))
         .thenReturn(true);
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsExactly(VIEW_FCS_CONSENTS);
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(fieldEquityPartnerRole))).isTrue();
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, operatorRoles)).isTrue();
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenRegulatorButNoPermissionAndNoOperatorPermissions_thenEmpty() {
-    var regulatorTeam = TeamTestUtil.Builder().build();
-    when(teamService.isRegulatorUser(USER)).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
-        .thenReturn(List.of(regulatorTeam));
-    when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
-        .thenReturn(Collections.emptySet());
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Collections.emptySet());
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+  void userHasAnyIndustryRole_fieldApplication_isNotFieldEquityPartner() {
+    var operatorRoles = Set.of(Role.CREATOR, Role.SUBMITTER);
+    var fieldEquityPartnerRole = Role.CONSENT_RECIPIENT;
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .isEmpty();
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
+
+    when(organisationUnitPermissionService.getUserRolesForOperator(user, applicationVersion))
+        .thenReturn(operatorRoles);
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion))
+        .thenReturn(applicationAsset);
+
+    when(fieldEquityPartnerAccessService.userIsFieldEquityPartner(user, applicationVersion))
+        .thenReturn(false);
+
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(fieldEquityPartnerRole))).isFalse();
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, operatorRoles)).isTrue();
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenRegulatorWithPermissionsAndNoOperatorPermissions_thenReturnPermissions() {
-    var regulatorTeam = TeamTestUtil.Builder().build();
-    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
-    when(teamService.isRegulatorUser(USER)).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
-        .thenReturn(List.of(regulatorTeam));
-    when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
-        .thenReturn(regulatorPermissions);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Collections.emptySet());
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+  void userHasAnyIndustryRole_isOperatorFieldEquityPartner() {
+    var operatorRoles = Set.of(Role.CREATOR, Role.SUBMITTER, Role.CONSENT_RECIPIENT);
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsAll(regulatorPermissions);
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.FIELD);
+
+    when(organisationUnitPermissionService.getUserRolesForOperator(user, applicationVersion))
+        .thenReturn(operatorRoles);
+
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, operatorRoles)).isTrue();
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenRegulatorWithNoPermissionsButWithOperatorPermissions_thenReturnPermissions() {
-    var regulatorTeam = TeamTestUtil.Builder().build();
-    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
-    when(teamService.isRegulatorUser(USER)).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
-        .thenReturn(List.of(regulatorTeam));
-    when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
-        .thenReturn(Collections.emptySet());
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(operatorPermissions);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+  void userHasAnyIndustryRole_terminalApplication() {
+    var operatorRoles = Set.of(Role.CREATOR, Role.SUBMITTER);
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetType(AssetType.TERMINAL);
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsAll(operatorPermissions);
+    when(organisationUnitPermissionService.getUserRolesForOperator(user, applicationVersion))
+        .thenReturn(operatorRoles);
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion))
+        .thenReturn(applicationAsset);
+
+    assertThat(applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, operatorRoles)).isTrue();
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenRegulatorWithPermissionsAndWithOperatorPermissions_thenReturnPermissions() {
-    var regulatorTeam = TeamTestUtil.Builder().build();
-    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
-    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
-    var allPermissions = Stream.of(regulatorPermissions, operatorPermissions)
-        .flatMap(Collection::stream)
-        .collect(Collectors.toSet());
-    when(teamService.isRegulatorUser(USER)).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
-        .thenReturn(List.of(regulatorTeam));
-    when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
-        .thenReturn(regulatorPermissions);
-    when(teamService.isConsulteeUser(USER)).thenReturn(false);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(operatorPermissions);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
-
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsAll(allPermissions);
+  void userHasAnyIndustryRole_nonIndustryRolePassedIn() {
+    // Role.CASE_MANAGER is an invalid industry role
+    var roles = Set.of(Role.CONSENT_RECIPIENT, Role.VIEWER, Role.CASE_MANAGER);
+    assertThatThrownBy(() -> applicationAccessService.userHasAnyIndustryRole(user, applicationVersion, roles))
+      .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenConsulteeWithPermissionsAndNoOperatorPermissions_thenReturnPermissions() {
-    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
-    var consulteePermissions = Set.of(ALLOCATE_CONSULTATION, VIEW_FCS_APPLICATIONS);
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.OPRED))
-        .thenReturn(List.of(consulteeTeam));
-    when(teamService.getUserPermissionsForTeam(consulteeTeam, USER))
-        .thenReturn(consulteePermissions);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Collections.emptySet());
+  void userHasAnyConsulteeRole_consultationExistsForApplication() {
+    var consultation = new Consultation();
+    var consulteeRoles = Set.of(Role.ALLOCATOR);
+
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
-        .thenReturn(List.of(new Consultation()));
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+        .thenReturn(List.of(consultation));
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .containsAll(consulteePermissions);
+    when(teamQueryService.getStaticRoles(user, TeamType.CONSULTEE))
+        .thenReturn(consulteeRoles);
+
+    assertThat(applicationAccessService.userHasAnyConsulteeRole(user, applicationVersion, consulteeRoles)).isTrue();
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenConsulteeWithPermissionsButNoConsultationForApplication_thenEmpty() {
-    when(teamService.isRegulatorUser(USER)).thenReturn(false);
-    when(teamService.isConsulteeUser(USER)).thenReturn(true);
-    when(organisationUnitPermissionService
-        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
-        .thenReturn(Collections.emptySet());
-    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
-        .thenReturn(Collections.emptyList());
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+  void userHasAnyConsulteeRole_consultationDoesNotExistForApplication() {
+    assertThat(applicationAccessService.userHasAnyConsulteeRole(user, applicationVersion, Set.of(Role.ALLOCATOR))).isFalse();
+  }
 
-    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .isEmpty();
+  @Test
+  void userHasAnyConsulteeRole_nonConsulteeRolePassedIn() {
+    // Role.EDITOR is an invalid consultee role
+    var roles = Set.of(Role.ALLOCATOR, Role.RESPONDER, Role.EDITOR);
+    assertThatThrownBy(() -> applicationAccessService.userHasAnyConsulteeRole(user, applicationVersion, roles))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

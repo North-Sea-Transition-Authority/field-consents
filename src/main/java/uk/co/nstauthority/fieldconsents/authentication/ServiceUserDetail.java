@@ -5,14 +5,15 @@ import org.springframework.security.core.AuthenticatedPrincipal;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.util.userutil.UserDisplayNameUtil;
 
-public record ServiceUserDetail(Long wuaId,
-                                Long personId,
-                                String forename,
-                                String surname,
-                                String emailAddress,
-                                Long proxyWuaId,
-                                String proxyUsername)
-    implements AuthenticatedPrincipal, Serializable {
+public record ServiceUserDetail(
+    Long wuaId,
+    Long personId,
+    String forename,
+    String surname,
+    String emailAddress,
+    Long proxyWuaId,
+    String proxyUsername
+) implements AuthenticatedPrincipal, Serializable {
 
   public static ServiceUserDetail from(EnergyPortalUserDto energyPortalUser) {
     return new ServiceUserDetail(

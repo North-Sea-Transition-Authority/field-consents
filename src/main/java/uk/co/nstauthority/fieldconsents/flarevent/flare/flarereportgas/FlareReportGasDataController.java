@@ -17,20 +17,19 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataForm;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataFormValidator;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/flare-report-gas-properties")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+@UserCanEditApplication
 public class FlareReportGasDataController {
 
   private final FlareReportGasDataService flareReportGasDataService;

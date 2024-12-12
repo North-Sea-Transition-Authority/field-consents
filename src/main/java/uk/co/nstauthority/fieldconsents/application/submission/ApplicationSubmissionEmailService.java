@@ -1,58 +1,67 @@
 package uk.co.nstauthority.fieldconsents.application.submission;
 
-import java.util.Set;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class ApplicationSubmissionEmailService {
 
   private static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for application submission notification";
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationSubmissionEmailService.class);
 
   private final EmailService emailService;
-  private final TeamMemberViewService teamMemberViewService;
   private final OrganisationUnitService organisationUnitService;
+  private final TeamQueryService teamQueryService;
 
-  public ApplicationSubmissionEmailService(EmailService emailService,
-                                           TeamMemberViewService teamMemberViewService,
-                                           OrganisationUnitService organisationUnitService) {
+  ApplicationSubmissionEmailService(
+      EmailService emailService,
+      OrganisationUnitService organisationUnitService,
+      TeamQueryService teamQueryService
+  ) {
     this.emailService = emailService;
-    this.teamMemberViewService = teamMemberViewService;
     this.organisationUnitService = organisationUnitService;
+    this.teamQueryService = teamQueryService;
   }
 
   public void sendNonAceApplicationSubmissionEmail(ApplicationVersion applicationVersion) {
+    var regulatorTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
+        .stream()
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_OFFICER || teamRole.getRole() == Role.CASE_MANAGER)
+        .toList();
+
+    var emailRecipients = teamQueryService.getTeamMemberViews(regulatorTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .collect(Collectors.toSet());
+
+    var emailTemplate = GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION;
+
+    if (emailRecipients.isEmpty()) {
+      LOGGER.info("Didn't find any case officers or case managers to send [{}] email to", emailTemplate);
+      return;
+    }
+
     var primaryOperator = organisationUnitService.getOrganisationUnitByIdOrFallback(
         applicationVersion.getPrimaryOperatorOuId(),
         ORGANISATION_LOOKUP_PURPOSE,
-        applicationVersion.getCachedPrimaryOperatorName());
+        applicationVersion.getCachedPrimaryOperatorName()
+    );
 
     var emailMergedTemplate = emailService
-        .getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion)
+        .getTemplateForApplication(emailTemplate, applicationVersion)
         .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name())
         .merge();
 
-    var emailRecipients = teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(
-            TeamType.REGULATOR,
-            Set.of(RegulatorTeamRole.CASE_OFFICER, RegulatorTeamRole.CASE_MANAGER))
-        .stream()
-        .map(FieldConsentsEmailRecipient::from)
-        .toList();
-
-    // iterate over the list of email recipients to notify about the non-ACE application submission
-    emailRecipients.forEach(recipient ->
-        emailService.sendEmail(
-            emailMergedTemplate,
-            recipient,
-            applicationVersion
-        ));
+    emailRecipients.forEach(emailRecipient -> emailService.sendEmail(emailMergedTemplate, emailRecipient, applicationVersion));
   }
 }

@@ -10,20 +10,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Set;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = AssetSelectionController.class)
 class AssetSelectionControllerTest extends AbstractControllerTest {
@@ -51,9 +56,6 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getAssetSelection_whenUserDoesNotHaveManageAssetsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
             .with(user(user)))
@@ -62,9 +64,6 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void manageAsset_whenUserDoesNotHaveManageAssetsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))
@@ -72,13 +71,101 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void getAssetSelection_assertHttpOk() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
+  @ParameterizedSecurityTest
+  @EnumSource(
+      value = Role.class,
+      names = {"CASE_OFFICER", "CASE_MANAGER", "CONSENTS_AND_AUTHORISATIONS_MANAGER", "TECHNICAL_REVIEWER", "VIEWER"}
+  )
+  void getAssetSelection_regulator_validRoles(Role role) throws Exception {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(role)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    ));
+
     mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(ASSET_SELECTION_VIEW_NAME));
+  }
+
+  @ParameterizedSecurityTest
+  @EnumSource(
+      value = Role.class,
+      names = {"ACCESS_MANAGER", "INDUSTRY_ACCESS_MANAGER", "DOCUMENT_TEMPLATE_MANAGER"}
+  )
+  void getAssetSelection_regulator_invalidRoles(Role role) throws Exception {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(role)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    ));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedSecurityTest
+  @EnumSource(
+      value = Role.class,
+      names = {"CREATOR", "EDITOR", "SUBMITTER", "FINANCE_ADMINISTRATOR", "VIEWER", "CONSENT_RECIPIENT"}
+  )
+  void getAssetSelection_industry_validRoles(Role role) throws Exception {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(role)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.INDUSTRY)
+                .build())
+            .build()
+    ));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(ASSET_SELECTION_VIEW_NAME));
+  }
+
+  @ParameterizedSecurityTest
+  @EnumSource(
+      value = Role.class,
+      names = {"ACCESS_MANAGER"}
+  )
+  void getAssetSelection_industry_invalidRoles(Role role) throws Exception {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(role)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.INDUSTRY)
+                .build())
+            .build()
+    ));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getAssetSelection_consultee_assertForbidden() throws Exception {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.CONSULTEE)
+                .build())
+            .build()
+    ));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @SecurityTest
@@ -91,7 +178,15 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_whenValidForm_assertRedirection() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_OFFICER)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    ));
+
     mockMvc
         .perform(post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))
@@ -103,7 +198,15 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_whenInValidForm_assertStatusOk() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_OFFICER)
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    ));
+
     mockMvc
         .perform(post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))

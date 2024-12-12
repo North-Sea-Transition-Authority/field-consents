@@ -22,7 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Service
 public class CaseAssignmentEventService implements CaseEventService<Application> {
@@ -130,14 +130,14 @@ public class CaseAssignmentEventService implements CaseEventService<Application>
         ? applicationVersionAudit.caseOfficerWuaId()
         : null;
     var caseOfficerAssigned = Objects.nonNull(caseOfficerId)
-        && RegulatorTeamRole.CASE_OFFICER.equals(applicationVersionAudit.currentCaseOwner());
+        && Role.CASE_OFFICER.equals(applicationVersionAudit.currentCaseOwner());
 
     // cam assignment details
     var camUserId = Objects.nonNull(applicationVersionAudit)
         ? applicationVersionAudit.camWuaId()
         : null;
     var camUserAssigned = Objects.nonNull(camUserId)
-        && RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersionAudit.currentCaseOwner());
+        && Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersionAudit.currentCaseOwner());
     
     return new AuditEventAssignment(caseOfficerId, caseOfficerAssigned, camUserId, camUserAssigned);
   }

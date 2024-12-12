@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,7 +34,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = FeePeriodController.class)
 class FeePeriodControllerTest extends AbstractControllerTest {
@@ -59,8 +59,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getFeePeriods_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(FeePeriodController.class).getFeePeriods()))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -76,7 +74,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
         )
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(fieldConsentsFeePeriodService.getFeePeriodSummaryViews()).thenReturn(feePeriodSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FeePeriodController.class).getFeePeriods()))
@@ -96,8 +94,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getViewFeePeriod_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(FeePeriodController.class).getViewFeePeriod(FEE_PERIOD_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -113,7 +109,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
     var feeLineViews = List.of(FeeLineView.from(feeLineDto));
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(feePeriodService.getFeeLineDtosByFeePeriodId(FEE_PERIOD_ID)).thenReturn(feeLineDtos);
     when(fieldConsentsFeePeriodService.getFeeLineViews(feeLineDtos)).thenReturn(feeLineViews);
@@ -136,8 +132,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getCreateFeePeriod_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(FeePeriodController.class).getCreateFeePeriod()))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -151,7 +145,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
     var feeLineViews = List.of(FeeLineView.from(feeLineDto));
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getLatestFeePeriodFeeLineDtos()).thenReturn(feeLineDtos);
     when(fieldConsentsFeePeriodService.getFeeLineViews(feeLineDtos)).thenReturn(feeLineViews);
 
@@ -177,8 +171,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void createFeePeriod_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(FeePeriodController.class)
             .createFeePeriod(null, null, null, null)))
             .with(csrf())
@@ -194,7 +186,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
     var feeLineViews = List.of(FeeLineView.from(feeLineDto));
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getLatestFeePeriodFeeLineDtos()).thenReturn(feeLineDtos);
 
     doAnswer(invocation -> {
@@ -230,7 +222,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
         = new FeeLineDto("FIELD/FLARE/ANNUAL/NEW_CONSENT", "Field Flare Annual Consent New Consent", 100);
     var feeLineDtos = List.of(feeLineDto);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getLatestFeePeriodFeeLineDtos()).thenReturn(feeLineDtos);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -259,8 +251,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getEditFeePeriod_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(FeePeriodController.class)
             .getEditFeePeriod(FEE_PERIOD_ID, null)))
             .with(user(user)))
@@ -271,7 +261,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
   void getEditFeePeriod_feePeriodNotEditable() throws Exception {
     var feePeriodDto = new FeePeriodDto(UUID.randomUUID(), LocalDate.now(), null);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(fieldConsentsFeePeriodService.isFeePeriodEditable(feePeriodDto)).thenReturn(false);
 
@@ -302,7 +292,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
     var feeLineViews = List.of(FeeLineView.from(feeLineDto));
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(fieldConsentsFeePeriodService.isFeePeriodEditable(feePeriodDto)).thenReturn(true);
     when(feePeriodService.getFeeLineDtosByFeePeriodId(FEE_PERIOD_ID)).thenReturn(feeLineDtos);
@@ -333,8 +323,6 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void editFeePeriod_userDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(FeePeriodController.class)
             .editFeePeriod(FEE_PERIOD_ID, null, null, null, null)))
             .with(csrf())
@@ -346,7 +334,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
   void editFeePeriod_feePeriodNotEditable() throws Exception {
     var feePeriodDto = new FeePeriodDto(UUID.randomUUID(), LocalDate.now(), null);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(fieldConsentsFeePeriodService.isFeePeriodEditable(feePeriodDto)).thenReturn(false);
 
@@ -378,7 +366,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
     var feeLineViews = List.of(FeeLineView.from(feeLineDto));
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(fieldConsentsFeePeriodService.isFeePeriodEditable(feePeriodDto)).thenReturn(true);
     when(feePeriodService.getFeeLineDtosByFeePeriodId(FEE_PERIOD_ID)).thenReturn(feeLineDtos);
@@ -417,7 +405,7 @@ class FeePeriodControllerTest extends AbstractControllerTest {
         = new FeeLineDto("FIELD/FLARE/ANNUAL/NEW_CONSENT", "Field Flare Annual Consent New Consent", 100);
     var feeLineDtos = List.of(feeLineDto);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
     when(feePeriodService.getFeePeriodDtoByIdOrThrow(FEE_PERIOD_ID)).thenReturn(feePeriodDto);
     when(fieldConsentsFeePeriodService.isFeePeriodEditable(feePeriodDto)).thenReturn(true);
     when(feePeriodService.getFeeLineDtosByFeePeriodId(FEE_PERIOD_ID)).thenReturn(feeLineDtos);

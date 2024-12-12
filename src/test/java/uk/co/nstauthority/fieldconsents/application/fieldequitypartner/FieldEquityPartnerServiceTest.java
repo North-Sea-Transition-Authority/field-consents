@@ -35,10 +35,12 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class FieldEquityPartnerServiceTest {
@@ -50,10 +52,7 @@ class FieldEquityPartnerServiceTest {
   private FieldApi fieldApi;
 
   @Mock
-  private TeamService teamService;
-
-  @Mock
-  private TeamMemberService teamMemberService;
+  private TeamQueryService teamQueryService;
 
   @Spy
   @InjectMocks
@@ -248,34 +247,84 @@ class FieldEquityPartnerServiceTest {
     var org2Id = 2;
     var org3Id = 3;
 
-    var team1 = TeamTestUtil.Builder().withOrganisationGroupId(org1Id).withDisplayName("FIRST").build();
-    var team2 = TeamTestUtil.Builder().withOrganisationGroupId(org2Id).withDisplayName("SECOND").build();
-    var team3 = TeamTestUtil.Builder().withOrganisationGroupId(org3Id).withDisplayName("THIRD").build();
-    var teams = List.of(team1, team2);
+    var team1 = TeamTestUtil.newBuilder()
+        .withScopeId(String.valueOf(org1Id))
+        .withName("FIRST")
+        .build();
+
+    var team2 = TeamTestUtil.newBuilder()
+        .withScopeId(String.valueOf(org2Id))
+        .withName("FIRST")
+        .build();
+
+    var team3 = TeamTestUtil.newBuilder()
+        .withScopeId(String.valueOf(org3Id))
+        .withName("FIRST")
+        .build();
 
     var fields = List.of(
         getFieldWithOrganisationGroups(Map.of(
-            org1Id, team1.getDisplayName(),
-            org2Id, team2.getDisplayName()
+            org1Id, team1.getName(),
+            org2Id, team2.getName()
         )),
         getFieldWithOrganisationGroups(Map.of(
-            org1Id, team1.getDisplayName()
+            org1Id, team1.getName()
         )),
         getFieldWithOrganisationGroups(Map.of(
-            org2Id, team2.getDisplayName(),
-            org3Id, team3.getDisplayName()
+            org2Id, team2.getName(),
+            org3Id, team3.getName()
         ))
     );
 
-    var organisationGroupIds = Set.of(org1Id, org2Id, org3Id);
+    var teamScopeIds = Set.of(
+        String.valueOf(team1.getScopeId()),
+        String.valueOf(team2.getScopeId()),
+        String.valueOf(team3.getScopeId())
+    );
 
-    var teamsWithConsentRecipients = Set.of(team1, team3);
+    var teamRoles = List.of(
+        // team 1 has a consent recipient
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team1)
+            .withRole(Role.CONSENT_RECIPIENT)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team1)
+            .withRole(Role.ACCESS_MANAGER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team1)
+            .withRole(Role.CREATOR)
+            .build(),
+        // team 3 also has a consent recipient
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team3)
+            .withRole(Role.CREATOR)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team3)
+            .withRole(Role.EDITOR)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team3)
+            .withRole(Role.ACCESS_MANAGER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team3)
+            .withRole(Role.CONSENT_RECIPIENT)
+            .build(),
+        // team 2 does not have a consent recipient
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(team2)
+            .withRole(Role.SUBMITTER)
+            .build()
+    );
 
-    when(teamService.getTeamsByOrganisationGroupIds(organisationGroupIds)).thenReturn(teams);
-    when(teamMemberService.getTeamsWhereMemberExistsWithRole(teams, IndustryTeamRole.CONSENT_RECIPIENT)).thenReturn(teamsWithConsentRecipients);
+    when(teamQueryService.getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds))
+        .thenReturn(teamRoles);
 
     assertThat(fieldEquityPartnerService.getOrganisationGroupNamesWithoutConsentRecipients(fields))
-        .containsExactly(team2.getDisplayName());
+        .containsExactly(team2.getName());
   }
 
   private Field getFieldWithFieldEquityPartner(String fieldEquityPartnerName) {

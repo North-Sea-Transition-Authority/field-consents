@@ -77,7 +77,7 @@ public class ConsultationRequestController {
     consultationService.requestConsultation(applicationVersion, deadline, userDetail);
 
     var consultationTeam = consultationService.getConsultationTeam();
-    var notificationBannerMessage = "Consultation request has been sent to %s".formatted(consultationTeam.getDisplayName());
+    var notificationBannerMessage = "Consultation request has been sent to %s".formatted(consultationTeam.getName());
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, notificationBannerMessage);
 
     return ReverseRouter.redirect(on(ConsultationController.class).getConsultations(applicationId, null));
@@ -86,7 +86,7 @@ public class ConsultationRequestController {
   private ModelAndView getModelAndView(ApplicationVersion applicationVersion, ConsultationRequestForm form) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var consultationTeam = consultationService.getConsultationTeam();
-    var pageTitle = "Request consultation from %s".formatted(consultationTeam.getDisplayName());
+    var pageTitle = "Request consultation from %s".formatted(consultationTeam.getName());
 
     var applicationId = applicationVersion.getApplication().getId();
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)

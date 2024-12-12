@@ -44,7 +44,7 @@ public class SearchFilterService {
     var applicationDataFilterConditions = applicationDataFilterService.getConditions(form);
     List<Condition> searchFilterConditions = new ArrayList<>(applicationDataFilterConditions);
 
-    if (TeamType.REGULATOR.equals(teamType) || TeamType.OPRED.equals(teamType)) {
+    if (TeamType.REGULATOR.equals(teamType) || TeamType.CONSULTEE.equals(teamType)) {
       Optional.ofNullable(form.getAceFlagStatuses())
           .map(applicationDataFilterService::getAceStatusCondition)
           .ifPresent(searchFilterConditions::add);
@@ -82,7 +82,7 @@ public class SearchFilterService {
       }
     }
 
-    if (TeamType.OPRED.equals(teamType)) {
+    if (TeamType.CONSULTEE.equals(teamType)) {
       searchFilterConditions.add(getConsultationsCondition());
     }
 

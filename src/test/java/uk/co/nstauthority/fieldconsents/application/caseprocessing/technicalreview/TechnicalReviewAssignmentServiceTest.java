@@ -6,13 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_5;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_6;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentService.USER_NOT_IN_TECHNICAL_REVIEWER_ROLE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
@@ -20,9 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_REQUEST;
 
 import java.time.Clock;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,10 +30,12 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewAssignmentServiceTest {
@@ -47,7 +44,7 @@ class TechnicalReviewAssignmentServiceTest {
   private static final ServiceUserDetail USER2 = SERVICE_USER_DETAIL_USER_6;
   private static final WebUserAccountId USER_WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER);
   private static final WebUserAccountId USER2_WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER2);
-  private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
+  private static final Team REGULATOR_TEAM = TeamTestUtil.newBuilder().build();
 
   @Mock
   private Clock clock;
@@ -56,16 +53,13 @@ class TechnicalReviewAssignmentServiceTest {
   private TechnicalReviewRepository technicalReviewRepository;
 
   @Mock
-  private RegulatorTeamService regulatorTeamService;
-
-  @Mock
-  private TeamMemberViewService teamMemberViewService;
-
-  @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @Mock
   private TechnicalReviewEmailService technicalReviewEmailService;
+
+  @Mock
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private TechnicalReviewAssignmentService technicalReviewAssignmentService;
@@ -82,8 +76,7 @@ class TechnicalReviewAssignmentServiceTest {
 
   @Test
   void assignTechnicalReviewer_whenNotInTechnicalReviewerRole_thenThrowException() {
-    when(regulatorTeamService.isTechnicalReviewer(USER_WEB_USER_ACCOUNT_ID))
-        .thenReturn(false);
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(false);
 
     assertThatThrownBy(() ->
         technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, USER, USER))
@@ -95,8 +88,7 @@ class TechnicalReviewAssignmentServiceTest {
   void assignTechnicalReviewer_whenInTechnicalReviewerRoleAndNoExistingTechnicalReviewer_thenTechnicalReviewerWuaUpdated() {
     technicalReview.setTechnicalReviewerWuaId(null);
 
-    when(regulatorTeamService.isTechnicalReviewer(USER_WEB_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, USER, USER);
 
@@ -118,8 +110,7 @@ class TechnicalReviewAssignmentServiceTest {
 
   @Test
   void assignTechnicalReviewer_whenInTechnicalReviewerRoleAndTakingOwnership_thenTechnicalReviewerWuaUpdated() {
-    when(regulatorTeamService.isTechnicalReviewer(USER2_WEB_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(USER2, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, USER2, USER2);
 
@@ -141,8 +132,7 @@ class TechnicalReviewAssignmentServiceTest {
 
   @Test
   void assignTechnicalReviewer_whenInTechnicalReviewerRoleAndAssigningOwnership_thenTechnicalReviewerWuaUpdated() {
-    when(regulatorTeamService.isTechnicalReviewer(USER2_WEB_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(USER2, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, USER2, USER);
 
@@ -164,8 +154,8 @@ class TechnicalReviewAssignmentServiceTest {
 
   @Test
   void assignTechnicalReviewer_whenSendTechnicalReviewRequestEmailFails_thenTechnicalReviewerWuaIdIsStillUpdated() {
-    when(regulatorTeamService.isTechnicalReviewer(USER2_WEB_USER_ACCOUNT_ID))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(USER2, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
+
     var technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
 
     // WHEN the email service call throws an exception
@@ -192,54 +182,32 @@ class TechnicalReviewAssignmentServiceTest {
 
   @Test
   void getTechnicalReviewerAssignmentCandidates_whenUserNotRegulatorTeam_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.empty());
-
-    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(USER))
-        .isEmpty();
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates()).isEmpty();
   }
 
   @Test
-  void getTechnicalReviewerAssignmentCandidates_whenRegulatorUserButNoMembersExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(Collections.emptyList());
+  void getTechnicalReviewerAssignmentCandidates_whenTechnicalReviewersExist() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.wuaId())
+            .withRole(Role.TECHNICAL_REVIEWER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.wuaId())
+            .withRole(Role.TECHNICAL_REVIEWER)
+            .build()
+    );
 
-    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(USER))
-        .isEmpty();
-  }
 
-  @Test
-  void getTechnicalReviewerAssignmentCandidates_whenRegulatorUserAndTechnicalReviewersDontExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(List.of(VIEWER_TEAM_MEMBER_VIEW, ACCESS_MANGER_TEAM_MEMBER_VIEW));
+    var teamMemberRoles = List.of(
+        TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1, TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2
+    );
 
-    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(USER))
-        .isEmpty();
-  }
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(teamRoles);
+    when(teamQueryService.getTeamMemberViews(teamRoles)).thenReturn(teamMemberRoles);
 
-  @Test
-  void getTechnicalReviewerAssignmentCandidates_whenRegulatorUserAndTechnicalReviewersExist() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
-
-    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(USER))
-        .containsExactly(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1, TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2);
-  }
-
-  @Test
-  void getTechnicalReviewerAssignmentCandidates_whenRegulatorUserAndTechnicalReviewersExistAndExistingTechnicalReviewer() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
-
-    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview, USER))
-        .containsExactly(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2);
+    assertThat(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates())
+        .isEqualTo(teamMemberRoles);
   }
 }

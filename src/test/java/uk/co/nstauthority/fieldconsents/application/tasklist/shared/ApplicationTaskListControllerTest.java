@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -39,7 +40,7 @@ import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = ApplicationTaskListController.class)
 class ApplicationTaskListControllerTest extends AbstractApplicationControllerTest {
@@ -281,9 +282,8 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
-        RolePermission.CREATE_FCS_APPLICATIONS))
-        .thenReturn(false);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion,
+        Set.of(Role.CREATOR))).thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
@@ -316,9 +316,8 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
-        RolePermission.CREATE_FCS_APPLICATIONS))
-        .thenReturn(false);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion,
+        Set.of(Role.CREATOR))).thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
@@ -359,9 +358,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
-        RolePermission.CREATE_FCS_APPLICATIONS))
-        .thenReturn(false);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR))).thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(false);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
@@ -389,9 +386,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
-        RolePermission.CREATE_FCS_APPLICATIONS))
-        .thenReturn(false);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR))).thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(false);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
@@ -410,9 +405,9 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
       ApplicationVersion applicationVersion,
       boolean canDeleteApplication
   ) {
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion,
-        RolePermission.CREATE_FCS_APPLICATIONS))
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR)))
         .thenReturn(canDeleteApplication);
+
   }
 
   private void stubProductionConsentCheck(

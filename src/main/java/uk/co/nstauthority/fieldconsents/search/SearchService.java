@@ -31,7 +31,7 @@ public class SearchService {
   }
 
   public List<ApplicationDataItemView> getConsulteeApplicationDataItemViews(SearchFilterForm form, ServiceUserDetail user) {
-    var conditions = searchFilterService.getConditions(form, TeamType.OPRED);
+    var conditions = searchFilterService.getConditions(form, TeamType.CONSULTEE);
 
     return applicationDataItemViewService.getConsulteeApplicationDataItemViews(conditions, user);
   }

@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application;
 
 import jakarta.annotation.Nullable;
 import java.time.Instant;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 public record ApplicationVersionAudit(
     Integer applicationVersionId,
@@ -13,5 +13,5 @@ public record ApplicationVersionAudit(
     @Nullable Long auditUserWuaId,
     ApplicationVersionStatus status,
     Long camWuaId,
-    RegulatorTeamRole currentCaseOwner) {
+    Role currentCaseOwner) {
 }

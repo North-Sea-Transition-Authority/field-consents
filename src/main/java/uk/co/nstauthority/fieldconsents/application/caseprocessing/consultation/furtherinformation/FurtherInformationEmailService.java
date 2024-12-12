@@ -15,7 +15,7 @@ public class FurtherInformationEmailService {
   private final EmailService emailService;
   private final EnergyPortalUserService energyPortalUserService;
 
-  public FurtherInformationEmailService(EmailService emailService, EnergyPortalUserService energyPortalUserService) {
+  FurtherInformationEmailService(EmailService emailService, EnergyPortalUserService energyPortalUserService) {
     this.emailService = emailService;
     this.energyPortalUserService = energyPortalUserService;
   }
@@ -28,7 +28,7 @@ public class FurtherInformationEmailService {
 
     var mergedTemplate = emailService
         .getTemplateForApplication(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion)
-        .withMailMergeField("CONSULTEE_NAME", consultationTeam.getDisplayName())
+        .withMailMergeField("CONSULTEE_NAME", consultationTeam.getName())
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficer.displayName())
         .merge();
 

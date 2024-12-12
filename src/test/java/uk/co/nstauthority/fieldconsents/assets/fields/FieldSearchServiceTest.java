@@ -26,6 +26,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3Json;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,16 +43,15 @@ import uk.co.fivium.energyportalapi.generated.types.FieldGeographicArea;
 import uk.co.fivium.energyportalapi.generated.types.FieldShore;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class FieldSearchServiceTest {
@@ -60,17 +60,19 @@ class FieldSearchServiceTest {
 
   private static final String REQUEST_PURPOSE = "Field search service test";
 
+  private static final Set<Role> CONSULTEE_ROLES = EnumSet.of(Role.ALLOCATOR, Role.RESPONDER, Role.VIEWER);
+
   @Mock
   private FieldApi fieldApi;
 
   @Mock
-  private TeamService teamService;
+  private TeamQueryService teamQueryService;
 
   @Mock
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Mock
-  private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
@@ -79,10 +81,6 @@ class FieldSearchServiceTest {
   private FieldSearchService fieldSearchService;
 
   private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
-
-  private final Team regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
-
-  private final Team consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
 
   @Test
   void searchFields_allTestFields() {
@@ -135,8 +133,8 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_regulatorUser_allTestFields() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -147,10 +145,10 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_consulteeUser_allTestFields() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(true);
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -161,9 +159,9 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_twoFields() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -175,8 +173,8 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_regulatorUser_singleTestField() {
     when(fieldApi.searchFields(eq("F2"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F2", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -187,10 +185,10 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_consulteeUser_singleTestField() {
     when(fieldApi.searchFields(eq("F2"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(true);
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F2", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -201,12 +199,12 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_singleField() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -218,12 +216,12 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_allFields_remainingFieldIdsEmpty() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -235,16 +233,15 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_twoFields_userHasViewFcsPermissionForInOperatorTeamAndFieldEquityPartnerTeam() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit2Json));
 
-    when(fieldEquityPartnerPermissionService.getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(
-        USER, List.of(field1.getFieldId(), field3.getFieldId()), Set.of(RolePermission.VIEW_FCS_CONSENTS)))
+    when(fieldEquityPartnerAccessService.getFieldIdsWhereUserIsFieldEquityPartner(USER, List.of(field1.getFieldId(), field3.getFieldId())))
         .thenReturn(List.of(field1.getFieldId()));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -257,15 +254,15 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_singleField_userHasViewFcsPermissionForInFieldEquityPartnerTeam() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of());
 
-    when(fieldEquityPartnerPermissionService.getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(USER, fieldIdList, Set.of(RolePermission.VIEW_FCS_CONSENTS)))
+    when(fieldEquityPartnerAccessService.getFieldIdsWhereUserIsFieldEquityPartner(USER, fieldIdList))
         .thenReturn(List.of(field1.getFieldId()));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -277,11 +274,11 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_noPermissions() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field1WithOperator));
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit2Json));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
@@ -293,11 +290,11 @@ class FieldSearchServiceTest {
   void searchFieldsWithOperatorForUser_industryUser_noOperator() {
     when(fieldApi.searchFields(eq("F"), eq(FIELD_STATUSES_ALLOWED), any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field1WithNoOperatorButLicences));
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, CONSULTEE_ROLES))
+        .thenReturn(false);
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json));
 
     assertThat(fieldSearchService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))

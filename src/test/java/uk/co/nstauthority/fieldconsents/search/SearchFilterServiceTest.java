@@ -142,7 +142,7 @@ class SearchFilterServiceTest {
   void getConditions_withConsultationsCondition() {
     when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(form, TeamType.OPRED))
+    assertThat(searchFilterService.getConditions(form, TeamType.CONSULTEE))
         .containsExactly(
             exists(context.select(APPLICATION_CONSULTATIONS.ID)
                 .from(APPLICATION_CONSULTATIONS)
@@ -216,7 +216,7 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_whenConsultee_thenApprovedForIssueConditionIsNotAdded() {
-    assertThat(searchFilterService.getConditions(form, TeamType.OPRED)).doesNotContain(
+    assertThat(searchFilterService.getConditions(form, TeamType.CONSULTEE)).doesNotContain(
         APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
   }
 

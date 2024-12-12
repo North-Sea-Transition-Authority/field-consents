@@ -30,7 +30,11 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class AdditionalInformationSummarySectionServiceTest {
@@ -41,9 +45,7 @@ class AdditionalInformationSummarySectionServiceTest {
 
   private static final String OTHER_LEGACY_APPLICATION_DETAILS_ITEM = "Other legacy application details";
 
-  private static final ServiceUserDetail REGULATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-  private static final ServiceUserDetail INDUSTRY_USER = ServiceUserDetailTestUtil.Builder().build();
-  private static final ServiceUserDetail OPRED_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   @Mock
   private SupportingInformationService supportingInformationService;
 
@@ -60,7 +62,7 @@ class AdditionalInformationSummarySectionServiceTest {
   private OtherLegacyDataSummaryService otherLegacyDataSummaryService;
 
   @Mock
-  private TeamService teamService;
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private AdditionalInformationSummarySectionService additionalInformationSummarySectionService;
@@ -79,10 +81,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(summaryCard);
-    when(teamService.isRegulatorUser(REGULATOR_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, REGULATOR_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -106,10 +112,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(summaryCard);
-    when(teamService.isIndustryUser(INDUSTRY_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.EDITOR)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, INDUSTRY_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -132,12 +142,9 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(summaryCard);
-    when(teamService.isRegulatorUser(OPRED_USER))
-        .thenReturn(false);
-    when(teamService.isIndustryUser(OPRED_USER))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of());
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, OPRED_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -156,10 +163,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(FieldTestUtil.field2Json);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(REGULATOR_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, REGULATOR_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -177,10 +188,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(FieldTestUtil.field2Json);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isIndustryUser(INDUSTRY_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.CREATOR)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, INDUSTRY_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -196,12 +211,9 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(FieldTestUtil.field2Json);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(OPRED_USER))
-        .thenReturn(false);
-    when(teamService.isIndustryUser(OPRED_USER))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of());
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, OPRED_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems()).isEmpty();
   }
@@ -221,10 +233,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(simpleSummaryCard);
-    when(teamService.isRegulatorUser(REGULATOR_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, REGULATOR_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertThat(summarySection.summaryItems())
         .containsExactly(
             SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard)),
@@ -248,10 +264,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(simpleSummaryCard);
-    when(teamService.isIndustryUser(INDUSTRY_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.SUBMITTER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, INDUSTRY_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertThat(summarySection.summaryItems())
         .containsExactly(
             SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard)),
@@ -273,12 +293,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(otherLegacyData));
     when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
         .thenReturn(simpleSummaryCard);
-    when(teamService.isRegulatorUser(OPRED_USER))
-        .thenReturn(false);
-    when(teamService.isIndustryUser(OPRED_USER))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.ALLOCATOR)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, OPRED_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertThat(summarySection.summaryItems())
         .containsExactly(
             SummaryItem.withCard(OTHER_LEGACY_APPLICATION_DETAILS_ITEM, simpleSummaryCard)
@@ -297,10 +319,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.fieldAsset3);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(REGULATOR_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, REGULATOR_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -320,10 +346,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.fieldAsset3);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isIndustryUser(INDUSTRY_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.VIEWER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, INDUSTRY_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -341,13 +371,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.fieldAsset3);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(OPRED_USER))
-        .thenReturn(false);
-    when(teamService.isIndustryUser(OPRED_USER))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.RESPONDER)
+            .build()
+    ));
 
-
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, OPRED_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .isEmpty();
@@ -363,10 +394,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.terminalAsset1);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(REGULATOR_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, REGULATOR_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -384,10 +419,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.terminalAsset1);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isIndustryUser(INDUSTRY_USER))
-        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.EDITOR)
+            .build()
+    ));
 
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, INDUSTRY_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
@@ -403,13 +442,14 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(ApplicationAssetTestUtil.terminalAsset1);
     when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
         .thenReturn(Optional.empty());
-    when(teamService.isRegulatorUser(OPRED_USER))
-        .thenReturn(false);
-    when(teamService.isIndustryUser(OPRED_USER))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(USER)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.RESPONDER)
+            .build()
+    ));
 
-
-    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, OPRED_USER).orElseThrow();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion, USER).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .isEmpty();

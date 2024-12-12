@@ -1,46 +1,33 @@
 package uk.co.nstauthority.fieldconsents;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTabConverter;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ActionEndPointInterceptorRule;
-import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationAccessInterceptorRule;
+import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationRoleAccessInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationStatusInterceptorRule;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Import({
-    ApplicationAccessInterceptorRule.class,
     ApplicationStatusInterceptorRule.class,
+    ApplicationRoleAccessInterceptorRule.class,
     ActionEndPointInterceptorRule.class,
-    CaseProcessingTabConverter.class
+    CaseProcessingTabConverter.class,
 })
 public abstract class AbstractApplicationControllerTest extends AbstractControllerTest {
-
-  @Autowired
-  protected ApplicationHandlerInterceptor applicationHandlerInterceptor;
-
-  @Autowired
-  protected ApplicationAccessInterceptorRule applicationAccessInterceptorRule;
-
-  @Autowired
-  protected ApplicationStatusInterceptorRule applicationStatusInterceptorRule;
-
-  @Autowired
-  protected ActionEndPointInterceptorRule actionEndPointInterceptorRule;
-
-  @MockBean
-  protected ApplicationAccessService applicationAccessService;
 
   @BeforeEach
   void setupAbstractApplicationControllerTest(TestInfo testInfo) {
@@ -57,8 +44,28 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   }
 
   void setupWhenUserHasApplicationAccessPermission() {
-    when(applicationAccessService.hasApplicationPermission(any(), any(), any(RolePermission[].class)))
-        .thenReturn(true);
+    when(fieldConsentsAccessService.userHasAnyRegulatorRole(eq(user), any())).thenReturn(true);
+    when(fieldConsentsAccessService.userHasAnyConsulteeRole(eq(user), any(), any())).thenReturn(true);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(eq(user), any(ApplicationVersion.class), any())).thenReturn(true);
+
+    when(teamQueryService.userHasStaticRole(eq(user), any(), any())).thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(eq(user), any(), any())).thenReturn(true);
+
+    var allTeamRoles =  EnumSet.allOf(Role.class)
+        .stream()
+        .flatMap(role -> EnumSet.allOf(TeamType.class)
+            .stream()
+            .map(teamType -> TeamRoleTestUtil.newBuilder()
+                .withRole(role)
+                .withTeam(TeamTestUtil.newBuilder()
+                    .withTeamType(teamType)
+                    .build())
+                .build())
+        )
+        .toList();
+    when(teamQueryService.getTeamRoles(user)).thenReturn(allTeamRoles);
+
+    when(fieldConsentsAccessService.getApplicationRolesForUser(any(), eq(user))).thenReturn(EnumSet.allOf(Role.class));
   }
 
   void setupWhenUserCanCallAllActionEndPoints() {

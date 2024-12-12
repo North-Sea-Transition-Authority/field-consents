@@ -19,14 +19,14 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionFormValidator;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("/document-templates/section/{documentTemplateSectionId}")
-@HasPermission(permissions = RolePermission.MANAGE_DOCUMENT_TEMPLATES)
+@HasRegulatorRole(Role.DOCUMENT_TEMPLATE_MANAGER)
 public class DocumentTemplateSectionController {
 
   static final String ADD_PAGE_TITLE = "Add section";

@@ -3,12 +3,12 @@ package uk.co.nstauthority.fieldconsents.email;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 public record FieldConsentsEmailRecipient(
     String displayName,
-    String emailAddress)
-    implements EmailRecipient {
+    String emailAddress
+) implements EmailRecipient {
 
   @Override
   public String getEmailAddress() {
@@ -24,6 +24,7 @@ public record FieldConsentsEmailRecipient(
   }
 
   public static FieldConsentsEmailRecipient from(TeamMemberView teamMemberView) {
-    return new FieldConsentsEmailRecipient(teamMemberView.getDisplayName(), teamMemberView.contactEmail());
+    return new FieldConsentsEmailRecipient(teamMemberView.getDisplayName(), teamMemberView.email());
   }
+
 }

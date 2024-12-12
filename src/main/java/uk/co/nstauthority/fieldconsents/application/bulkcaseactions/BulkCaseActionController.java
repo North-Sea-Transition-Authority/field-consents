@@ -11,28 +11,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasAnyRegulatorRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Controller
 @RequestMapping("bulk-case-actions")
-@HasPermission(permissions = {RolePermission.ASSIGN_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS})
+@HasAnyRegulatorRole({Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, Role.CASE_MANAGER})
 public class BulkCaseActionController {
 
   private final BulkCaseActionSelectionFormValidator bulkCaseActionSelectionFormValidator;
-  private final RegulatorTeamService regulatorTeamService;
-  private final PermissionService permissionService;
+  private final TeamQueryService teamQueryService;
 
   BulkCaseActionController(
       BulkCaseActionSelectionFormValidator bulkCaseActionSelectionFormValidator,
-      RegulatorTeamService regulatorTeamService,
-      PermissionService permissionService
+      TeamQueryService teamQueryService
   ) {
     this.bulkCaseActionSelectionFormValidator = bulkCaseActionSelectionFormValidator;
-    this.regulatorTeamService = regulatorTeamService;
-    this.permissionService = permissionService;
+    this.teamQueryService = teamQueryService;
   }
 
   @GetMapping
@@ -55,13 +52,15 @@ public class BulkCaseActionController {
   }
 
   private ModelAndView getModelAndView(ServiceUserDetail user) {
-    var regulatorTeam = regulatorTeamService.getRegulatorTeamForUser(user)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
+    var regulatorRoles = teamQueryService.getStaticRoles(user, TeamType.REGULATOR);
 
-    var userRolePermissions = permissionService.getUserPermissionsForTeam(regulatorTeam, user);
+    if (regulatorRoles.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
     var availableActions = EnumSet.allOf(BulkCaseAction.class)
         .stream()
-        .filter(action -> userRolePermissions.containsAll(action.getRequiredPermissions()))
+        .filter(action -> regulatorRoles.contains(action.getRequiredRole()))
         .toList();
 
     if (availableActions.isEmpty()) {

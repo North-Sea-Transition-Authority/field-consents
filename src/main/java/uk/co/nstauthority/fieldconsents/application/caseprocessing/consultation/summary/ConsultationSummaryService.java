@@ -158,7 +158,7 @@ public class ConsultationSummaryService {
     var summaryDataView = SummaryDataView
         .newWithKeyValue("Consultation status", consultation.getStatus().getDisplayName())
         .addKeyValue("Deadline", DateUtils.format(consultation.getRequestDeadline(), DateUtils.DATE_TIME))
-        .addKeyValue("Consultee", consultation.getConsultationTeam().getDisplayName())
+        .addKeyValue("Consultee", consultation.getConsultationTeam().getName())
         .addKeyValue("Responder", responder)
         .addKeyValue("Request application version", consultation.getRequestApplicationVersion().getVersion())
         .addKeyValue("Requested by", energyPortalUserByWuaId.get(consultation.getRequestedByWuaId()).displayName())

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
@@ -17,8 +18,10 @@ interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
 
   List<Consultation> findAllByRequestApplicationVersion_ApplicationOrderById(Application application);
 
-  List<Consultation> findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(
-      Application application, Team team);
+  List<Consultation> findAllByRequestApplicationVersion_ApplicationAndConsultationTeamInOrderById(
+      Application application,
+      Collection<Team> teams
+  );
 
   Optional<Consultation> findByIdAndRequestApplicationVersion_Application(Integer id, Application application);
 

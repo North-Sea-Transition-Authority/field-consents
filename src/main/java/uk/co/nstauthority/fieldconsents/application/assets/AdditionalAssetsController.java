@@ -26,15 +26,14 @@ import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/additional-assets")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+@UserCanEditApplication
 public class AdditionalAssetsController {
 
   public static final String PAGE_NAME_SUMMARY = "Additional fields and licences";

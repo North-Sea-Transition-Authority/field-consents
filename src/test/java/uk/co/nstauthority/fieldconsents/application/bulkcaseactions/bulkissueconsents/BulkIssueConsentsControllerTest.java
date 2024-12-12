@@ -36,7 +36,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = BulkIssueConsentsController.class)
 class BulkIssueConsentsControllerTest extends AbstractControllerTest {
@@ -79,7 +80,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
     var selectedApplicationIds = Set.of(1, 2, 3);
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(selectedApplicationIds);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     var applicationDataItemView = mock(ApplicationDataItemView.class);
     // these are called in nested freemarker component
@@ -107,7 +108,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(selectedApplicationIds);
     assertThat(this.bulkIssueConsentsSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).isEqualTo(selectedApplicationIds);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     var bulkIssueConsentsForm = new BulkIssueConsentsForm(Set.of("1", "2", "3"));
 
@@ -130,7 +131,7 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
 
   @Test
   void bulkIssueConsents_validationError() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     var bulkIssueConsentsForm = new BulkIssueConsentsForm(Set.of("1", "2", "3"));
 

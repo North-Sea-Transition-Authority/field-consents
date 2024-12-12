@@ -43,7 +43,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = CaseAssignmentController.class)
@@ -62,10 +61,6 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
-
-  @MockBean
-  private TeamMemberViewService teamMemberViewService;
-
 
   @SecurityTest
   void getCaseAssignment_noUser() throws Exception {
@@ -122,8 +117,6 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
         .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CASE_OFFICER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null)))
@@ -194,8 +187,6 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
         .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CASE_OFFICER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)

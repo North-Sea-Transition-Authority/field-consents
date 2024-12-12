@@ -26,16 +26,16 @@ import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("/manage-asset/facilities/{terminalId}")
-@HasAssetPermission(permissions = RolePermission.CREATE_FCS_APPLICATIONS)
+@HasAssetOrRegulatorRole(industryRoles = Role.CREATOR)
 public class StartApplicationFromTerminalController {
 
   private final ApplicationService applicationService;

@@ -6,8 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.email.EmailService.SENDER_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAM_USER;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_1;
@@ -16,8 +14,9 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAS
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER_EPU;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.SENDER_IDENTIFIER_MERGE_FIELD_NAME;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,9 +40,10 @@ import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class CaseAssignmentEmailServiceTest {
@@ -51,10 +52,13 @@ class CaseAssignmentEmailServiceTest {
   private EmailService emailService;
 
   @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private EnergyPortalUserService energyPortalUserService;
 
   @Mock
-  private EnergyPortalUserService energyPortalUserService;
+  private TeamQueryService teamQueryService;
+
+  @InjectMocks
+  private CaseAssignmentEmailService caseAssignmentEmailService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -65,18 +69,11 @@ class CaseAssignmentEmailServiceTest {
   @Captor
   private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
 
-  private CaseAssignmentEmailService caseAssignmentEmailService;
-
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    caseAssignmentEmailService = new CaseAssignmentEmailService(
-        emailService,
-        teamMemberViewService,
-        energyPortalUserService
-    );
   }
 
   @Test
@@ -149,11 +146,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withNoCaseManagersToNotify() {
-    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
-        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
 
     caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);
 
@@ -162,10 +155,19 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withOneCaseManagerToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    );
+
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
+
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1));
 
     caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);
@@ -195,10 +197,22 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withMultipleCaseManagersToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_MANAGER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    );
+
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
+
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
 
     caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);

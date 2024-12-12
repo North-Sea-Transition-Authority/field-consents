@@ -3,15 +3,14 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.core.annotation.AnnotationUtils;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerSearchController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentsController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissueconsents.BulkIssueConsentsSearchController;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 public enum BulkCaseAction {
 
@@ -32,7 +31,7 @@ public enum BulkCaseAction {
   private final String displayName;
   private final String description;
   private final String searchUrl;
-  private final Set<RolePermission> requiredPermissions;
+  private final Role requiredRole;
 
   BulkCaseAction(
       String displayName,
@@ -42,7 +41,7 @@ public enum BulkCaseAction {
   ) {
     this.displayName = displayName;
     this.description = description;
-    this.requiredPermissions = getRolePermissionsFromController(actionController);
+    this.requiredRole = getRoleFromController(actionController);
     this.searchUrl = searchUrl;
   }
 
@@ -58,15 +57,15 @@ public enum BulkCaseAction {
     return searchUrl;
   }
 
-  public Set<RolePermission> getRequiredPermissions() {
-    return requiredPermissions;
+  public Role getRequiredRole() {
+    return requiredRole;
   }
 
-  private static Set<RolePermission> getRolePermissionsFromController(Class<?> targetClass) {
-    return Optional.ofNullable(AnnotationUtils.findAnnotation(targetClass, HasPermission.class))
-        .map(hasPermission -> Set.of(hasPermission.permissions()))
+  private static Role getRoleFromController(Class<?> targetClass) {
+    return Optional.ofNullable(AnnotationUtils.findAnnotation(targetClass, HasRegulatorRole.class))
+        .map(HasRegulatorRole::value)
         .orElseThrow(() -> new IllegalStateException("class %s is not annotated with @%s"
-            .formatted(targetClass.getSimpleName(), HasPermission.class.getSimpleName())));
+            .formatted(targetClass.getSimpleName(), HasRegulatorRole.class.getSimpleName())));
   }
 
 }

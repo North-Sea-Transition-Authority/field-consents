@@ -1,19 +1,13 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.ACCESS_MANAGER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.VIEWER;
-
 import java.util.List;
 import java.util.Map;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 public class AssignmentTestUtil {
 
@@ -77,73 +71,73 @@ public class AssignmentTestUtil {
       ServiceUserDetail.from(ENERGY_PORTAL_USER_1);
 
   public static final TeamMemberView CASE_OFFICER_TEAM_MEMBER_VIEW_1 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CASE_OFFICER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_1.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_1.forename())
-          .withLastName(ENERGY_PORTAL_USER_1.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.CASE_OFFICER)
+          .withWuaId(ENERGY_PORTAL_USER_1.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_1.forename())
+          .withSurname(ENERGY_PORTAL_USER_1.surname())
           .build();
 
   public static final TeamMemberView VIEWER_TEAM_MEMBER_VIEW =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(VIEWER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_2.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_2.forename())
-          .withLastName(ENERGY_PORTAL_USER_2.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.VIEWER)
+          .withWuaId(ENERGY_PORTAL_USER_2.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_2.forename())
+          .withSurname(ENERGY_PORTAL_USER_2.surname())
           .build();
 
   public static final TeamMemberView CASE_OFFICER_TEAM_MEMBER_VIEW_2 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CASE_OFFICER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_3.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_3.forename())
-          .withLastName(ENERGY_PORTAL_USER_3.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.CASE_OFFICER)
+          .withWuaId(ENERGY_PORTAL_USER_3.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_3.forename())
+          .withSurname(ENERGY_PORTAL_USER_3.surname())
           .build();
 
   public static final TeamMemberView ACCESS_MANGER_TEAM_MEMBER_VIEW =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(ACCESS_MANAGER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_4.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_4.forename())
-          .withLastName(ENERGY_PORTAL_USER_4.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.ACCESS_MANAGER)
+          .withWuaId(ENERGY_PORTAL_USER_4.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_4.forename())
+          .withSurname(ENERGY_PORTAL_USER_4.surname())
           .build();
 
   public static final ServiceUserDetail SERVICE_USER_DETAIL_USER_5 =
       ServiceUserDetail.from(ENERGY_PORTAL_USER_5);
 
   public static final TeamMemberView TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(TECHNICAL_REVIEWER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_5.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_5.forename())
-          .withLastName(ENERGY_PORTAL_USER_5.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.TECHNICAL_REVIEWER)
+          .withWuaId(ENERGY_PORTAL_USER_5.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_5.forename())
+          .withSurname(ENERGY_PORTAL_USER_5.surname())
           .build();
 
   public static final ServiceUserDetail SERVICE_USER_DETAIL_USER_6 =
       ServiceUserDetail.from(ENERGY_PORTAL_USER_6);
 
   public static final TeamMemberView TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(TECHNICAL_REVIEWER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_6.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_6.forename())
-          .withLastName(ENERGY_PORTAL_USER_6.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.TECHNICAL_REVIEWER)
+          .withWuaId(ENERGY_PORTAL_USER_6.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_6.forename())
+          .withSurname(ENERGY_PORTAL_USER_6.surname())
           .build();
 
   public static final TeamMemberView CAM_USER_TEAM_MEMBER_VIEW_1 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_7.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_7.forename())
-          .withLastName(ENERGY_PORTAL_USER_7.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
+          .withWuaId(ENERGY_PORTAL_USER_7.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_7.forename())
+          .withSurname(ENERGY_PORTAL_USER_7.surname())
           .build();
 
   public static final TeamMemberView CAM_USER_TEAM_MEMBER_VIEW_2 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
-          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_8.webUserAccountId()))
-          .withFirstName(ENERGY_PORTAL_USER_8.forename())
-          .withLastName(ENERGY_PORTAL_USER_8.surname())
+      TeamMemberViewTestUtil.newBuilder()
+          .withRoles(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
+          .withWuaId(ENERGY_PORTAL_USER_8.webUserAccountId())
+          .withForename(ENERGY_PORTAL_USER_8.forename())
+          .withSurname(ENERGY_PORTAL_USER_8.surname())
           .build();
 
   public static final List<TeamMemberView> TEAM_MEMBER_VIEW_LIST =

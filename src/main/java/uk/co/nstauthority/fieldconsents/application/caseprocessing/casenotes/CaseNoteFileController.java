@@ -14,10 +14,9 @@ import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserIsRegulatorCaseProcessor;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/applications/{applicationId}/case-notes/{caseNoteId}/files")
@@ -38,7 +37,7 @@ public class CaseNoteFileController {
   }
 
   @GetMapping("/{fileId}")
-  @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
+  @UserIsRegulatorCaseProcessor
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationId,
       @PathVariable Integer caseNoteId,

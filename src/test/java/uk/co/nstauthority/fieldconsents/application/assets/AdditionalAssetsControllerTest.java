@@ -77,6 +77,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     expectBaseAdditionalAssetsUrl = ApplicationAssetTestUtil.BASE_ASSETS_URL;
 
+    // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
 

@@ -1,13 +1,15 @@
 package uk.co.nstauthority.fieldconsents.organisations;
 
+import java.util.Collections;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchResult;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @RestController
 @AccessibleByServiceUsers
@@ -36,7 +38,7 @@ public class OrganisationUnitRestController {
             searchTerm,
             ORG_UNIT_SEARCH_PURPOSE,
             user,
-            RolePermission.CREATE_FCS_APPLICATIONS
+            Collections.singleton(Role.CREATOR)
         )
     );
   }
@@ -49,7 +51,11 @@ public class OrganisationUnitRestController {
             searchTerm,
             ORG_UNIT_WORK_AREA_PURPOSE,
             user,
-            RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS
+            RoleGroup.union(
+                RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES,
+                RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES,
+                RoleGroup.CONSULTEE_WITH_VIEWER_ROLES
+            )
         )
     );
   }

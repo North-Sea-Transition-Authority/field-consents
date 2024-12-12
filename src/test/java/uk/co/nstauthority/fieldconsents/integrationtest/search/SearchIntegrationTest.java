@@ -51,6 +51,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
@@ -67,7 +68,6 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
@@ -83,15 +83,12 @@ import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.search.SearchFilterForm;
 import uk.co.nstauthority.fieldconsents.search.SearchFilterFormService;
 import uk.co.nstauthority.fieldconsents.search.SearchSession;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 class SearchIntegrationTest extends AbstractIntegrationTest {
-
-  @MockBean
-  private TeamService teamService;
 
   @MockBean
   private OrganisationUnitService organisationUnitService;
@@ -106,7 +103,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   private TerminalService terminalService;
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  private TeamQueryService teamQueryService;
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
@@ -160,23 +157,33 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     searchForm = new SearchFilterForm();
     zonedDateTime = ZonedDateTime.now(clock.getZone());
-    when(teamService.isRegulatorUser(USER_DETAIL)).thenReturn(true);
-    when(organisationUnitService.getOrganisationUnitsByIds(
-        ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(Collections.singletonList(
-        OrganisationUnitTestUtil.orgUnit1Json));
+
+    when(teamQueryService.userIsMemberOfTeamType(USER_DETAIL, TeamType.REGULATOR))
+        .thenReturn(true);
+    when(teamQueryService.getTeamRoles(USER_DETAIL)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER_DETAIL, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
+
+    when(organisationUnitService.getOrganisationUnitsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(Collections.singletonList(OrganisationUnitTestUtil.orgUnit1Json));
 
     assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     orgUnitRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     orgUnitGroupRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
-    when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER_DETAIL, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
+    when(applicationDataFilterFormService.getPrefilledAsset(null))
+        .thenReturn(assetFieldRestSearchItem);
 
-    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
-        field1JsonWithOperatorAndLicences));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(List.of(field1JsonWithOperatorAndLicences));
 
-    when(energyPortalUserService.getEnergyPortalUserMap(ArgumentMatchers.anyList())).thenReturn(PORTAL_USERS_DTO_MAP);
+    when(energyPortalUserService.getEnergyPortalUserMap(ArgumentMatchers.anyList()))
+        .thenReturn(PORTAL_USERS_DTO_MAP);
   }
 
   /*********************************** EMPTY SEARCH ***********************************/
@@ -341,7 +348,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     searchForm.setStatuses(List.of(ApplicationVersionStatus.CONSENTED));
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(CASE_OFFICER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
     var consentData = new ConsentData(1);
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1));
@@ -675,7 +682,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   @Test
   void searchByConsentStartYear_whenFound() {
     searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear()));
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(CASE_OFFICER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);
@@ -702,7 +709,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   @Test
   void searchByConsentStartYear_whenNotFound() {
     searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear() - 1));
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(CASE_OFFICER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);
@@ -718,7 +725,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   @Test
   void searchByConsentEndYear_whenFound() {
     searchForm.setConsentEndYear(String.valueOf(zonedDateTime.getYear()));
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(CASE_OFFICER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);
@@ -745,7 +752,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   @Test
   void searchByConsentEndYear_whenNotFound() {
     searchForm.setConsentEndYear(String.valueOf(zonedDateTime.getYear()));
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(CASE_OFFICER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);

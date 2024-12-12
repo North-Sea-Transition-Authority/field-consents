@@ -11,7 +11,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -21,7 +20,8 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSummaryView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = DocumentTemplateController.class)
 class DocumentTemplateControllerTest extends AbstractControllerTest {
@@ -45,8 +45,6 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getDocumentTemplates_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates()))
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -59,7 +57,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
         new DocumentTemplateSummaryView("Test title 2", "Test description 2", "test-view-url-2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(fieldConsentsDocumentTemplateViewService.getDocumentTemplateSummaryViews())
         .thenReturn(documentTemplateSummaryViews);
 
@@ -79,8 +77,6 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getViewDocumentTemplate_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(DOCUMENT_TEMPLATE_ID)))
             .with(user(user)))
@@ -116,7 +112,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
         )
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateService.getDocumentTemplateDtoOrThrow(DOCUMENT_TEMPLATE_ID))
         .thenReturn(documentTemplateDto);
     when(

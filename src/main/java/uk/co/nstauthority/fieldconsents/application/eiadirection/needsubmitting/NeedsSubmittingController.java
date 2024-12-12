@@ -16,15 +16,14 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionSer
 import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedController;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/eia-direction/does-an-eia-screening-direction-need-to-be-submitted")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+@UserCanEditApplication
 public class NeedsSubmittingController {
 
   private final NeedsSubmittingFormValidator validator;

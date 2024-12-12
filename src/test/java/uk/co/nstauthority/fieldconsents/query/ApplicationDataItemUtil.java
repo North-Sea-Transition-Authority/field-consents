@@ -32,7 +32,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 public class ApplicationDataItemUtil {
 
@@ -441,7 +441,7 @@ public class ApplicationDataItemUtil {
         true,
         CASE_OFFICER_WUA_ID,
         CAM_USER_WUA_ID,
-        RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER,
+        Role.CONSENTS_AND_AUTHORISATIONS_MANAGER,
         false,
         TECHNICAL_REVIEWER_WUA_ID,
         false,

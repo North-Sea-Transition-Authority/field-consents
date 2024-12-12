@@ -26,9 +26,10 @@ import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmis
 import uk.co.nstauthority.fieldconsents.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @DirtiesContext
 class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest {
@@ -67,7 +68,7 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
   private CaseAssignmentEventService caseAssignmentEventService;
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  private TeamQueryService teamQueryService;
 
   private ApplicationVersion applicationVersion;
 
@@ -75,7 +76,7 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
   void setUp() {
     SamlAuthenticationUtil.Builder().withUser(INDUSTRY_USER_DETAIL).setSecurityContext();
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(REGULATOR_USER_DETAIL))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(REGULATOR_USER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     applicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.FLARE,

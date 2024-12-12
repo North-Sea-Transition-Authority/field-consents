@@ -75,7 +75,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = IndustryCaseProcessingController.class)
 class IndustryCaseProcessingControllerTest extends AbstractApplicationControllerTest {
@@ -174,9 +173,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         null,
         List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
     );
-
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
   }
 
   @SecurityTest
@@ -262,13 +258,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.EDIT_FCS_APPLICATIONS,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
-        RolePermission.VIEW_FCS_CONSENTS
-    )).thenReturn(false);
 
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)
@@ -519,8 +508,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
@@ -538,8 +525,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, VIEW_APPLICATION, null)))
@@ -560,8 +545,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     stubSummaryServiceCall(applicationVersion);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 
@@ -585,8 +568,6 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     stubSummaryServiceCall(applicationVersion);
 
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
-    // this is called in the IsMemberOfTeamTypeInterceptor
-    when(teamService.isIndustryUser(user)).thenReturn(true);
     when(licenceExpiryService.getLicencesExpiringDuringConsentPeriod(applicationVersion))
         .thenReturn(expiringLicences);
 

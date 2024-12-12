@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -17,13 +19,14 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
@@ -42,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = StartApplicationFromTerminalController.class)
@@ -50,6 +54,8 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   private static final Integer TERMINAL_ID = 1;
 
   private static final String MANAGE_TERMINAL_URL_BASE = "/manage-asset/facilities/1";
+
+  private static final Set<Role> INDUSTRY_ROLES = EnumSet.of(Role.CREATOR);
 
   @MockBean
   private ApplicationService applicationService;
@@ -80,12 +86,13 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.TERMINAL)).thenReturn(applicationTypeMap);
-    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
+    when(terminalService.findTerminalWithOperator(eq(TERMINAL_ID), anyString())).thenReturn(Optional.of(terminal1JsonWithOperator));
   }
 
-  @Test
+  @SecurityTest
   void getStartApplicationForm() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     String continueStartApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class)
         .continueStartApplicationOfType(TERMINAL_ID, null, null, null, null));
 
@@ -112,16 +119,16 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void getStartApplicationForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationForm(TERMINAL_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void continueStartApplicationOfType() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .continueStartApplicationOfType(TERMINAL_ID, null, null, null, null)))
             .param("applicationType", ApplicationType.FLARE.name())
@@ -133,8 +140,10 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .andExpect(view().name("redirect:" + MANAGE_TERMINAL_URL_BASE + "/start-application/operator"));
   }
 
-  @Test
+  @SecurityTest
   void continueStartApplicationOfType_formErrors() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     doCallRealMethod().when(formValidator).validate(any(), any());
 
     var modelAndView =
@@ -163,8 +172,6 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void continueStartApplicationOfType_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .continueStartApplicationOfType(TERMINAL_ID, null, null, null, null)))
             .with(user(user))
@@ -172,8 +179,10 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getStartApplicationOperatorForm() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     var orgUnitRestSearchItem = new RestSearchItem("1", "ORG_NAME");
     when(startApplicationOperatorFormService.getPrefilledOperatorForTerminal(TERMINAL_ID))
         .thenReturn(orgUnitRestSearchItem);
@@ -206,6 +215,8 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void getStartApplicationOperatorForm_notAuthorized() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationOperatorForm(TERMINAL_ID, null, null))))
         .andExpect(redirectionToLoginUrl());
@@ -213,16 +224,16 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void getStartApplicationOperatorForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationOperatorForm(TERMINAL_ID, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void createNewApplication() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
         ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
     when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
@@ -243,8 +254,10 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
-  @Test
+  @SecurityTest
   void createNewApplication_formErrors() throws Exception {
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
+
     doCallRealMethod().when(operatorFormValidator).validate(any(), any());
 
     when(startApplicationOperatorFormService.getPrefilledOperatorForTerminal(TERMINAL_ID))
@@ -283,8 +296,6 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void createNewApplication_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(user(user))
@@ -292,11 +303,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getStartApplicationForm_cannotStartApplicationForTerminal() throws Exception {
-    // Required for HasAssetPermissionInterceptor
-    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
 
     doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
         .when(assetService)
@@ -308,11 +317,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void continueStartApplicationOfType_cannotStartApplicationForField() throws Exception {
-    // Required for HasAssetPermissionInterceptor
-    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminal1JsonWithOperator, INDUSTRY_ROLES)).thenReturn(true);
 
     doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
         .when(assetService)

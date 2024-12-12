@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,16 +19,16 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("applications/{applicationId}/task-list")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+@UserCanEditApplication
 public class ApplicationTaskListController {
 
   private final ApplicationService applicationService;
@@ -36,7 +37,7 @@ public class ApplicationTaskListController {
   private final ApplicationContextService applicationContextService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
-  private final ApplicationAccessService applicationAccessService;
+  private final FieldConsentsAccessService fieldConsentsAccessService;
   private final ConsentService consentService;
   private final LicenceExpiryService licenceExpiryService;
 
@@ -47,7 +48,7 @@ public class ApplicationTaskListController {
       ApplicationContextService applicationContextService,
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
-      ApplicationAccessService applicationAccessService,
+      FieldConsentsAccessService fieldConsentsAccessService,
       ConsentService consentService,
       LicenceExpiryService licenceExpiryService
   ) {
@@ -57,7 +58,7 @@ public class ApplicationTaskListController {
     this.applicationContextService = applicationContextService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
-    this.applicationAccessService = applicationAccessService;
+    this.fieldConsentsAccessService = fieldConsentsAccessService;
     this.consentService = consentService;
     this.licenceExpiryService = licenceExpiryService;
   }
@@ -70,7 +71,7 @@ public class ApplicationTaskListController {
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
     var applicationReference = applicationService.getApplicationReference(applicationVersion);
     var hasPermissionToDeleteApplication =
-        applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS);
+        fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR));
 
     var modelAndView = new ModelAndView("fcs/application/applicationTaskList")
         .addObject("pageTitle", applicationType.getDisplayName() + " application")

@@ -7,7 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionAudit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 public class ApplicationVersionAuditTestUtil {
 
@@ -33,7 +33,7 @@ public class ApplicationVersionAuditTestUtil {
         CASE_OFFICER_WUA_ID_1,
         ApplicationVersionStatus.SUBMITTED,
         null,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
   }
 
@@ -73,7 +73,7 @@ public class ApplicationVersionAuditTestUtil {
         AUDIT_USER_WUA_ID,
         ApplicationVersionStatus.SUBMITTED,
         null,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
   }
 
@@ -85,7 +85,7 @@ public class ApplicationVersionAuditTestUtil {
         caseOfficerWuaId,
         ApplicationVersionStatus.SUBMITTED,
         camUserWuaId,
-        RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER
+        Role.CONSENTS_AND_AUTHORISATIONS_MANAGER
     );
   }
 
@@ -106,7 +106,7 @@ public class ApplicationVersionAuditTestUtil {
         actionUserWuaId,
         ApplicationVersionStatus.SUBMITTED,
         camUserWuaId2,
-        RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER
+        Role.CONSENTS_AND_AUTHORISATIONS_MANAGER
     );
   }
 
@@ -127,7 +127,7 @@ public class ApplicationVersionAuditTestUtil {
         camUserWuaId,
         ApplicationVersionStatus.SUBMITTED,
         null,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
   }
 
@@ -158,7 +158,7 @@ public class ApplicationVersionAuditTestUtil {
         OPERATOR_WUA_ID,
         ApplicationVersionStatus.DELETED,
         null,
-        RegulatorTeamRole.CASE_OFFICER
+        Role.CASE_OFFICER
     );
   }
 }

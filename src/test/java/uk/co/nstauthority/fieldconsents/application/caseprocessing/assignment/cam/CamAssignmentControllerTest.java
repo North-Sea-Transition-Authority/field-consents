@@ -44,7 +44,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = CamAssignmentController.class)
@@ -63,9 +62,6 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
-
-  @MockBean
-  private TeamMemberViewService teamMemberViewService;
 
   @SecurityTest
   void getCamAssignment_noUser() throws Exception {
@@ -98,7 +94,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
     when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CAM_ASSIGN_OWNERSHIP))
         .thenReturn(true);
@@ -120,10 +116,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamAssignment(APPLICATION_ID, null)))
@@ -192,10 +186,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CamAssignmentController.class)
@@ -242,7 +234,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
     when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CAM_REASSIGN_OWNERSHIP))
         .thenReturn(true);
@@ -264,10 +256,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamReassignment(APPLICATION_ID, null)))
@@ -336,10 +326,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CamAssignmentController.class)

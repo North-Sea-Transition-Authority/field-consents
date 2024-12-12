@@ -22,7 +22,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -38,7 +37,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = DocumentTemplateSectionController.class)
 class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
@@ -66,8 +66,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getAddDocumentTemplateSectionBefore_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionBefore(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
@@ -85,7 +83,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
@@ -117,8 +115,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void addDocumentTemplateSectionBefore_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .addDocumentTemplateSectionBefore(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -137,7 +133,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -178,7 +174,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void addDocumentTemplateSectionBefore_nullParent() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -215,7 +211,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .withParentId(parentId)
         .build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(parentId))
@@ -254,8 +250,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getAddDocumentTemplateSectionAfter_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionAfter(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
@@ -273,7 +267,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
@@ -305,8 +299,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void addDocumentTemplateSectionAfter_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .addDocumentTemplateSectionAfter(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -325,7 +317,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -366,7 +358,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void addDocumentTemplateSectionAfter_nullParent() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -403,7 +395,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .withParentId(parentId)
         .build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(parentId))
@@ -442,8 +434,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getAddDocumentTemplateSubsection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSubsection(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
@@ -461,7 +451,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
@@ -493,8 +483,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void addDocumentTemplateSubsection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .addDocumentTemplateSubsection(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -513,7 +501,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
@@ -554,7 +542,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void addDocumentTemplateSubsection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -591,8 +579,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getEditDocumentTemplateSection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getEditDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
@@ -610,7 +596,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
@@ -642,8 +628,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void editDocumentTemplateSection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .editDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
             .with(csrf())
@@ -662,7 +646,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -703,7 +687,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void editDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -736,8 +720,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getRemoveDocumentTemplateSection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getRemoveDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
@@ -748,7 +730,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void getRemoveDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
@@ -773,8 +755,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void removeDocumentTemplateSection_userDoesNotHaveManageDocumentTemplatesPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .removeDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID, null)))
             .with(csrf())
@@ -786,7 +766,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   void removeDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.DOCUMENT_TEMPLATE_MANAGER)).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 

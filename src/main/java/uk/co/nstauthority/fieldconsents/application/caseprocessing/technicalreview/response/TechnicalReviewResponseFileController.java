@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response;
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 
 import java.util.UUID;
 import org.springframework.core.io.InputStreamResource;
@@ -16,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserIsRegulatorCaseProcessor;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 
@@ -39,7 +38,7 @@ public class TechnicalReviewResponseFileController {
   }
 
   @GetMapping("/{fileId}")
-  @HasApplicationPermission(permissions = VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
+  @UserIsRegulatorCaseProcessor
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationId,
       @PathVariable Integer technicalReviewId,

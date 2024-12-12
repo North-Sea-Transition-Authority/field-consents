@@ -9,13 +9,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanViewConsent;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/applications/{applicationId}/consent/files")
-@HasApplicationPermission(permissions = RolePermission.VIEW_FCS_CONSENTS)
+@UserCanViewConsent
 public class ConsentFileController {
 
   private final ApplicationService applicationService;

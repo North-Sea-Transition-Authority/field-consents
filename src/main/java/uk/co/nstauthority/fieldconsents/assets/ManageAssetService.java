@@ -7,31 +7,32 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class ManageAssetService {
 
   private final ApplicationDataItemViewService applicationDataItemService;
   private final ApplicationDataFilterService applicationDataFilterService;
-  private final TeamService teamService;
+  private final TeamQueryService teamQueryService;
 
   ManageAssetService(
       ApplicationDataItemViewService applicationDataItemService,
       ApplicationDataFilterService applicationDataFilterService,
-      TeamService teamService
+      TeamQueryService teamQueryService
   ) {
     this.applicationDataItemService = applicationDataItemService;
     this.applicationDataFilterService = applicationDataFilterService;
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<ApplicationDataItemView> getApplicationDataItemViews(AssetKey assetKey, ServiceUserDetail user) {
-    if (teamService.isRegulatorUser(user)) {
+    if (teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)) {
       return applicationDataItemService.getRegulatorApplicationDataItems(getConditions(assetKey), user);
     }
 
-    if (teamService.isIndustryUser(user)) {
+    if (teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)) {
       return applicationDataItemService.getIndustryApplicationDataItems(getConditions(assetKey), user);
     }
 

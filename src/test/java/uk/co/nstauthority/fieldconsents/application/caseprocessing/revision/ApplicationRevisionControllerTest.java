@@ -27,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = ApplicationRevisionController.class)
 class ApplicationRevisionControllerTest extends AbstractApplicationControllerTest {
@@ -74,7 +75,7 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
         CaseProcessingActionItem.REVISE_CONSENT
     )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
             .with(user(user)))
@@ -97,7 +98,7 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
         CaseProcessingActionItem.REVISE_CONSENT
     )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID, null)))
             .with(user(user)))

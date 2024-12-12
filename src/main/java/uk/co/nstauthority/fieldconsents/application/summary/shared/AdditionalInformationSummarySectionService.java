@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.summary.shared;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
@@ -16,7 +17,9 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class AdditionalInformationSummarySectionService implements SummarySectionService<ApplicationVersion> {
@@ -33,7 +36,7 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
 
   private final OtherLegacyDataSummaryService otherLegacyDataSummaryService;
 
-  private final TeamService teamService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   AdditionalInformationSummarySectionService(SupportingInformationService supportingInformationService,
@@ -41,18 +44,17 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
                                              FieldService fieldService,
                                              EiaDirectionService eiaDirectionService,
                                              OtherLegacyDataSummaryService otherLegacyDataSummaryService,
-                                             TeamService teamService) {
+                                             TeamQueryService teamQueryService) {
     this.supportingInformationService = supportingInformationService;
     this.applicationAssetService = applicationAssetService;
     this.fieldService = fieldService;
     this.eiaDirectionService = eiaDirectionService;
     this.otherLegacyDataSummaryService = otherLegacyDataSummaryService;
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
   }
 
   @Override
   public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-
     var summaryItems = new ArrayList<SummaryItem>();
 
     var applicationType = applicationVersion.getApplication().getType();
@@ -65,7 +67,14 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
       }
     }
 
-    if (teamService.isRegulatorUser(user) || teamService.isIndustryUser(user)) {
+    var rolesByTeamType = teamQueryService.getTeamRoles(user)
+        .stream()
+        .collect(Collectors.groupingBy(
+            teamRole -> teamRole.getTeam().getTeamType(),
+            Collectors.mapping(TeamRole::getRole, Collectors.toSet())
+        ));
+
+    if (rolesByTeamType.containsKey(TeamType.REGULATOR) || rolesByTeamType.containsKey(TeamType.INDUSTRY)) {
       summaryItems.add(getSupportingInformationSummaryItem(applicationVersion));
     }
 

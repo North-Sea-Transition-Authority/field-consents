@@ -92,6 +92,8 @@ dependencies {
   testImplementation 'org.testcontainers:junit-jupiter'
   testImplementation 'org.springframework.security:spring-security-test'
 
+  testImplementation 'net.datafaker:datafaker:2.4.1'
+
   epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:fieldconsents-epmq-messages:integration-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'

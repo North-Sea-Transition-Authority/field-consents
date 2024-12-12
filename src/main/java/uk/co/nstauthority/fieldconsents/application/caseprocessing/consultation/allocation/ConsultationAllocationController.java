@@ -26,7 +26,8 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
@@ -40,20 +41,17 @@ public class ConsultationAllocationController {
   private final ApplicationVersionService applicationVersionService;
   private final ConsultationService consultationService;
   private final EnergyPortalUserService energyPortalUserService;
-  private final TeamMemberViewService teamMemberViewService;
 
   ConsultationAllocationController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ConsultationService consultationService,
-      EnergyPortalUserService energyPortalUserService,
-      TeamMemberViewService teamMemberViewService
+      EnergyPortalUserService energyPortalUserService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.consultationService = consultationService;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamMemberViewService = teamMemberViewService;
   }
 
   @GetMapping
@@ -95,16 +93,21 @@ public class ConsultationAllocationController {
                                                           ConsultationAllocationForm form) {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var responders = consultationService.getAllAvailableConsultationRespondersForConsultation(consultation);
     var backLinkUrl = ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
         .caseProcessing(applicationId, null, null, null));
+    var availableRespondersMap = consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)
+        .stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            teamMemberView -> teamMemberView.wuaId().toString(),
+            TeamMemberView::getDisplayName
+        ));
 
     return new ModelAndView("fcs/application/consultation/manageConsulteeResponder")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_TITLE)
         .addObject("backLinkUrl", backLinkUrl)
         .addObject("applicationReference", applicationReference)
-        .addObject("availableRespondersMap", teamMemberViewService.getUsersMap(responders));
+        .addObject("availableRespondersMap", availableRespondersMap);
   }
 
 }

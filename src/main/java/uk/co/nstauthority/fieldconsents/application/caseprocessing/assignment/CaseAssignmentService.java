@@ -2,20 +2,14 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -30,12 +24,11 @@ import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 @Service
 public class CaseAssignmentService {
@@ -46,40 +39,38 @@ public class CaseAssignmentService {
       "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"::formatted;
 
   private final ApplicationVersionRepository applicationVersionRepository;
-  private final RegulatorTeamService regulatorTeamService;
-  private final TeamMemberViewService teamMemberViewService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
-  private final TeamService teamService;
   private final CaseAssignmentEmailService caseAssignmentEmailService;
+  private final TeamQueryService teamQueryService;
 
-  @Autowired
-  public CaseAssignmentService(ApplicationVersionRepository applicationVersionRepository,
-                               RegulatorTeamService regulatorTeamService,
-                               TeamMemberViewService teamMemberViewService,
-                               ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
-                               EnergyPortalUserService energyPortalUserService,
-                               TeamService teamService,
-                               CaseAssignmentEmailService caseAssignmentEmailService) {
+  CaseAssignmentService(
+      ApplicationVersionRepository applicationVersionRepository,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      EnergyPortalUserService energyPortalUserService,
+      CaseAssignmentEmailService caseAssignmentEmailService,
+      TeamQueryService teamQueryService
+  ) {
     this.applicationVersionRepository = applicationVersionRepository;
-    this.regulatorTeamService = regulatorTeamService;
-    this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamService = teamService;
     this.caseAssignmentEmailService = caseAssignmentEmailService;
+    this.teamQueryService = teamQueryService;
   }
 
   @Transactional
-  public void assignCaseOfficer(ApplicationVersion applicationVersion,
-                                ServiceUserDetail caseOfficerUser,
-                                ServiceUserDetail actionUser) {
-    if (!regulatorTeamService.isCaseOfficer(WebUserAccountId.from(caseOfficerUser))) {
+  public void assignCaseOfficer(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail caseOfficerUser,
+      ServiceUserDetail actionUser
+  ) {
+    if (!teamQueryService.userHasStaticRole(caseOfficerUser, TeamType.REGULATOR, Role.CASE_OFFICER)) {
       throw new IllegalArgumentException(
           USER_NOT_IN_CASE_OFFICER_ROLE.apply(String.valueOf(caseOfficerUser.wuaId())));
     }
+
     applicationVersion.setCaseOfficerWuaId(caseOfficerUser.wuaId());
-    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
     applicationVersionRepository.save(applicationVersion);
 
     // figure out the work area priority reason, if the person making the assignment is the same as the assignee
@@ -136,28 +127,28 @@ public class CaseAssignmentService {
 
   public boolean isCaseOfficerAssigned(ApplicationVersion applicationVersion) {
     return Objects.nonNull(applicationVersion.getCaseOfficerWuaId())
-        && CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner());
+        && Role.CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner());
   }
 
   public boolean isCamAssigned(ApplicationVersion applicationVersion) {
     return Objects.nonNull(applicationVersion.getCamWuaId())
-        && CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner());
+        && Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner());
   }
 
-  public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion,
-                                                                 ServiceUserDetail user) {
-    return regulatorTeamService.getRegulatorTeamForUser(user)
-        .map(team -> teamMemberViewService.getTeamMemberViewsForTeam(team)
-            .stream()
-            .filter(teamMemberView -> teamMemberView.teamRoles().contains(RegulatorTeamRole.CASE_OFFICER))
-            .filter(teamMemberView -> Objects.isNull(applicationVersion.getCaseOfficerWuaId())
-                    || !applicationVersion.getCaseOfficerWuaId().equals(teamMemberView.wuaId().id()))
-            .toList()
-        )
-        .orElse(Collections.emptyList())
+  public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var caseOfficerTeamRoles = teamQueryService.getStaticTeamRoles(user, TeamType.REGULATOR)
         .stream()
-        .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_OFFICER)
+        // exclude the currently assigned case officer if one is assigned
+        .filter(teamRole -> applicationVersion.getCaseOfficerWuaId() == null
+            || !applicationVersion.getCaseOfficerWuaId().equals(teamRole.getWuaId()))
         .toList();
+
+    if (caseOfficerTeamRoles.isEmpty()) {
+      return List.of();
+    }
+
+    return teamQueryService.getTeamMemberViews(caseOfficerTeamRoles);
   }
 
   /**
@@ -165,16 +156,13 @@ public class CaseAssignmentService {
    * and the case officers assigned to current applications.
    */
   public List<EnergyPortalUserDto> getCurrentCaseOfficers() {
-    var caseOfficerAssignedWuaIds = applicationVersionRepository
+    var currentCaseOfficersWuaIds = new HashSet<>(getActiveCaseOfficerWebUserAccountIds());
+
+    applicationVersionRepository
         .findAllCaseOfficerWuaIdsByApplicationVersionStatus(ApplicationVersionStatus.SUBMITTED)
         .stream()
         .map(WebUserAccountId::from)
-        .toList();
-
-    var currentCaseOfficersWuaIds = new HashSet<WebUserAccountId>();
-
-    currentCaseOfficersWuaIds.addAll(getActiveCaseOfficerWebUserAccountIds());
-    currentCaseOfficersWuaIds.addAll(caseOfficerAssignedWuaIds);
+        .forEach(currentCaseOfficersWuaIds::add);
 
     return energyPortalUserService.findByWuaIds(currentCaseOfficersWuaIds);
   }
@@ -185,14 +173,19 @@ public class CaseAssignmentService {
   }
 
   private List<WebUserAccountId> getActiveCaseOfficerWebUserAccountIds() {
-    return teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER));
+    return teamQueryService.getTeamRoles(TeamType.REGULATOR)
+        .stream()
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_OFFICER)
+        .map(TeamRole::getWuaId)
+        .map(WebUserAccountId::from)
+        .toList();
   }
 
   @Transactional
   public void returnToCaseOfficer(ApplicationVersion applicationVersion,
                                   ServiceUserDetail actionUser) {
     applicationVersion.setCamWuaId(null);
-    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
     applicationVersionRepository.save(applicationVersion);
 
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(

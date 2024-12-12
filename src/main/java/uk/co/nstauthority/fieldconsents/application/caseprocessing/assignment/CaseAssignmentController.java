@@ -7,7 +7,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +26,8 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
@@ -35,30 +35,23 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class CaseAssignmentController {
 
   private final ApplicationService applicationService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final CaseAssignmentService caseAssignmentService;
-
   private final CaseAssignmentFormValidator caseAssignmentFormValidator;
-
   private final EnergyPortalUserService energyPortalUserService;
 
-  private final TeamMemberViewService teamMemberViewService;
-
-  @Autowired
-  CaseAssignmentController(ApplicationService applicationService,
-                           ApplicationVersionService applicationVersionService,
-                           CaseAssignmentService caseAssignmentService,
-                           CaseAssignmentFormValidator caseAssignmentFormValidator,
-                           EnergyPortalUserService energyPortalUserService,
-                           TeamMemberViewService teamMemberViewService) {
+  CaseAssignmentController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      CaseAssignmentService caseAssignmentService,
+      CaseAssignmentFormValidator caseAssignmentFormValidator,
+      EnergyPortalUserService energyPortalUserService
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.caseAssignmentService = caseAssignmentService;
     this.caseAssignmentFormValidator = caseAssignmentFormValidator;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamMemberViewService = teamMemberViewService;
   }
 
   @GetMapping("assign")
@@ -76,8 +69,12 @@ public class CaseAssignmentController {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
-    var caseOfficerAssignmentCandidatesMap = teamMemberViewService
-        .getUsersMap(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user));
+    var caseOfficerAssignmentCandidatesMap = caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user)
+        .stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            teamMemberView -> teamMemberView.wuaId().toString(),
+            TeamMemberView::getDisplayName
+        ));
 
     return new ModelAndView("fcs/application/caseAssignment")
         .addObject("applicationReference", applicationReference)

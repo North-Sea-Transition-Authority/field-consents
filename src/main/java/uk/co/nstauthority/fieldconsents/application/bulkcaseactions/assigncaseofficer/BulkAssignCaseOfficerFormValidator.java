@@ -4,7 +4,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Component
 class BulkAssignCaseOfficerFormValidator {
@@ -17,15 +19,15 @@ class BulkAssignCaseOfficerFormValidator {
   private static final String SELECT_A_CASE_OFFICER = "Select a case officer";
   private static final String SELECT_AT_LEAST_ONE_APPLICATION = "Select at least one application";
 
-  private final RegulatorTeamService regulatorTeamService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final TeamQueryService teamQueryService;
 
   BulkAssignCaseOfficerFormValidator(
-      RegulatorTeamService regulatorTeamService,
-      EnergyPortalUserService energyPortalUserService
+      EnergyPortalUserService energyPortalUserService,
+      TeamQueryService teamQueryService
   ) {
-    this.regulatorTeamService = regulatorTeamService;
     this.energyPortalUserService = energyPortalUserService;
+    this.teamQueryService = teamQueryService;
   }
 
   void validate(BulkAssignCaseOfficerForm form, Errors errors) {
@@ -36,7 +38,7 @@ class BulkAssignCaseOfficerFormValidator {
   void validateCaseOfficerWuaId(BulkAssignCaseOfficerForm form, Errors errors) {
     try {
       var webUserAccountId = WebUserAccountId.valueOf(form.caseOfficerWuaId());
-      if (!regulatorTeamService.isCaseOfficer(webUserAccountId)) {
+      if (!teamQueryService.userHasStaticRole(webUserAccountId, TeamType.REGULATOR, Role.CASE_OFFICER)) {
         errors.rejectValue(CASE_OFFICER_WUA_ID, REQUIRED, SELECT_A_CASE_OFFICER);
       }
 

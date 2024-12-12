@@ -12,10 +12,10 @@ import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanViewApplication;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/application-versions/{applicationVersionId}/supporting-information/files")
@@ -28,7 +28,7 @@ class SupportingInformationFileController {
   }
 
   @GetMapping("/{fileId}")
-  @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
+  @UserCanViewApplication
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationVersionId,
       @PathVariable UUID fileId,
@@ -42,7 +42,7 @@ class SupportingInformationFileController {
   }
 
   @PostMapping("/delete/{fileId}")
-  @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+  @UserCanEditApplication
   @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
   public ResponseEntity<FileDeleteResponse> delete(
       @PathVariable Integer applicationVersionId,

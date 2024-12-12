@@ -11,14 +11,13 @@ import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanViewAsset;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/manage-asset/fields/{fieldId}")
-@HasAssetPermission(permissions = {RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS})
+@UserCanViewAsset
 public class FieldController {
 
   private final FieldService fieldService;

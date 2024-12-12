@@ -9,11 +9,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,20 +31,20 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestForm;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilter;
 
@@ -64,13 +63,10 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
   private ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
   @MockBean
-  private TeamService teamService;
-
-  @MockBean
-  private PermissionService permissionService;
-
-  @MockBean
   private OrganisationUnitService organisationUnitService;
+
+  @MockBean
+  private TeamQueryService teamQueryService;
 
   @Autowired
   private ApplicationUpdateRequestController applicationUpdateRequestController;
@@ -90,12 +86,17 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
   @BeforeEach
   void setUp() {
     when(userDetailService.getUserDetail()).thenReturn(SERVICE_USER_DETAIL);
-    when(teamService.isRegulatorUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(SERVICE_USER_DETAIL, Collections.singleton(PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(organisationUnitService.getOrganisationUnitsByIds(anyList(), anyString())).thenReturn(Collections.singletonList(orgUnit1Json));
 
-    var teams = Collections.singletonList(new Team(1));
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(SERVICE_USER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS)).thenReturn(teams);
+    var teamRole = TeamRoleTestUtil.newBuilder().build();
+    when(teamQueryService.getTeamRoles(SERVICE_USER_DETAIL))
+        .thenReturn(List.of(teamRole));
+
+    var regulatorRoles = new HashSet<>(RoleGroup.REGULATOR_CASE_PROCESSING_ROLES);
+    regulatorRoles.add(Role.VIEWER);
+    when(teamQueryService.userHasAtLeastOneStaticRole(SERVICE_USER_DETAIL, TeamType.REGULATOR, regulatorRoles))
+        .thenReturn(true);
+
+    when(organisationUnitService.getOrganisationUnitsByIds(anyList(), anyString())).thenReturn(Collections.singletonList(orgUnit1Json));
   }
 
   @ParameterizedTest(name = "Deadline {0} should be displayed as {1}")
@@ -181,7 +182,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     applicationRepository.save(application);
 
     applicationVersion.setCaseOfficerWuaId(SERVICE_USER_DETAIL.wuaId());
-    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
     applicationVersion.setSubmittedByWuaId(SERVICE_USER_DETAIL.wuaId());
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
 

@@ -4,12 +4,9 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_REQUEST;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +17,11 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 @Service
 public class TechnicalReviewAssignmentService {
@@ -36,34 +32,30 @@ public class TechnicalReviewAssignmentService {
       "Cannot assign technical reviewer as user with wua id %s is not in a regulator technical reviewer role"::formatted;
 
   private final TechnicalReviewRepository technicalReviewRepository;
-  private final RegulatorTeamService regulatorTeamService;
-  private final TeamMemberViewService teamMemberViewService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
-  private final TeamService teamService;
   private final TechnicalReviewEmailService technicalReviewEmailService;
+  private final TeamQueryService teamQueryService;
 
-  public TechnicalReviewAssignmentService(TechnicalReviewRepository technicalReviewRepository,
-                                          RegulatorTeamService regulatorTeamService,
-                                          TeamMemberViewService teamMemberViewService,
-                                          ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
-                                          EnergyPortalUserService energyPortalUserService,
-                                          TeamService teamService,
-                                          TechnicalReviewEmailService technicalReviewEmailService) {
+  TechnicalReviewAssignmentService(
+      TechnicalReviewRepository technicalReviewRepository,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      EnergyPortalUserService energyPortalUserService,
+      TechnicalReviewEmailService technicalReviewEmailService,
+      TeamQueryService teamQueryService
+  ) {
     this.technicalReviewRepository = technicalReviewRepository;
-    this.regulatorTeamService = regulatorTeamService;
-    this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamService = teamService;
     this.technicalReviewEmailService = technicalReviewEmailService;
+    this.teamQueryService = teamQueryService;
   }
 
   @Transactional
   public void assignTechnicalReviewer(TechnicalReview technicalReview,
                                       ServiceUserDetail technicalReviewerUser,
                                       ServiceUserDetail actionUser) {
-    if (!regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(technicalReviewerUser))) {
+    if (!teamQueryService.userHasStaticRole(technicalReviewerUser, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)) {
       throw new IllegalArgumentException(
           USER_NOT_IN_TECHNICAL_REVIEWER_ROLE.apply(String.valueOf(technicalReviewerUser.wuaId())));
     }
@@ -94,46 +86,40 @@ public class TechnicalReviewAssignmentService {
     }
   }
 
-  public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates(ServiceUserDetail user) {
-
-    return regulatorTeamService.getRegulatorTeamForUser(user)
-        .map(team -> teamMemberViewService.getTeamMemberViewsForTeam(team)
-            .stream()
-            .filter(teamMemberView -> teamMemberView.teamRoles().contains(RegulatorTeamRole.TECHNICAL_REVIEWER))
-            .toList()
-        )
-        .orElse(Collections.emptyList())
+  public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates() {
+    var technicalReviewerTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
-        .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
+        .filter(teamRole -> teamRole.getRole() == Role.TECHNICAL_REVIEWER)
         .toList();
+
+    return teamQueryService.getTeamMemberViews(technicalReviewerTeamRoles);
   }
 
-  public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates(TechnicalReview technicalReview,
-                                                                       ServiceUserDetail user) {
+  public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates(TechnicalReview technicalReview) {
 
-    return getTechnicalReviewerAssignmentCandidates(user)
+    return getTechnicalReviewerAssignmentCandidates()
         .stream()
-        .filter(teamMemberView -> !technicalReview.getTechnicalReviewerWuaId().equals(teamMemberView.wuaId().id()))
+        .filter(teamMemberView -> !technicalReview.getTechnicalReviewerWuaId().equals(teamMemberView.wuaId()))
         .toList();
   }
 
   public List<EnergyPortalUserDto> getCurrentTechnicalReviewers() {
     // The list of current technical reviewers is the union of all current technical reviewers in the NSTA team
     // and the technical reviewers assigned to current open technical reviews.
+    var currentTechnicalReviewersWuaIds = new HashSet<WebUserAccountId>();
 
-    var teamTechnicalReviewerWuaIds = teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.TECHNICAL_REVIEWER)
-    );
-    var technicalReviewerAssignedWuaIds = technicalReviewRepository
+    teamQueryService.getTeamRoles(TeamType.REGULATOR)
+        .stream()
+        .filter(teamRole -> teamRole.getRole() == Role.TECHNICAL_REVIEWER)
+        .map(TeamRole::getWuaId)
+        .map(WebUserAccountId::from)
+        .forEach(currentTechnicalReviewersWuaIds::add);
+
+    technicalReviewRepository
         .findAllTechnicalReviewerWuaIdsByTechnicalReviewStatus(TechnicalReviewStatus.OPEN)
         .stream()
         .map(WebUserAccountId::from)
-        .toList();
-
-    Set<WebUserAccountId> currentTechnicalReviewersWuaIds = new HashSet<>();
-    currentTechnicalReviewersWuaIds.addAll(teamTechnicalReviewerWuaIds);
-    currentTechnicalReviewersWuaIds.addAll(technicalReviewerAssignedWuaIds);
+        .forEach(currentTechnicalReviewersWuaIds::add);
 
     return energyPortalUserService.findByWuaIds(currentTechnicalReviewersWuaIds);
   }

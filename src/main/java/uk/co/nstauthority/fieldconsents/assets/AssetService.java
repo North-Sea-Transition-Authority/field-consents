@@ -3,13 +3,13 @@ package uk.co.nstauthority.fieldconsents.assets;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,9 @@ import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalStatus;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class AssetService {
@@ -34,7 +36,7 @@ public class AssetService {
   private final FieldService fieldService;
   private final TerminalService terminalService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final TeamService teamService;
+  private final TeamQueryService teamQueryService;
   private final FacilityService facilityService;
   private final HubService hubService;
 
@@ -42,14 +44,14 @@ public class AssetService {
       FieldService fieldService,
       TerminalService terminalService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      TeamService teamService,
+      TeamQueryService teamQueryService,
       FacilityService facilityService,
       HubService hubService
   ) {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
     this.facilityService = facilityService;
     this.hubService = hubService;
   }
@@ -102,7 +104,7 @@ public class AssetService {
       ServiceUserDetail user,
       Supplier<FieldWithOperatorAndLicencesJson> fieldJsonSupplier
   ) {
-    if (!teamService.isIndustryUser(user)) {
+    if (!teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)) {
       return StartApplicationDecision.notAllowed(List.of());
     }
 
@@ -128,7 +130,7 @@ public class AssetService {
       ServiceUserDetail user,
       Supplier<TerminalWithOperatorJson> terminalJsonSupplier
   ) {
-    if (!teamService.isIndustryUser(user)) {
+    if (!teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)) {
       return StartApplicationDecision.notAllowed(List.of());
     }
 
@@ -154,8 +156,7 @@ public class AssetService {
       return Optional.of("An operator does not exist for this %s".formatted(assetTypeLowercase));
     }
 
-    var operatorOuId = assetWithOperatorJson.getOperatorJson().organisationUnitId();
-    if (!organisationUnitPermissionService.hasOperatorPermission(user, operatorOuId, CREATE_FCS_APPLICATIONS)) {
+    if (!organisationUnitPermissionService.hasOperatorRole(user, assetWithOperatorJson, Set.of(Role.CREATOR))) {
       return Optional.of("You are missing permissions to create applications for this %s".formatted(assetTypeLowercase));
     }
 

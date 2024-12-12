@@ -23,6 +23,7 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,8 +49,9 @@ import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJso
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -74,7 +76,7 @@ class AssetServiceTest {
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Mock
-  private TeamService teamService;
+  private TeamQueryService teamQueryService;
 
   @Captor
   private ArgumentCaptor<Supplier<FieldWithOperatorAndLicencesJson>> fieldJsonSupplierCaptor;
@@ -189,7 +191,7 @@ class AssetServiceTest {
   @Test
   @SuppressWarnings("unchecked")
   void getStartApplicationDecisionForField_notIndustryUser() {
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(false);
 
     var mockFieldJsonSupplier = mock(Supplier.class);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, mockFieldJsonSupplier))
@@ -217,11 +219,12 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, fieldJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.allowed());
   }
@@ -242,7 +245,7 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
 
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
@@ -270,11 +273,12 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, fieldJson, Set.of(Role.CREATOR)))
         .thenReturn(false);
 
-    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of("You are missing permissions to create applications for this field")
@@ -294,11 +298,12 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, fieldJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of("There are no licences associated to this field")
@@ -319,11 +324,12 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, fieldJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of("There are no licences associated to this field")
@@ -349,11 +355,12 @@ class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, fieldJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
     assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of("The field %s".formatted(FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE))
@@ -399,8 +406,6 @@ class AssetServiceTest {
   @Test
   @SuppressWarnings("unchecked")
   void getStartApplicationDecisionForTerminal_notIndustryUser() {
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(false);
-
     var mockTerminalJsonSupplier = mock(Supplier.class);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, mockTerminalJsonSupplier))
         .isEqualTo(StartApplicationDecision.notAllowed(List.of()));
@@ -419,11 +424,12 @@ class AssetServiceTest {
         .terminalActive(true)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, terminalJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.allowed());
   }
@@ -436,7 +442,7 @@ class AssetServiceTest {
         .terminalActive(true)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
 
     var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
@@ -456,11 +462,12 @@ class AssetServiceTest {
         .terminalActive(true)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, terminalJson, Set.of(Role.CREATOR)))
         .thenReturn(false);
 
-    var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of("You are missing permissions to create applications for this facility")
@@ -478,11 +485,12 @@ class AssetServiceTest {
         .terminalActive(false)
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, terminalJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of(
@@ -501,11 +509,12 @@ class AssetServiceTest {
             .build())
         .build();
 
-    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
-    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+
+    when(teamQueryService.userIsMemberOfTeamType(SERVICE_USER_DETAIL, TeamType.INDUSTRY)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorRole(SERVICE_USER_DETAIL, terminalJson, Set.of(Role.CREATOR)))
         .thenReturn(true);
 
-    var terminalJson = TerminalWithOperatorJson.from(terminal);
     assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
         .isEqualTo(StartApplicationDecision.notAllowed(
             List.of(

@@ -26,16 +26,16 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("/manage-asset/fields/{fieldId}")
-@HasAssetPermission(permissions = RolePermission.CREATE_FCS_APPLICATIONS)
+@HasAssetOrRegulatorRole(industryRoles = Role.CREATOR)
 public class StartApplicationFromFieldController {
 
   private final ApplicationService applicationService;

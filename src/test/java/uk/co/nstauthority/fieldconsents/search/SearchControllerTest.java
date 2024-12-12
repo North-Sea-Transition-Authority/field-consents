@@ -42,6 +42,10 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = SearchController.class)
 class SearchControllerTest extends AbstractControllerTest {
@@ -101,7 +105,7 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getSearch_whenUserHasPermissions() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(true);
     searchSession.update(form);
 
     mockMvc.perform(
@@ -128,10 +132,13 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @Test
   void getSearch_IndustryUser() throws Exception {
-    var isRegulator = false;
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.CREATOR)
+            .build()
+    ));
 
-    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
-    when(teamService.isIndustryUser(user)).thenReturn(true);
     when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(applicationDataItemViews);
     searchSession.update(form);
@@ -148,7 +155,7 @@ class SearchControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
-        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, false);
     assertSearchModel(model);
   }
 
@@ -158,7 +165,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.CREATOR)
+            .build()
+    ));
     when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -178,7 +190,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build())
+            .withRole(Role.CREATOR)
+            .build()
+    ));
     when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -194,9 +211,12 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @Test
   void getSearch_RegulatorUser() throws Exception {
-    var isRegulator = true;
-
-    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
     when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(applicationDataItemViews);
     searchSession.update(form);
@@ -214,7 +234,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry(ACE_STATUSES, AceFlagStatus.getDisplayableOptions())
-        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, true);
     assertSearchModel(model);
   }
 
@@ -224,7 +244,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
     when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -244,7 +269,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
     when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -260,11 +290,13 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @Test
   void getSearch_ConsulteeUser() throws Exception {
-    var isRegulator = false;
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.ALLOCATOR)
+            .build()
+    ));
 
-    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
     when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(applicationDataItemViews);
     searchSession.update(form);
@@ -282,7 +314,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry(ACE_STATUSES, AceFlagStatus.getDisplayableOptions())
-        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, false);
     assertSearchModel(model);
   }
 
@@ -292,7 +324,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.ALLOCATOR)
+            .build()
+    ));
     when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -312,7 +349,12 @@ class SearchControllerTest extends AbstractControllerTest {
         .mapToObj(i -> ApplicationDataItemUtil.getApplicationDataItemView())
         .toList();
 
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build())
+            .withRole(Role.ALLOCATOR)
+            .build()
+    ));
     when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class))).thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
@@ -328,11 +370,8 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @Test
   void getSearch_userNotRecognised() throws Exception {
-    var isRegulator = false;
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of());
 
-    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
-    when(teamService.isConsulteeUser(user)).thenReturn(false);
     applicationDataItemViews = Collections.emptyList();
     searchSession.update(form);
 
@@ -348,15 +387,19 @@ class SearchControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
     assertThat(model)
         .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
-        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator);
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, false);
     assertSearchModel(model);
   }
 
   @Test
   void getSearch_withSearchNotInvoked() throws Exception {
-    var isRegulator = true;
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    ));
 
-    when(teamService.isRegulatorUser(user)).thenReturn(isRegulator);
     assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
@@ -373,7 +416,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, isRegulator)
+        .containsEntry(CAN_FILTER_BY_PRIMARY_OPERATOR_GROUP, true)
         .doesNotContainEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
     assertSearchModel(model);
   }

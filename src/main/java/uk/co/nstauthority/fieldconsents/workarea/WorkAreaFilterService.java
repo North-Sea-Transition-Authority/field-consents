@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,9 @@ import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class WorkAreaFilterService {
@@ -31,17 +33,17 @@ public class WorkAreaFilterService {
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
 
   private final AssetService assetService;
-  private final TeamService teamService;
   private final ApplicationDataFilterService applicationDataFilterService;
+  private final TeamQueryService teamQueryService;
 
   WorkAreaFilterService(
       AssetService assetService,
-      TeamService teamService,
-      ApplicationDataFilterService applicationDataFilterService
+      ApplicationDataFilterService applicationDataFilterService,
+      TeamQueryService teamQueryService
   ) {
     this.assetService = assetService;
-    this.teamService = teamService;
     this.applicationDataFilterService = applicationDataFilterService;
+    this.teamQueryService = teamQueryService;
   }
 
   List<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab) {
@@ -65,7 +67,7 @@ public class WorkAreaFilterService {
     return switch (workAreaTab) {
       case MY_APPLICATIONS ->
           APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
-          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CASE_OFFICER.name()));
+          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CASE_OFFICER.name()));
       case MY_TECHNICAL_REVIEWS ->
           APPLICATION_TECHNICAL_REVIEWS_QUERY.field(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID)
               .eq(user.wuaId().intValue());
@@ -82,7 +84,7 @@ public class WorkAreaFilterService {
           APPLICATION_CONSULTATIONS_QUERY.field(APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID).eq(user.wuaId().intValue());
       case MY_CAM_APPLICATIONS ->
           APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
-          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()));
+          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()));
     };
   }
 
@@ -110,7 +112,7 @@ public class WorkAreaFilterService {
   public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {
     var defaultFilter = new WorkAreaFilter();
 
-    if (teamService.isIndustryUser(user)) {
+    if (teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)) {
       defaultFilter.setStatuses(
           List.of(
               ApplicationVersionStatus.IN_PROGRESS,
@@ -125,15 +127,20 @@ public class WorkAreaFilterService {
   }
 
   private Condition getApplicationStatusCondition(ServiceUserDetail user) {
-    if (teamService.isRegulatorUser(user)) {
+    var teamTypes = teamQueryService.getTeamRoles(user)
+        .stream()
+        .map(teamRole -> teamRole.getTeam().getTeamType())
+        .collect(Collectors.toSet());
+
+    if (teamTypes.contains(TeamType.REGULATOR)) {
       return applicationDataFilterService.getSubmittedApplicationStatusCondition();
     }
 
-    if (teamService.isConsulteeUser(user)) {
+    if (teamTypes.contains(TeamType.CONSULTEE)) {
       return applicationDataFilterService.getSubmittedApplicationStatusCondition();
     }
 
-    if (teamService.isIndustryUser(user)) {
+    if (teamTypes.contains(TeamType.INDUSTRY)) {
       return getIndustryApplicationStatusCondition();
     }
 

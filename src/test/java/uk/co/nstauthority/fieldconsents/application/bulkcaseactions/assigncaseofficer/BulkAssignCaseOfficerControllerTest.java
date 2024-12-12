@@ -46,7 +46,8 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = BulkAssignCaseOfficerController.class)
@@ -85,7 +86,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void assignCaseOfficer_userDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .assignCaseOfficer(null, null)))
@@ -95,7 +96,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   @Test
   void assignCaseOfficer() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     var availableCaseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2);
     when(bulkAssignCaseOfficerService.getAvailableCaseOfficers()).thenReturn(availableCaseOfficers);
@@ -123,7 +124,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   @Test
   void assignCaseOfficer_submitForm() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     var caseOfficer = ENERGY_PORTAL_USER_1;
     var applicationVersions = List.of(new ApplicationVersion(), new ApplicationVersion(), new ApplicationVersion());
@@ -157,7 +158,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   @Test
   void assignCaseOfficer_submitInvalidForm() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     var availableCaseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2);
     when(bulkAssignCaseOfficerService.getAvailableCaseOfficers()).thenReturn(availableCaseOfficers);

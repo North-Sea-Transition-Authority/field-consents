@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
+import static uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService.FIELD_EQUITY_PARTNER_ROLE;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,83 +13,87 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
-public class ApplicationAccessService {
+class ApplicationAccessService {
 
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final TeamService teamService;
   private final ConsultationService consultationService;
-  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
   private final ApplicationAssetService applicationAssetService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   ApplicationAccessService(
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      TeamService teamService,
       ConsultationService consultationService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
-      ApplicationAssetService applicationAssetService
+      FieldEquityPartnerAccessService fieldEquityPartnerAccessService,
+      ApplicationAssetService applicationAssetService,
+      TeamQueryService teamQueryService
   ) {
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.teamService = teamService;
     this.consultationService = consultationService;
-    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.fieldEquityPartnerAccessService = fieldEquityPartnerAccessService;
     this.applicationAssetService = applicationAssetService;
+    this.teamQueryService = teamQueryService;
   }
 
-  public boolean hasApplicationPermission(
-      ServiceUserDetail user,
+  boolean userHasAnyIndustryRole(
+      ServiceUserDetail userDetail,
       ApplicationVersion applicationVersion,
-      RolePermission... requiredPermissions
+      Collection<Role> requiredRoles
   ) {
-    return hasApplicationPermission(user, applicationVersion, Set.of(requiredPermissions));
+    if (!CollectionUtils.containsAll(TeamType.INDUSTRY.getAllowedRoles(), requiredRoles)) {
+      throw new IllegalArgumentException("Invalid industry roles [%s]".formatted(requiredRoles));
+    }
+
+    var industryRoles = getIndustryRoles(userDetail, applicationVersion);
+    return CollectionUtils.containsAny(industryRoles, requiredRoles);
   }
 
-  public boolean hasApplicationPermission(
-      ServiceUserDetail user,
+  Set<Role> getIndustryRoles(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
+    var userRoles = organisationUnitPermissionService.getUserRolesForOperator(userDetail, applicationVersion);
+
+    if (userRoles.contains(FIELD_EQUITY_PARTNER_ROLE)) {
+      return userRoles;
+    }
+
+    if (!applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
+      return userRoles;
+    }
+
+    if (fieldEquityPartnerAccessService.userIsFieldEquityPartner(userDetail, applicationVersion)) {
+      var userRolesWithFieldEquityPartnerRole = new HashSet<>(userRoles);
+      userRolesWithFieldEquityPartnerRole.add(FIELD_EQUITY_PARTNER_ROLE);
+      return userRolesWithFieldEquityPartnerRole;
+    }
+
+    return userRoles;
+  }
+
+  boolean userHasAnyConsulteeRole(
+      ServiceUserDetail userDetail,
       ApplicationVersion applicationVersion,
-      Set<RolePermission> requiredPermissions
+      Collection<Role> requiredRoles
   ) {
-    return CollectionUtils.containsAny(getApplicationPermissionsForUser(applicationVersion, user), requiredPermissions);
+    if (!CollectionUtils.containsAll(TeamType.CONSULTEE.getAllowedRoles(), requiredRoles)) {
+      throw new IllegalArgumentException("Invalid consultee roles [%s]".formatted(requiredRoles));
+    }
+
+    var consulteeRoles = getConsulteeRoles(userDetail, applicationVersion);
+    return CollectionUtils.containsAny(consulteeRoles, requiredRoles);
   }
 
-  public Set<RolePermission> getApplicationPermissionsForUser(ApplicationVersion applicationVersion,
-                                                              ServiceUserDetail user) {
-
-    var userRolePermissions = new HashSet<RolePermission>();
-
-    if (teamService.isRegulatorUser(user)) {
-      teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)
-          .stream()
-          .map(team -> teamService.getUserPermissionsForTeam(team, user))
-          .flatMap(Collection::stream)
-          .forEach(userRolePermissions::add);
+  Set<Role> getConsulteeRoles(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
+    var consultations = consultationService.getConsultationsByApplication(applicationVersion.getApplication());
+    if (consultations.isEmpty()) {
+      return Set.of();
     }
 
-    var consultationsExistForApplication =
-        !consultationService.getConsultationsByApplication(applicationVersion.getApplication()).isEmpty();
-    if (teamService.isConsulteeUser(user) && consultationsExistForApplication) {
-      teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.OPRED)
-          .stream()
-          .map(team -> teamService.getUserPermissionsForTeam(team, user))
-          .flatMap(Collection::stream)
-          .forEach(userRolePermissions::add);
-    }
-
-    userRolePermissions.addAll(organisationUnitPermissionService
-        .getUserPermissionsForOperator(user, applicationVersion.getPrimaryOperatorOuId()));
-
-    if (!userRolePermissions.contains(RolePermission.VIEW_FCS_CONSENTS)
-        && applicationAssetService.getPrimaryAsset(applicationVersion).isField()
-        && fieldEquityPartnerPermissionService
-        .userHasPermissionForFieldInFieldEquityPartnerTeam(user, applicationVersion, Set.of(RolePermission.VIEW_FCS_CONSENTS))) {
-      userRolePermissions.add(RolePermission.VIEW_FCS_CONSENTS);
-    }
-
-    return userRolePermissions;
+    return teamQueryService.getStaticRoles(userDetail, TeamType.CONSULTEE);
   }
+
 }

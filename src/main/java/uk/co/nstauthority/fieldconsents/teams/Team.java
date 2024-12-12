@@ -4,39 +4,49 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Objects;
+import java.util.UUID;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.envers.Audited;
-import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 
-@Entity
 @Audited
+@Entity
 @Table(name = "teams")
-public class Team implements DomainReference {
+public class Team {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @UuidGenerator
+  private UUID id;
+
+  private String name;
 
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private TeamType teamType;
 
-  private String displayName;
+  private String scopeType;
 
-  private Integer organisationGroupId;
+  private String scopeId;
 
   public Team() {
   }
 
-  public Team(Integer id) {
+  public Team(UUID id) {
     this.id = id;
   }
 
-  public Integer getId() {
+  public UUID getId() {
     return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public TeamType getTeamType() {
@@ -47,42 +57,37 @@ public class Team implements DomainReference {
     this.teamType = teamType;
   }
 
-  public String getDisplayName() {
-    return displayName;
+  public String getScopeType() {
+    return scopeType;
   }
 
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
+  public void setScopeType(String scopeType) {
+    this.scopeType = scopeType;
   }
 
-  public Integer getOrganisationGroupId() {
-    return organisationGroupId;
+  public String getScopeId() {
+    return scopeId;
   }
 
-  public void setOrganisationGroupId(Integer organisationGroupId) {
-    this.organisationGroupId = organisationGroupId;
-  }
-
-  public TeamId toTeamId() {
-    return new TeamId(this.getId());
+  public void setScopeId(String scopeId) {
+    this.scopeId = scopeId;
   }
 
   @Override
-  public String toString() {
-    return "Team{" +
-        "id=" + id +
-        ", teamType=" + teamType +
-        ", displayName='" + displayName + '\'' +
-        '}';
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Team team = (Team) o;
+    return Objects.equals(id, team.id);
   }
 
   @Override
-  public String getDomainId() {
-    return String.valueOf(id);
+  public int hashCode() {
+    return Objects.hash(id);
   }
 
-  @Override
-  public String getDomainType() {
-    return "TEAM";
-  }
 }

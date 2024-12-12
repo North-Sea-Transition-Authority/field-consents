@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.submission;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseForm;
@@ -26,13 +26,13 @@ import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentSe
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanPayAndSubmitApplication;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.feedback.FeedbackController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
@@ -47,7 +47,7 @@ public class ApplicationSubmissionController {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSubmissionService applicationSubmissionService;
-  private final ApplicationAccessService applicationAccessService;
+  private final FieldConsentsAccessService fieldConsentsAccessService;
   private final ApplicationSummaryService applicationSummaryService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
@@ -56,23 +56,23 @@ public class ApplicationSubmissionController {
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final LicenceExpiryService licenceExpiryService;
 
-  @Autowired
   ApplicationSubmissionController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationSubmissionService applicationSubmissionService,
-      ApplicationAccessService applicationAccessService,
+      FieldConsentsAccessService fieldConsentsAccessService,
       ApplicationSummaryService applicationSummaryService,
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       ApplicationPaymentService applicationPaymentService,
       ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator,
       CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
-      LicenceExpiryService licenceExpiryService) {
+      LicenceExpiryService licenceExpiryService
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSubmissionService = applicationSubmissionService;
-    this.applicationAccessService = applicationAccessService;
+    this.fieldConsentsAccessService = fieldConsentsAccessService;
     this.applicationSummaryService = applicationSummaryService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
@@ -83,7 +83,7 @@ public class ApplicationSubmissionController {
   }
 
   @GetMapping("/review-and-submit")
-  @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+  @UserCanEditApplication
   public ModelAndView getReviewAndSubmit(@PathVariable Integer applicationId,
                                          ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -97,8 +97,8 @@ public class ApplicationSubmissionController {
                                                       ApplicationUpdateResponseForm form) {
     var applicationId = applicationVersion.getApplication().getId();
 
-    var userHasPayAndSubmitPermission = applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+    var userHasPayAndSubmitPermission = fieldConsentsAccessService.userHasAnyIndustryRole(
+        user, applicationVersion, RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES
     );
 
     var submittable = applicationSubmissionService.isSubmittable(applicationVersion);
@@ -140,7 +140,7 @@ public class ApplicationSubmissionController {
   }
 
   @PostMapping("/review-and-submit")
-  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  @UserCanPayAndSubmitApplication
   ModelAndView submitApplication(
       @PathVariable Integer applicationId,
       @ModelAttribute("form") ApplicationUpdateResponseForm form,
@@ -187,21 +187,21 @@ public class ApplicationSubmissionController {
 
   @GetMapping("/submitted")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  @UserCanPayAndSubmitApplication
   public ModelAndView getApplicationSubmitted(@PathVariable Integer applicationId) {
     return getSubmissionConfirmationModelAndView(applicationId, SUBMITTED_PAGE_TITLE);
   }
 
   @GetMapping("/paid-and-submitted")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  @UserCanPayAndSubmitApplication
   public ModelAndView getApplicationPaidAndSubmitted(@PathVariable Integer applicationId) {
     return getSubmissionConfirmationModelAndView(applicationId, PAID_AND_SUBMITTED_PAGE_TITLE);
   }
 
   @GetMapping("/update-submitted")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  @UserCanPayAndSubmitApplication
   public ModelAndView getApplicationUpdateSubmitted(@PathVariable Integer applicationId) {
     return getSubmissionConfirmationModelAndView(applicationId, UPDATE_SUBMITTED_PAGE_TITLE);
   }

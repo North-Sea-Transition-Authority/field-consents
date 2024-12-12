@@ -5,38 +5,44 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CasePr
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.REGULATOR_TABS;
 
 import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class CaseProcessingTabService {
 
-  private final ApplicationAccessService applicationAccessService;
+  private final FieldConsentsAccessService fieldConsentsAccessService;
 
-  CaseProcessingTabService(ApplicationAccessService applicationAccessService) {
-    this.applicationAccessService = applicationAccessService;
+  CaseProcessingTabService(FieldConsentsAccessService fieldConsentsAccessService) {
+    this.fieldConsentsAccessService = fieldConsentsAccessService;
   }
 
-  public List<CaseProcessingTab> getRegulatorTabsAvailableToUser(ServiceUserDetail user, ApplicationVersion applicationVersion) {
+  public List<CaseProcessingTab> getRegulatorTabsAvailableToUser(ServiceUserDetail user) {
+    var regulatorRoles = fieldConsentsAccessService.getRegulatorRoles(user);
     return REGULATOR_TABS
         .stream()
-        .filter(tab -> applicationAccessService.hasApplicationPermission(user, applicationVersion, tab.getRolePermissions()))
+        .filter(tab -> CollectionUtils.containsAny(regulatorRoles, tab.getRoles(TeamType.REGULATOR)))
         .toList();
   }
 
   public List<CaseProcessingTab> getConsulteeTabsAvailableToUser(ServiceUserDetail user, ApplicationVersion applicationVersion) {
+    var consulteeRoles = fieldConsentsAccessService.getConsulteeRoles(user, applicationVersion);
     return CONSULTEE_TABS
         .stream()
-        .filter(tab -> applicationAccessService.hasApplicationPermission(user, applicationVersion, tab.getRolePermissions()))
+        .filter(tab -> CollectionUtils.containsAny(consulteeRoles, tab.getRoles(TeamType.CONSULTEE)))
         .toList();
   }
 
   public List<CaseProcessingTab> getIndustryTabsAvailableToUser(ServiceUserDetail user, ApplicationVersion applicationVersion) {
+    var industryRoles = fieldConsentsAccessService.getIndustryRoles(user, applicationVersion);
     return INDUSTRY_TABS
         .stream()
-        .filter(tab -> applicationAccessService.hasApplicationPermission(user, applicationVersion, tab.getRolePermissions()))
+        .filter(tab -> CollectionUtils.containsAny(industryRoles, tab.getRoles(TeamType.INDUSTRY)))
         .toList();
   }
+
 }

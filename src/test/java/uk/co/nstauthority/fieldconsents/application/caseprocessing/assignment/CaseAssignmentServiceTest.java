@@ -9,28 +9,20 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_3;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService.USER_NOT_IN_CASE_OFFICER_ROLE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,87 +42,56 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMember;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
 class CaseAssignmentServiceTest {
 
-  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().withWuaId(1L).build();
   private static final ServiceUserDetail USER2 = ServiceUserDetailTestUtil.Builder().withWuaId(2L).build();
-
   private static final WebUserAccountId WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER);
-
-  private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
-
-  private static final TeamMember CASE_OFFICER_1 = TeamMemberTestUtil.Builder()
-      .withWebUserAccountId(1L)
-      .withRole(CASE_OFFICER)
-      .build();
-
-  private static final TeamMember CASE_OFFICER_2 = TeamMemberTestUtil.Builder()
-      .withWebUserAccountId(2L)
-      .withRole(CASE_OFFICER)
-      .build();
-
-  private static final TeamMember CASE_OFFICER_3 = TeamMemberTestUtil.Builder()
-      .withWebUserAccountId(3L)
-      .withRole(CASE_OFFICER)
-      .build();
-
-  private static final List<Long> ASSIGNED_CASE_OFFICERS_WUA_IDS = List.of(CASE_OFFICER_1.wuaId().id(), CASE_OFFICER_2.wuaId().id());
-
-  private static final List<WebUserAccountId> TEAM_CASE_OFFICER_WUA_IDS = List.of(CASE_OFFICER_1.wuaId(), CASE_OFFICER_2.wuaId());
+  private static final Team REGULATOR_TEAM = TeamTestUtil.newBuilder().build();
 
   @Mock
   private ApplicationVersionRepository applicationVersionRepository;
-
-  @Mock
-  private RegulatorTeamService regulatorTeamService;
-
-  @Mock
-  private TeamMemberViewService teamMemberViewService;
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
-  
-  @Mock
-  private TeamService teamService;
 
   @Mock
   private CaseAssignmentEmailService caseAssignmentEmailService;
+
+  @Mock
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private CaseAssignmentService caseAssignmentService;
 
   private ApplicationVersion applicationVersion;
 
-  private Collection<WebUserAccountId> allCaseOfficersWuaIds;
+  private Set<WebUserAccountId> allCaseOfficersWuaIds;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     allCaseOfficersWuaIds = new HashSet<>();
-    allCaseOfficersWuaIds.add(CASE_OFFICER_1.wuaId());
-    allCaseOfficersWuaIds.add(CASE_OFFICER_2.wuaId());
+    allCaseOfficersWuaIds.add(WebUserAccountId.from(1L));
+    allCaseOfficersWuaIds.add(WebUserAccountId.from(2L));
   }
 
   @Test
   void assignCaseOfficer_whenNotInCaseOfficerRole_thenThrowException() {
-    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.CASE_OFFICER))
         .thenReturn(false);
 
     assertThatThrownBy(() ->
@@ -141,7 +102,7 @@ class CaseAssignmentServiceTest {
 
   @Test
   void assignCaseOfficer_whenInCaseOfficerRoleAndTakingOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
-    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.CASE_OFFICER))
         .thenReturn(true);
 
     caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER);
@@ -160,7 +121,7 @@ class CaseAssignmentServiceTest {
 
   @Test
   void assignCaseOfficer_whenAssigneeInCaseOfficerRoleAndBeingAssignedOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
-    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.CASE_OFFICER))
         .thenReturn(true);
 
     caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER2);
@@ -172,7 +133,7 @@ class CaseAssignmentServiceTest {
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isEqualTo(WEB_USER_ACCOUNT_ID.id());
-    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(Role.CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
@@ -185,7 +146,7 @@ class CaseAssignmentServiceTest {
 
   @Test
   void assignCaseOfficer_whenSendCaseAssignmentEmailFails_thenApplicationVersionCaseOfficerWuaIsStillUpdated() {
-    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+    when(teamQueryService.userHasStaticRole(USER, TeamType.REGULATOR, Role.CASE_OFFICER))
         .thenReturn(true);
 
     // WHEN the email service call throws an exception
@@ -209,7 +170,7 @@ class CaseAssignmentServiceTest {
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isEqualTo(WEB_USER_ACCOUNT_ID.id());
-    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(Role.CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
@@ -271,7 +232,7 @@ class CaseAssignmentServiceTest {
   void isCaseOfficerAssigned() {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCaseOfficerWuaId(123L);
-    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
 
     assertThat(caseAssignmentService.isCaseOfficerAssigned(applicationVersion)).isTrue();
   }
@@ -280,14 +241,14 @@ class CaseAssignmentServiceTest {
   void isCaseOfficerAssigned_noWuaId() {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCaseOfficerWuaId(null);
-    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
 
     assertThat(caseAssignmentService.isCaseOfficerAssigned(applicationVersion)).isFalse();
   }
 
   @ParameterizedTest
-  @EnumSource(value = RegulatorTeamRole.class, names = "CASE_OFFICER", mode= EnumSource.Mode.EXCLUDE)
-  void isCaseOfficerAssigned_currentCaseOwnerNotCaseOfficer(RegulatorTeamRole regulatorTeamRole) {
+  @EnumSource(value = Role.class, names = "CASE_OFFICER", mode= EnumSource.Mode.EXCLUDE)
+  void isCaseOfficerAssigned_currentCaseOwnerNotCaseOfficer(Role regulatorTeamRole) {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCaseOfficerWuaId(123L);
     applicationVersion.setCurrentCaseOwner(regulatorTeamRole);
@@ -299,7 +260,7 @@ class CaseAssignmentServiceTest {
   void isCamAssigned() {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCamWuaId(123L);
-    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+    applicationVersion.setCurrentCaseOwner(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER);
 
     assertThat(caseAssignmentService.isCamAssigned(applicationVersion)).isTrue();
   }
@@ -308,14 +269,14 @@ class CaseAssignmentServiceTest {
   void isCamAssigned_noWuaId() {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCamWuaId(null);
-    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+    applicationVersion.setCurrentCaseOwner(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER);
 
     assertThat(caseAssignmentService.isCamAssigned(applicationVersion)).isFalse();
   }
 
   @ParameterizedTest
-  @EnumSource(value = RegulatorTeamRole.class, names = "CONSENTS_AND_AUTHORISATIONS_MANAGER", mode= EnumSource.Mode.EXCLUDE)
-  void isCaseOfficerAssigned_currentCaseOwnerNotCam(RegulatorTeamRole regulatorTeamRole) {
+  @EnumSource(value = Role.class, names = "CONSENTS_AND_AUTHORISATIONS_MANAGER", mode= EnumSource.Mode.EXCLUDE)
+  void isCaseOfficerAssigned_currentCaseOwnerNotCam(Role regulatorTeamRole) {
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setCamWuaId(123L);
     applicationVersion.setCurrentCaseOwner(regulatorTeamRole);
@@ -324,68 +285,22 @@ class CaseAssignmentServiceTest {
   }
 
   @Test
-  void getCaseOfficerCandidates_whenUserNotRegulatorTeam_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.empty());
-
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getCaseOfficerCandidates_whenRegulatorUserAndCaseOfficersExist() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
-
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
-        .containsExactly(CASE_OFFICER_TEAM_MEMBER_VIEW_1, CASE_OFFICER_TEAM_MEMBER_VIEW_2);
-  }
-
-  @Test
-  void getCaseOfficerCandidates_whenRegulatorUserAndCaseOfficersExistAndExistingCaseOfficer() {
-    applicationVersion.setCaseOfficerWuaId(CASE_OFFICER_TEAM_MEMBER_VIEW_1.wuaId().id());
-
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(TEAM_MEMBER_VIEW_LIST);
-
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
-        .containsExactly(CASE_OFFICER_TEAM_MEMBER_VIEW_2);
-  }
-
-  @Test
-  void getCaseOfficerCandidates_whenRegulatorUserButNoMembersExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
   void getCaseOfficerCandidates_whenRegulatorUserAndCaseOfficersDontExist_thenEmpty() {
-    when(regulatorTeamService.getRegulatorTeamForUser(USER))
-        .thenReturn(Optional.of(REGULATOR_TEAM));
-    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
-        .thenReturn(List.of(VIEWER_TEAM_MEMBER_VIEW, ACCESS_MANGER_TEAM_MEMBER_VIEW));
-
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
-        .isEmpty();
+    when(teamQueryService.getStaticTeamRoles(USER, TeamType.REGULATOR)).thenReturn(List.of());
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER)).isEmpty();
   }
 
   @Test
   void getCurrentCaseOfficers_whenUserNoRegulatorInCaseOfficerRole() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER)))
-        .thenReturn(Collections.emptyList());
-    when(applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(ASSIGNED_CASE_OFFICERS_WUA_IDS);
-    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds))
-        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
+    var caseOfficerWuaIds = List.of(1L, 2L, 3L);
+    var caseOfficerWebUserAccountIds = caseOfficerWuaIds
+        .stream()
+        .map(WebUserAccountId::new)
+        .collect(Collectors.toSet());
+
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+    when(applicationVersionRepository.findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(caseOfficerWuaIds);
+    when(energyPortalUserService.findByWuaIds(caseOfficerWebUserAccountIds)).thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
 
     assertThat(caseAssignmentService.getCurrentCaseOfficers())
         .containsExactly(
@@ -396,39 +311,30 @@ class CaseAssignmentServiceTest {
 
   @Test
   void getCurrentCaseOfficers_withNoCurrentNorPreviouslyAssignedCaseOfficersAvailable() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER)))
-        .thenReturn(Collections.emptyList());
-    when(applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+    when(applicationVersionRepository.findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(Collections.emptyList());
 
     assertThat(caseAssignmentService.getCurrentCaseOfficers()).isEmpty();
   }
 
   @Test
-  void getCurrentCaseOfficers_withCurrentCaseOfficersSameAsAssigned() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER)))
-        .thenReturn(TEAM_CASE_OFFICER_WUA_IDS);
-    when(applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(ASSIGNED_CASE_OFFICERS_WUA_IDS);
-    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds))
-        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
-
-    assertThat(caseAssignmentService.getCurrentCaseOfficers())
-        .containsExactly(
-            ENERGY_PORTAL_USER_1,
-            ENERGY_PORTAL_USER_2
-        );
-  }
-
-  @Test
   void getCurrentCaseOfficers_withCurrentCaseOfficersButNoneAssigned() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER)))
-        .thenReturn(TEAM_CASE_OFFICER_WUA_IDS);
-    when(applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(Collections.emptyList());
-    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds))
-        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_1.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_2.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(teamRoles);
+    when(applicationVersionRepository.findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(List.of());
+    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds)).thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
 
     assertThat(caseAssignmentService.getCurrentCaseOfficers())
         .containsExactly(
@@ -439,14 +345,24 @@ class CaseAssignmentServiceTest {
 
   @Test
   void getCurrentCaseOfficers_withPreviouslyAssignedCaseOfficers() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER)))
-        .thenReturn(TEAM_CASE_OFFICER_WUA_IDS);
-    when(applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(List.of(CASE_OFFICER_3.wuaId().id()));
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_1.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_2.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
 
-    allCaseOfficersWuaIds.add(CASE_OFFICER_3.wuaId());
-    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds))
-        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3));
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(teamRoles);
+    when(applicationVersionRepository.findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(List.of(3L));
+
+    allCaseOfficersWuaIds.add(WebUserAccountId.from(3L));
+    when(energyPortalUserService.findByWuaIds(allCaseOfficersWuaIds)).thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3));
 
     assertThat(caseAssignmentService.getCurrentCaseOfficers())
         .containsExactly(
@@ -459,13 +375,31 @@ class CaseAssignmentServiceTest {
   @Test
   void getActiveCaseOfficers() {
     var caseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3);
-    var caseOfficerWebUserAccountIds = caseOfficers
-        .stream()
-        .map(EnergyPortalUserDto::webUserAccountId)
-        .map(WebUserAccountId::new)
+
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_1.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_2.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withWuaId(ENERGY_PORTAL_USER_3.webUserAccountId())
+            .withTeam(REGULATOR_TEAM)
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
+
+    var caseOfficerWebUserAccountIds = teamRoles.stream()
+        .map(TeamRole::getWuaId)
+        .map(WebUserAccountId::from)
         .toList();
 
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(CASE_OFFICER))).thenReturn(caseOfficerWebUserAccountIds);
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(teamRoles);
     when(energyPortalUserService.findByWuaIds(caseOfficerWebUserAccountIds)).thenReturn(caseOfficers);
 
     assertThat(caseAssignmentService.getActiveCaseOfficers()).isEqualTo(caseOfficers);
@@ -484,7 +418,7 @@ class CaseAssignmentServiceTest {
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCamWuaId()).isNull();
-    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(Role.CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
@@ -512,7 +446,7 @@ class CaseAssignmentServiceTest {
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCamWuaId()).isNull();
-    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(Role.CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 

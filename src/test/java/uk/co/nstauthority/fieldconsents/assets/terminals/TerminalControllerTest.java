@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,11 +14,12 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,9 +35,19 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = TerminalController.class)
 public class TerminalControllerTest extends AbstractControllerTest {
+
+  private static final Set<Role> INDUSTRY_ROLES = EnumSet.of(
+      Role.CREATOR,
+      Role.EDITOR,
+      Role.SUBMITTER,
+      Role.FINANCE_ADMINISTRATOR,
+      Role.VIEWER,
+      Role.CONSENT_RECIPIENT
+  );
 
   @MockBean
   private ManageAssetService manageAssetService;
@@ -54,9 +66,25 @@ public class TerminalControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
+  void manageTerminal_whenTerminalNotFound() throws Exception {
+    var terminalId = terminal1JsonWithOperator.getId();
+
+    when(terminalService.findTerminalWithOperator(eq(terminalId), anyString()))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
+            .manageTerminal(terminalId, null)))
+            .with(user(user))
+        )
+        .andExpect(status().isNotFound());
+  }
+
+  @SecurityTest
   void manageTerminal_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
-        .thenReturn(false);
+    var terminalId = terminal1JsonWithOperator.getId();
+
+    when(terminalService.findTerminalWithOperator(eq(terminalId), anyString()))
+        .thenReturn(Optional.of(terminal1JsonWithOperator));
 
     mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
             .manageTerminal(terminal1JsonWithOperator.getId(), null)))
@@ -68,10 +96,13 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @Test
   void manageTerminal() throws Exception {
     var terminalJson = terminal1JsonWithNullOperator;
+    var terminalId = terminalJson.getId();
 
-    // Required for HasAssetPermissionInterceptor
-    when(terminalService.getTerminalWithOperator(terminalJson.getId(), "Search terminal for asset permission")).thenReturn(terminalJson);
-    when(assetAccessService.hasAssetPermission(user, terminalJson, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS)).thenReturn(true);
+    // Required for AssetRoleInterceptor
+    when(terminalService.findTerminalWithOperator(eq(terminalId), anyString()))
+        .thenReturn(Optional.of(terminalJson));
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, terminalJson, INDUSTRY_ROLES))
+        .thenReturn(true);
 
     when(terminalService.getTerminalWithOperator(eq(terminalJson.getId()), any())).thenReturn(terminalJson);
 

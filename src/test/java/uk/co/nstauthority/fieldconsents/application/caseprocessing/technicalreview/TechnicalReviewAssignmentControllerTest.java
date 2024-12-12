@@ -46,7 +46,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
 @ContextConfiguration(classes = TechnicalReviewAssignmentController.class)
 class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControllerTest {
@@ -72,9 +71,6 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
 
-  @MockBean
-  private TeamMemberViewService teamMemberViewService;
-
   @SecurityTest
   void getTechnicalReviewAssignment_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
@@ -91,7 +87,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
-            .getTechnicalReviewAssignment(APPLICATION_ID, null)))
+            .getTechnicalReviewAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -112,7 +108,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(DUMMY_APP_REF);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion))
         .thenReturn(technicalReview);
-    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview, user))
+    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview))
         .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
     when(caseProcessingActionService.userHasAnyAction(
         applicationVersion,
@@ -121,7 +117,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
     )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
-            .getTechnicalReviewAssignment(APPLICATION_ID, null)))
+            .getTechnicalReviewAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -143,13 +139,11 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(DUMMY_APP_REF);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion))
         .thenReturn(technicalReview);
-    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview, user))
+    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview))
         .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
-            .getTechnicalReviewAssignment(APPLICATION_ID, null)))
+            .getTechnicalReviewAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -267,10 +261,8 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(DUMMY_APP_REF);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion))
         .thenReturn(technicalReview);
-    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview, user))
+    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview))
         .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)

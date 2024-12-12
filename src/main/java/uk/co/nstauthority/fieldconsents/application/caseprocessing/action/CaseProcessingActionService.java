@@ -69,20 +69,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection.CASE_TASKS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -108,15 +94,14 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Service
 public class CaseProcessingActionService {
 
-  private final ApplicationAccessService applicationAccessService;
+  private final FieldConsentsAccessService fieldConsentsAccessService;
   private final CaseStatusFlagService caseStatusFlagService;
   private final TechnicalReviewService technicalReviewService;
   private final ConsultationService consultationService;
@@ -205,48 +190,48 @@ public class CaseProcessingActionService {
           )
       );
 
-  private final Map<CaseProcessingActionItem, Set<RolePermission>> actionsToPermissions =
+  private final Map<CaseProcessingActionItem, Set<Role>> actionsToRoles =
       Map.ofEntries(
-          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CHANGE_ACE_STATUS, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(TECHNICAL_REVIEWS, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
-          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
-          entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
-          entry(CLOSE_APPLICATION, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CONSULTATIONS, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
-          entry(CONSULTATION_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CONSULTATION_RESPONSE, EnumSet.of(RESPOND_TO_CONSULTATION)),
-          entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(ALLOCATE_CONSULTATION)),
-          entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS)),
-          entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
-          entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
-          entry(APPLICATION_UPDATES, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
-          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)),
-          entry(CONSENT_PREPARATION, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)),
-          entry(EDIT_CONSENT_DATA, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(PAY_AND_SUBMIT_FCS_APPLICATIONS)),
-          entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
-              EDIT_FCS_APPLICATIONS)),
-          entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
-          entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS)),
-          entry(REVISE_CONSENT, EnumSet.of(EDIT_FCS_APPLICATIONS, PROCESS_FCS_APPLICATIONS)),
-          entry(BREACH_INFORMATION, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
-          entry(RECORD_BREACH, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(REMOVE_BREACH, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(EDIT_BREACH_INFORMATION, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
-          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CONSENT_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
-          entry(APPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
-          entry(ISSUE_CONSENT, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
-          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
-          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS))
+          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CHANGE_ACE_STATUS, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(Role.CASE_OFFICER)),
+          entry(TECHNICAL_REVIEWS, RoleGroup.REGULATOR_CASE_PROCESSING_ROLES),
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(Role.CASE_MANAGER)),
+          entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(Role.CASE_MANAGER)),
+          entry(CLOSE_APPLICATION, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CONSULTATIONS, RoleGroup.REGULATOR_CASE_PROCESSING_ROLES),
+          entry(CONSULTATION_REQUEST, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(Role.RESPONDER)),
+          entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(Role.ALLOCATOR)),
+          entry(REGULATOR_ADD_CASE_NOTE, RoleGroup.REGULATOR_CASE_PROCESSING_ROLES),
+          entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(Role.TECHNICAL_REVIEWER)),
+          entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(Role.TECHNICAL_REVIEWER)),
+          entry(APPLICATION_UPDATES, RoleGroup.REGULATOR_CASE_PROCESSING_ROLES),
+          entry(APPLICATION_UPDATE_REQUEST, RoleGroup.CASE_OFFICER_AND_TECHNICAL_REVIEWER),
+          entry(CONSENT_PREPARATION, EnumSet.of(Role.CASE_OFFICER, Role.CASE_MANAGER)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(Role.CASE_OFFICER)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(Role.CASE_OFFICER)),
+          entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES),
+          entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT,
+              RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES),
+          entry(OPERATOR_WITHDRAWAL_REQUEST, RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES),
+          entry(OPERATOR_UPDATE_APPLICATION, RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES),
+          entry(REVISE_CONSENT, EnumSet.of(Role.CREATOR, Role.EDITOR, Role.SUBMITTER, Role.CASE_OFFICER)),
+          entry(BREACH_INFORMATION, RoleGroup.REGULATOR_CASE_PROCESSING_ROLES),
+          entry(RECORD_BREACH, EnumSet.of(Role.CASE_OFFICER)),
+          entry(REMOVE_BREACH, EnumSet.of(Role.CASE_OFFICER)),
+          entry(EDIT_BREACH_INFORMATION, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(Role.RESPONDER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CONSENT_ISSUING, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(ISSUE_CONSENT, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, Role.CASE_MANAGER))
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
@@ -309,26 +294,26 @@ public class CaseProcessingActionService {
           entry(EDIT_BREACH_INFORMATION, EnumSet.of(BREACH_INFORMATION_EXISTS))
       );
 
-  private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =
+  private final Map<CaseProcessingActionItem, Set<Role>> actionsToAssigneeOnlyRoles =
       Map.ofEntries(
-          entry(CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER)),
-          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
-          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER)),
-          entry(CLOSE_APPLICATION, EnumSet.of(CASE_OFFICER)),
-          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER)),
-          entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER)),
-          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER)),
-          entry(CONSULTATION_REQUEST, EnumSet.of(CASE_OFFICER)),
-          entry(CONSULTATION_RESPONSE, EnumSet.of(RESPONDER)),
-          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER)),
-          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
-          entry(EDIT_CONSENT_DATA, EnumSet.of(CASE_OFFICER)),
-          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CASE_OFFICER)),
-          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
-          entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
-          entry(ISSUE_CONSENT, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
-          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
+          entry(CHANGE_ACE_STATUS, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CLOSE_APPLICATION, EnumSet.of(Role.CASE_OFFICER)),
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(Role.CASE_OFFICER)),
+          entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(Role.TECHNICAL_REVIEWER)),
+          entry(APPLICATION_UPDATE_REQUEST, RoleGroup.CASE_OFFICER_AND_TECHNICAL_REVIEWER),
+          entry(CONSULTATION_REQUEST, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(Role.RESPONDER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(Role.RESPONDER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(Role.CASE_OFFICER)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(Role.CASE_OFFICER)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(Role.CASE_OFFICER)),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(Role.CASE_OFFICER)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(ISSUE_CONSENT, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER))
       );
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
@@ -375,14 +360,14 @@ public class CaseProcessingActionService {
       );
 
   CaseProcessingActionService(
-      ApplicationAccessService applicationAccessService,
+      FieldConsentsAccessService fieldConsentsAccessService,
       CaseStatusFlagService caseStatusFlagService,
       TechnicalReviewService technicalReviewService,
       ConsultationService consultationService,
       CaseAssignmentService caseAssignmentService,
       CamAssignmentService camAssignmentService
   ) {
-    this.applicationAccessService = applicationAccessService;
+    this.fieldConsentsAccessService = fieldConsentsAccessService;
     this.caseStatusFlagService = caseStatusFlagService;
     this.technicalReviewService = technicalReviewService;
     this.consultationService = consultationService;
@@ -482,7 +467,7 @@ public class CaseProcessingActionService {
   ) {
     // TODO: FCS-863 - user roles are looked up repeatedly despite only the actions changing in later invocations.
     //  either pass them in or cache them
-    var userRolePermissions = applicationAccessService.getApplicationPermissionsForUser(applicationVersion, user);
+    var userRoles = fieldConsentsAccessService.getApplicationRolesForUser(applicationVersion, user);
     // TODO: FCS-863 - same here about looking up roles/teams over and over
     var assigneeMap = constructAssigneeMap(applicationVersion);
     var applicableByCaseStatusFlag = new EnumMap<CaseStatusFlag, Boolean>(CaseStatusFlag.class);
@@ -493,7 +478,7 @@ public class CaseProcessingActionService {
         // remove actions which are not allowed for this application type
         .filter(action -> applicationTypeFeatureFlagAllowed(applicationVersion, action))
         // remove actions that the user doesn't have permission for
-        .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
+        .filter(action -> CollectionUtils.containsAny(actionsToRoles.get(action), userRoles))
         // remove "assignee only" actions if the user is not the assignee on the case (for an assignee role)
         .filter(action -> isActionEnabledForUser(action, assigneeMap, user))
         // remove actions that are missing any of their required case status flags
@@ -509,33 +494,33 @@ public class CaseProcessingActionService {
         .collect(toSet());
   }
 
-  Map<TeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
-    var assigneeMap = new HashMap<TeamRole, WebUserAccountId>();
+  Map<Role, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
+    var assigneeMap = new HashMap<Role, WebUserAccountId>();
 
-    if (CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner())) {
+    if (Role.CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner())) {
       caseAssignmentService.findCaseOfficerWuaId(applicationVersion)
-          .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
+          .ifPresent(caseOfficerWuaId -> assigneeMap.put(Role.CASE_OFFICER, caseOfficerWuaId));
     }
 
-    if (CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner())) {
+    if (Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner())) {
       camAssignmentService.findCamWuaId(applicationVersion)
-          .ifPresent(camUserWuaId -> assigneeMap.put(CONSENTS_AND_AUTHORISATIONS_MANAGER, camUserWuaId));
+          .ifPresent(camUserWuaId -> assigneeMap.put(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, camUserWuaId));
     }
 
     technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)
-        .ifPresent(technicalReviewerWuaId -> assigneeMap.put(TECHNICAL_REVIEWER, technicalReviewerWuaId));
+        .ifPresent(technicalReviewerWuaId -> assigneeMap.put(Role.TECHNICAL_REVIEWER, technicalReviewerWuaId));
 
     consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
         .map(Consultation::getResponderWuaId)
         .map(WebUserAccountId::from)
-        .ifPresent(responderWuaId -> assigneeMap.put(RESPONDER, responderWuaId));
+        .ifPresent(responderWuaId -> assigneeMap.put(Role.RESPONDER, responderWuaId));
 
     return assigneeMap;
   }
 
   boolean isActionEnabledForUser(
       CaseProcessingActionItem action,
-      Map<TeamRole, WebUserAccountId> assigneeMap,
+      Map<Role, WebUserAccountId> assigneeMap,
       ServiceUserDetail user
   ) {
     var assigneeRoles = actionsToAssigneeOnlyRoles.get(action);
@@ -543,7 +528,8 @@ public class CaseProcessingActionService {
     if (!action.isAssigneeOnly() && Objects.isNull(assigneeRoles)) {
       return true;
     } else if (action.isAssigneeOnly() && Objects.isNull(assigneeRoles)) {
-      throw new IllegalArgumentException("Action " + action.name() + " is assignee only but no roles are defined for the action");
+      throw new IllegalArgumentException(
+          "Action " + action.name() + " is assignee only but no roles are defined for the action");
     }
 
     for (var assigneeRole : assigneeRoles) {
@@ -556,7 +542,8 @@ public class CaseProcessingActionService {
     return false;
   }
 
-  boolean applicationTypeFeatureFlagAllowed(ApplicationVersion applicationVersion, CaseProcessingActionItem actionItem) {
+  boolean applicationTypeFeatureFlagAllowed(ApplicationVersion applicationVersion,
+                                            CaseProcessingActionItem actionItem) {
     var applicationType = applicationVersion.getApplication().getType();
 
     var features = actionItemsToFeatures.get(actionItem);

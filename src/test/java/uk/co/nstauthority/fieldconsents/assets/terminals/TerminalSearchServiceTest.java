@@ -32,15 +32,14 @@ import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class TerminalSearchServiceTest {
@@ -53,22 +52,18 @@ class TerminalSearchServiceTest {
   private TerminalApi terminalApi;
 
   @Mock
-  private TeamService teamService;
-
-  @Mock
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
 
+  @Mock
+  private TeamQueryService teamQueryService;
+
   @InjectMocks
   private TerminalSearchService terminalSearchService;
 
   private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
-
-  private final Team regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
-
-  private final Team consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
 
   @Test
   void searchTerminals_allTestTerminals() {
@@ -115,8 +110,8 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -128,8 +123,8 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3WithOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -141,10 +136,11 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, Set.of(Role.VIEWER, Role.ALLOCATOR, Role.RESPONDER)))
+        .thenReturn(true);
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -156,10 +152,11 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3WithOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(List.of(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(USER, TeamType.CONSULTEE, Set.of(Role.VIEWER, Role.ALLOCATOR, Role.RESPONDER)))
+        .thenReturn(true);
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
@@ -171,12 +168,7 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json));
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
@@ -189,12 +181,7 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit2Json));
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
@@ -207,12 +194,7 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit2Json));
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
@@ -225,12 +207,7 @@ class TerminalSearchServiceTest {
     when(terminalApi.searchTerminals(eq("T3"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithNoOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
-
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(USER, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(orgUnit1Json));
 
     assertThat(terminalSearchService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))

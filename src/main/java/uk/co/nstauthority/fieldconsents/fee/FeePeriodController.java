@@ -17,16 +17,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeeLineDto;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("/fee-periods")
-@HasPermission(permissions = RolePermission.MANAGE_FEE_PERIODS)
+@HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
 public class FeePeriodController {
 
   static final String CREATE_PAGE_TITLE = "Create fee period";

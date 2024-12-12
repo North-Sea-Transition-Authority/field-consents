@@ -1,30 +1,28 @@
 package uk.co.nstauthority.fieldconsents.email;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.INDUSTRY_TEAM;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CONSENT_RECIPIENT;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupDto;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitWithGroupsJson;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsEmailRecipientServiceTest {
@@ -32,74 +30,76 @@ class FieldConsentsEmailRecipientServiceTest {
   private static final OrganisationGroupDto ORG_GROUP_1_DTO = OrganisationGroupDto.from(ORG_GROUP_1);
 
   @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private TeamQueryService teamQueryService;
 
-  @Mock
-  private IndustryTeamService industryTeamService;
-
+  @InjectMocks
   private FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
   private OrganisationUnitWithGroupsJson organisationUnitJson;
 
   @BeforeEach
   void setUp() {
-    fieldConsentsEmailRecipientService = new FieldConsentsEmailRecipientService(
-        teamMemberViewService,
-        industryTeamService
-    );
     organisationUnitJson = new OrganisationUnitWithGroupsJson(orgUnit1.getOrganisationUnitId(), orgUnit1.getName(),
         List.of(ORG_GROUP_1_DTO));
   }
 
   @Test
-  void getDistinctEmailRecipientsWithRoles_whenNoTeamExists() {
-    when(industryTeamService.getTeamByOrganisationGroupId(organisationUnitJson.organisationUnitId())).thenReturn(
-        Optional.empty());
+  void getDistinctEmailRecipientsWithRoles_noCreatorsFound() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.EDITOR).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.SUBMITTER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.ACCESS_MANAGER).build()
+    );
 
-    assertThat(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitJson, anySet())).isEmpty();
+    var teamScopeIds = organisationUnitJson.organisationGroups()
+        .stream()
+        .map(OrganisationGroupDto::getOrganisationGroupId)
+        .map(String::valueOf)
+        .collect(Collectors.toSet());
+
+    when(teamQueryService.getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds))
+        .thenReturn(teamRoles);
+
+    assertThat(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(Role.CREATOR)))
+        .isEmpty();
   }
 
   @Test
-  void getDistinctEmailRecipientsWithRoles_whenTeamExistsButNoRecipientsInRoles() {
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM));
+  void getDistinctEmailRecipientsWithRoles_multipleCreatorsFound() {
+    var creator1 = TeamRoleTestUtil.newBuilder().withRole(Role.CREATOR).build();
+    var creator2 = TeamRoleTestUtil.newBuilder().withRole(Role.CREATOR).build();
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM, Set.of(CONSENT_RECIPIENT))).thenReturn(Collections.emptyList());
+    var teamRoles = List.of(
+        creator1,
+        creator2,
+        TeamRoleTestUtil.newBuilder().withRole(Role.ACCESS_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.RESPONDER).build()
+    );
 
-    assertThat(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitJson, Set.of(CONSENT_RECIPIENT))).isEmpty();
+    var teamMemberViews = List.of(
+        TeamMemberViewTestUtil.newBuilder().withEmail("creator1").build(),
+        TeamMemberViewTestUtil.newBuilder().withEmail("creator2").build()
+    );
+
+    var teamScopeIds = organisationUnitJson.organisationGroups()
+        .stream()
+        .map(OrganisationGroupDto::getOrganisationGroupId)
+        .map(String::valueOf)
+        .collect(Collectors.toSet());
+
+    when(teamQueryService.getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(new HashSet<>(teamRoles.subList(0, 2)))).thenReturn(teamMemberViews);
+
+    var expectedEmailRecipients = teamMemberViews
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .collect(Collectors.toSet());
+
+    assertThat(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(organisationUnitJson, Set.of(Role.CREATOR)))
+        .isEqualTo(expectedEmailRecipients);
   }
 
-  @Test
-  void getDistinctEmailRecipientsWithRoles() {
-    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM));
 
-    var teamMemberViewConsentRecipient1 = TeamMemberViewTestUtil.Builder()
-        .withWebUserAccountId(WebUserAccountId.from(10L))
-        .withTeamId(INDUSTRY_TEAM.toTeamId())
-        .withContactEmail("user1@email.com")
-        .withRoles(Set.of(SUBMITTER))
-        .build();
-
-    var teamMemberViewConsentRecipient2 = TeamMemberViewTestUtil.Builder()
-        .withWebUserAccountId(WebUserAccountId.from(20L))
-        .withTeamId(INDUSTRY_TEAM.toTeamId())
-        .withContactEmail("user2@email.com")
-        .withRoles(Set.of(IndustryTeamRole.CONSENT_RECIPIENT))
-        .build();
-
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM, Set.of(SUBMITTER, CONSENT_RECIPIENT)))
-        .thenReturn(List.of(teamMemberViewConsentRecipient1, teamMemberViewConsentRecipient2));
-
-    assertThat(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitJson, Set.of(SUBMITTER, CONSENT_RECIPIENT)))
-        .containsExactly(
-            FieldConsentsEmailRecipient.from(teamMemberViewConsentRecipient1),
-            FieldConsentsEmailRecipient.from(teamMemberViewConsentRecipient2)
-        );
-  }
 }

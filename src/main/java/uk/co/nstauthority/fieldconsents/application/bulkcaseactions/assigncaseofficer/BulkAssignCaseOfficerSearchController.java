@@ -19,16 +19,16 @@ import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("bulk-case-actions/assign-case-officer/search")
-@HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+@HasRegulatorRole(Role.CASE_MANAGER)
 public class BulkAssignCaseOfficerSearchController {
 
   private final BulkCaseActionService bulkCaseActionService;

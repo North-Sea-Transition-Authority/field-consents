@@ -1,41 +1,39 @@
 package uk.co.nstauthority.fieldconsents.organisations;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class OrganisationUnitSearchService {
 
   private final OrganisationApi organisationApi;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final TeamService teamService;
+  private final TeamQueryService teamQueryService;
 
   OrganisationUnitSearchService(
       OrganisationApi organisationApi,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      TeamService teamService
+      TeamQueryService teamQueryService
   ) {
     this.organisationApi = organisationApi;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<OrganisationUnitJson> searchOrganisationUnitsForUser(
       String searchTerm,
       String purpose,
       ServiceUserDetail user,
-      RolePermission... requiredPermissions
+      Collection<Role> requiredRoles
   ) {
-    var requiredPermissionsSet = Set.of(requiredPermissions);
-
     var requestPurpose = new RequestPurpose(purpose);
     var requestedFields = new OrganisationUnitsProjectionRoot()
         .organisationUnitId().name();
@@ -45,24 +43,16 @@ public class OrganisationUnitSearchService {
         .map(OrganisationUnitJson::from)
         .toList();
 
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissionsSet);
-
-    // short circuit and return all org units found is the user is a regulator with the required permissions
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, requiredRoles)) {
       return organisationUnitJsons;
     }
 
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
-
-    // short circuit and return all org units found is the user is a consultee with the required permissions
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, requiredRoles)) {
       return organisationUnitJsons;
     }
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, requiredPermissionsSet)
+        organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, requiredRoles)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();

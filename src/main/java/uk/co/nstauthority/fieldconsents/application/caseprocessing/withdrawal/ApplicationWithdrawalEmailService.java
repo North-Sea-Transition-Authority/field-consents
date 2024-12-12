@@ -1,12 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
-import java.util.Set;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipientService;
@@ -14,9 +11,9 @@ import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class ApplicationWithdrawalEmailService {
@@ -25,23 +22,23 @@ public class ApplicationWithdrawalEmailService {
   static final String CASE_MANAGERS_RECIPIENT_DISPLAY_NAME = "Case Managers";
 
   private final EmailService emailService;
-  private final TeamMemberViewService teamMemberViewService;
   private final EnergyPortalUserService energyPortalUserService;
   private final OrganisationUnitService organisationUnitService;
   private final FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
+  private final TeamQueryService teamQueryService;
 
-  public ApplicationWithdrawalEmailService(
+  ApplicationWithdrawalEmailService(
       EmailService emailService,
-      TeamMemberViewService teamMemberViewService,
       EnergyPortalUserService energyPortalUserService,
       OrganisationUnitService organisationUnitService,
-      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService
+      FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService,
+      TeamQueryService teamQueryService
   ) {
     this.emailService = emailService;
-    this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
     this.organisationUnitService = organisationUnitService;
     this.fieldConsentsEmailRecipientService = fieldConsentsEmailRecipientService;
+    this.teamQueryService = teamQueryService;
   }
 
   public void sendApplicationWithdrawalRequestEmail(ApplicationWithdrawal applicationWithdrawal) {
@@ -50,7 +47,8 @@ public class ApplicationWithdrawalEmailService {
     var primaryOperator = organisationUnitService.getOrganisationUnitByIdOrFallback(
         applicationVersion.getPrimaryOperatorOuId(),
         ORGANISATION_LOOKUP_PURPOSE,
-        applicationVersion.getCachedPrimaryOperatorName());
+        applicationVersion.getCachedPrimaryOperatorName()
+    );
 
     var mergedTemplateBuilder = emailService
         .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion)
@@ -75,23 +73,20 @@ public class ApplicationWithdrawalEmailService {
       return;
     }
 
-    // otherwise email all case managers
-    var caseManagerEmailRecipients = teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER))
+    var caseManagerTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
-        .map(FieldConsentsEmailRecipient::from)
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_MANAGER)
         .toList();
 
     var mergedTemplate = mergedTemplateBuilder
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME)
         .merge();
 
-    caseManagerEmailRecipients.forEach(caseManagerEmailRecipient ->
-        emailService.sendEmail(
-            mergedTemplate,
-            caseManagerEmailRecipient,
-            applicationVersion
-        ));
+    // otherwise email all case managers
+    teamQueryService.getTeamMemberViews(caseManagerTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .forEach(emailRecipient -> emailService.sendEmail(mergedTemplate, emailRecipient, applicationVersion));
   }
 
   public void sendApplicationWithdrawalResponseEmail(ApplicationWithdrawal applicationWithdrawal) {
@@ -104,7 +99,7 @@ public class ApplicationWithdrawalEmailService {
         .getOrganisationUnitWithGroupsById(applicationVersion.getPrimaryOperatorOuId(), ORGANISATION_LOOKUP_PURPOSE);
 
     var distinctEmailRecipients = fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
-        organisationUnitWithGroupsJson, Set.of(CREATOR, SUBMITTER, EDITOR));
+        organisationUnitWithGroupsJson, RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES);
 
     distinctEmailRecipients.add(withdrawalRequesterEmailRecipient);
 

@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseo
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.UNASSIGNED;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,7 +16,9 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 class BulkAssignCaseOfficerSearchFilterService {
@@ -27,19 +28,19 @@ class BulkAssignCaseOfficerSearchFilterService {
 
   private final ApplicationDataFilterFormService filterFormService;
   private final ApplicationDataFilterService applicationDataFilterService;
-  private final TeamService teamService;
   private final CaseAssignmentService caseAssignmentService;
+  private final TeamQueryService teamQueryService;
 
   BulkAssignCaseOfficerSearchFilterService(
       ApplicationDataFilterFormService filterFormService,
       ApplicationDataFilterService applicationDataFilterService,
-      TeamService teamService,
-      CaseAssignmentService caseAssignmentService
+      CaseAssignmentService caseAssignmentService,
+      TeamQueryService teamQueryService
   ) {
     this.filterFormService = filterFormService;
     this.applicationDataFilterService = applicationDataFilterService;
-    this.teamService = teamService;
     this.caseAssignmentService = caseAssignmentService;
+    this.teamQueryService = teamQueryService;
   }
 
   RestSearchItem getPrefilledOrganisation(Integer operatorId) {
@@ -106,11 +107,11 @@ class BulkAssignCaseOfficerSearchFilterService {
 
   private Condition getCurrentCaseOwnerIsEmptyOrIsCaseOfficerCondition() {
     return APPLICATION_VERSIONS.CURRENT_CASE_OWNER.isNull()
-        .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(CASE_OFFICER.name()));
+        .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CASE_OFFICER.name()));
   }
 
   private Optional<Condition> getUserCondition(ServiceUserDetail user) {
-    if (!teamService.isRegulatorUser(user)) {
+    if (!teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)) {
       return Optional.empty();
     }
 

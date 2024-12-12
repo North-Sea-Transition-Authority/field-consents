@@ -14,9 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,7 +66,7 @@ class SearchServiceTest {
 
   @Test
   void getConsulteeApplicationDataItemViews() {
-    when(searchFilterService.getConditions(form, TeamType.OPRED)).thenReturn(conditions);
+    when(searchFilterService.getConditions(form, TeamType.CONSULTEE)).thenReturn(conditions);
 
     when(applicationDataItemViewService.getConsulteeApplicationDataItemViews(conditions, user)).thenReturn(
         applicationDataItemViews);

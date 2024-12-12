@@ -14,20 +14,24 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.Test;
+import java.util.Set;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = DeleteApplicationController.class)
 class DeleteApplicationControllerTest extends AbstractApplicationControllerTest {
@@ -38,7 +42,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
   private ApplicationSummaryService applicationSummaryService;
 
   @SecurityTest
-  void getDeleteApplication_whenInProgressAndUserHasCreatePermission_thenGetDeleteScreenWithSummaryView() throws Exception {
+  void getDeleteApplication_inProgress() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     var viewName = "fcs/application/deleteApplication";
     var modelAndView = new ModelAndView(viewName)
@@ -49,15 +53,14 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         .addObject("selectedApplicationVersionView", null)
         .addObject("applicationVersionViews", List.of());
 
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR))).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS)).thenReturn(true);
     when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, viewName, PAGE_TITLE, user)).thenReturn(modelAndView);
 
     mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(APPLICATION_ID, user)))
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpectAll(
             status().isOk(),
             view().name(viewName),
@@ -70,48 +73,12 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
   }
 
   @SecurityTest
-  void getDeleteApplication_whenInProgressAndUserHasNoCreatePermission_thenUserIsForbiddenToDelete() throws Exception {
+  void deleteApplication_inProgress() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR))).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(false);
-
-    mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(APPLICATION_ID, user)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void getDeleteApplication_whenSubmittedAndUserHasCreatePermission_thenUserIsForbiddenToDelete() throws Exception {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(true);
-
-    mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
-            .getDeleteApplication(APPLICATION_ID, user)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  void deleteApplication_whenInProgressAndUserHasCreatePermission_thenRedirect() throws Exception {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(true);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -140,15 +107,27 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         );
   }
 
-  @Test
-  void deleteApplication_whenInProgressAndUserHasNoCreatePermission_thenUserIsForbiddenToDelete() throws Exception {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "IN_PROGRESS", mode = EnumSource.Mode.EXCLUDE)
+  void getDeleteApplication_notInProgress_thenUserIsForbiddenToDelete(ApplicationVersionStatus applicationVersionStatus) throws Exception {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setStatus(applicationVersionStatus);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
+            .getDeleteApplication(APPLICATION_ID, user)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "IN_PROGRESS", mode = EnumSource.Mode.EXCLUDE)
+  void deleteApplication_notInProgress_thenUserIsForbiddenToDelete(ApplicationVersionStatus applicationVersionStatus) throws Exception {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(DeleteApplicationController.class)
             .deleteApplication(APPLICATION_ID, null)))
@@ -157,15 +136,25 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void deleteApplication_whenSubmittedAndUserHasCreatePermission_thenUserIsForbiddenToDelete() throws Exception {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+  @SecurityTest
+  void getDeleteApplication_inProgressAndUserIsNotCreator() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
-    )).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
+            .deleteApplication(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void deleteApplication_inProgressAndUserIsNotCreator() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
 
     mockMvc.perform(post(ReverseRouter.route(on(DeleteApplicationController.class)
             .deleteApplication(APPLICATION_ID, null)))

@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -31,6 +31,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -39,8 +40,9 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ConsultationAllocationController.class)
@@ -63,15 +65,16 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
   );
   private static final ServiceUserDetail RESPONDER_SERVICE_USER = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
   private static final List<TeamMemberView> TEAM_MEMBER_VIEWS = List.of(
-       mock(TeamMemberView.class),
-       mock(TeamMemberView.class),
-       mock(TeamMemberView.class)
+      TeamMemberViewTestUtil.newBuilder().build(),
+      TeamMemberViewTestUtil.newBuilder().build(),
+      TeamMemberViewTestUtil.newBuilder().build()
   );
-  private static final Map<String, String> TEAM_MEMBER_VIEWS_AS_MAP = Map.of(
-      "1", "Name 1",
-      "2", "Name 2",
-      "3", "Name 3"
-  );
+  private static final Map<String, String> TEAM_MEMBER_VIEWS_AS_MAP = TEAM_MEMBER_VIEWS
+      .stream()
+      .collect(StreamUtils.toLinkedHashMap(
+          teamMemberView -> teamMemberView.wuaId().toString(),
+          TeamMemberView::getDisplayName
+      ));
 
   @MockBean
   private ApplicationService applicationService;
@@ -81,9 +84,6 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
-
-  @MockBean
-  private TeamMemberViewService teamMemberViewService;
 
   private ApplicationVersion applicationVersion;
 
@@ -104,7 +104,8 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
     when(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)).thenReturn(TEAM_MEMBER_VIEWS);
-    when(teamMemberViewService.getUsersMap(TEAM_MEMBER_VIEWS)).thenReturn(TEAM_MEMBER_VIEWS_AS_MAP);
+    when(caseProcessingActionService.getTaskListActionItems(applicationVersion, user))
+        .thenReturn(Set.of(CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER));
   }
 
   @SecurityTest

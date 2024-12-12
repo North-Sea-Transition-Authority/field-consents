@@ -11,32 +11,32 @@ import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class TerminalSearchService {
 
   private final TerminalApi terminalApi;
-  private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final ApplicationAssetService applicationAssetService;
+  private final TeamQueryService teamQueryService;
 
   TerminalSearchService(
       TerminalApi terminalApi,
-      TeamService teamService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      ApplicationAssetService applicationAssetService
+      ApplicationAssetService applicationAssetService,
+      TeamQueryService teamQueryService
   ) {
     this.terminalApi = terminalApi;
-    this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.applicationAssetService = applicationAssetService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<TerminalJson> searchTerminals(String terminalName, String requestPurpose) {
@@ -60,24 +60,16 @@ public class TerminalSearchService {
         TerminalWithOperatorJson::from
     );
 
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found terminals if the user is a regulator with view permissions
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES)) {
       return terminalWithOperatorJsons;
     }
 
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found terminals if the user is a consultee with view permissions
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, RoleGroup.CONSULTEE_WITH_VIEWER_ROLES)) {
       return terminalWithOperatorJsons;
     }
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+        organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();

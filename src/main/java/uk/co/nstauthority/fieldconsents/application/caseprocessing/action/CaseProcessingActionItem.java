@@ -100,7 +100,7 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(TechnicalReviewResponseController.class).getForm(applicationId, null))),
   TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 2, false, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
-          .getTechnicalReviewAssignment(applicationId, null))),
+          .getTechnicalReviewAssignment(applicationId))),
   // Case officer and Technical reviewer actions
   APPLICATION_UPDATE_REQUEST("Request application update", 6, true, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationUpdateRequestController.class)

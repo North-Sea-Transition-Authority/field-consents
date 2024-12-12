@@ -52,45 +52,11 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_NOT_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_APPROVED_FOR_ISSUE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_NOT_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_REVISABLE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_UPDATABLE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -120,10 +86,9 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.Case
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ExtendWith(MockitoExtension.class)
 class CaseProcessingActionServiceTest {
@@ -132,7 +97,7 @@ class CaseProcessingActionServiceTest {
   private static final WebUserAccountId USER_WUA_ID = WebUserAccountId.from(USER.wuaId());
 
   @Mock
-  private ApplicationAccessService applicationAccessService;
+  private FieldConsentsAccessService fieldConsentsAccessService;
 
   @Mock
   private CaseStatusFlagService caseStatusFlagService;
@@ -160,7 +125,7 @@ class CaseProcessingActionServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
-    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
+    applicationVersion.setCurrentCaseOwner(Role.CASE_OFFICER);
     application = applicationVersion.getApplication();
   }
 
@@ -182,55 +147,51 @@ class CaseProcessingActionServiceTest {
     assertThat(caseProcessingActionService.userHasAnyAction(applicationVersion, USER, APPLICATION_UPDATES)).isFalse();
   }
 
-  @ParameterizedTest
-  @MethodSource("getTaskListActionItems")
-  void getTaskListActionItems_inProgress(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getTaskListActionItems_regulator")
+  void getTaskListActionItems_inProgress(Role role, ExpectedActions expectedActions) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(PRODUCTION);
-    getTaskListActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.inProgressActions());
+    getTaskListActionItems(applicationVersion, role, expectedActions.inProgressActions());
   }
 
-  @ParameterizedTest
-  @MethodSource("getTaskListActionItems")
-  void getTaskListActionItems_awaitingPayment(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getTaskListActionItems_regulator")
+  void getTaskListActionItems_awaitingPayment(Role role, ExpectedActions expectedActions) {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(PRODUCTION);
-    getTaskListActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.awaitingPaymentActions());
+    getTaskListActionItems(applicationVersion, role, expectedActions.awaitingPaymentActions());
   }
 
-  @ParameterizedTest
-  @MethodSource("getTaskListActionItems")
-  void getTaskListActionItems_submitted(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getTaskListActionItems_regulator")
+  void getTaskListActionItems_submitted(Role role, ExpectedActions expectedActions) {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(PRODUCTION);
-    getTaskListActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.submittedActions());
+    getTaskListActionItems(applicationVersion, role, expectedActions.submittedActions());
   }
 
-  @ParameterizedTest
-  @MethodSource("getTaskListActionItems")
-  void getTaskListActionItems_withdrawn(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getTaskListActionItems_regulator")
+  void getTaskListActionItems_withdrawn(Role role, ExpectedActions expectedActions) {
     var applicationVersion = ApplicationTestUtil.getWithdrawnApplicationVersionWithType(PRODUCTION);
-    getTaskListActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.withdrawnActions());
+    getTaskListActionItems(applicationVersion, role, expectedActions.withdrawnActions());
   }
 
-  @ParameterizedTest
-  @MethodSource("getTaskListActionItems")
-  void getTaskListActionItems_completed(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("getTaskListActionItems_regulator")
+  void getTaskListActionItems_completed(Role role, ExpectedActions expectedActions) {
     var applicationVersion = ApplicationTestUtil.getConsentedApplicationVersionWithType(PRODUCTION);
-    getTaskListActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.completedActions());
+    getTaskListActionItems(applicationVersion, role, expectedActions.completedActions());
   }
 
   private void getTaskListActionItems(
       ApplicationVersion applicationVersion,
-      Set<RolePermission> rolePermissions,
-      Set<CaseStatusFlag> caseStatusFlags,
-      List<CaseProcessingActionItem> expectedActionItems
+      Role role,
+      Set<CaseProcessingActionItem> expectedActionItems
   ) {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER)).thenReturn(rolePermissions);
+    when(fieldConsentsAccessService.getApplicationRolesForUser(applicationVersion, USER)).thenReturn(Set.of(role));
 
-    // TODO: FCS-745
-    for (var caseStatusFlag : caseStatusFlags) {
-      lenient().when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, caseStatusFlag)).thenReturn(true);
-    }
+    lenient().when(caseStatusFlagService.isCaseStatusFlagApplicable(eq(applicationVersion), any(CaseStatusFlag.class))).thenReturn(true);
 
-    var webUserAccountIdByTeamRole = Collections.<TeamRole, WebUserAccountId>emptyMap();
+    var webUserAccountIdByTeamRole = Collections.<Role, WebUserAccountId>emptyMap();
     doReturn(webUserAccountIdByTeamRole)
         .when(caseProcessingActionService)
         .constructAssigneeMap(applicationVersion);
@@ -243,193 +204,61 @@ class CaseProcessingActionServiceTest {
         .when(caseProcessingActionService)
         .isActionEnabledForUser(any(CaseProcessingActionItem.class), eq(webUserAccountIdByTeamRole), eq(USER));
 
-    assertThat(caseProcessingActionService.getTaskListActionItems(applicationVersion, USER))
-        .containsExactlyInAnyOrderElementsOf(expectedActionItems);
+    assertThat(caseProcessingActionService.getTaskListActionItems(applicationVersion, USER)).isEqualTo(expectedActionItems);
   }
 
-  private static Stream<Arguments> getTaskListActionItems() {
+  private static Stream<Arguments> getTaskListActionItems_regulator() {
     return Stream.of(
         arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED),
+            Role.ACCESS_MANAGER,
+            ExpectedActions.empty()
+        ),
+        arguments(
+            Role.INDUSTRY_ACCESS_MANAGER,
+            ExpectedActions.empty()
+        ),
+        arguments(
+            Role.DOCUMENT_TEMPLATE_MANAGER,
+            ExpectedActions.empty()
+        ),
+        arguments(
+            Role.CASE_OFFICER,
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CONSENT_PREPARATION, CLOSE_APPLICATION)
+                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, CONSENT_PREPARATION, CLOSE_APPLICATION, CHANGE_ACE_STATUS)
+                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, BREACH_INFORMATION)
                 .build()
         ),
         arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
+            Role.CASE_MANAGER,
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CONSENT_PREPARATION, CLOSE_APPLICATION)
+                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, CONSENT_PREPARATION)
+                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, BREACH_INFORMATION)
                 .build()
         ),
         arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
+            Role.CONSENTS_AND_AUTHORISATIONS_MANAGER,
             ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CONSENT_PREPARATION, CLOSE_APPLICATION)
+                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, CONSENT_ISSUING)
+                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, BREACH_INFORMATION)
                 .build()
         ),
         arguments(
-            Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
-            Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS),
-            Set.of(APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
+            Role.TECHNICAL_REVIEWER,
             ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, CONSULTATION_NOT_OPEN),
-            ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(RESPOND_TO_CONSULTATION),
-            Set.of(CONSULTATION_OPEN, CONSULTATION_FURTHER_INFORMATION_NOT_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(RESPOND_TO_CONSULTATION),
-            Set.of(CONSULTATION_FURTHER_INFORMATION_NOT_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE),
-            ExpectedActions.newBuilder()
-                .submittedActions(CHANGE_ACE_STATUS, CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(ASSIGN_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION)
-                .build()
-        ),
-        arguments(
-            Set.of(ASSIGN_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION)
-                .build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions()
-                .build()
-        ),
-        arguments(
-            Set.of(ASSIGN_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION)
-                .build()
-        ),
-        arguments(
-            Set.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS),
-            Set.of(),
-            ExpectedActions.newBuilder()
-                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
-                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
-                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
-                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
-                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, BREACH_INFORMATION)
-                .build()
-        ),
-        arguments(
-            Set.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS),
-            Set.of(CASE_NOTES_ALLOWED),
-            ExpectedActions.newBuilder()
-                .inProgressActions(REGULATOR_ADD_CASE_NOTE)
-                .awaitingPaymentActions(REGULATOR_ADD_CASE_NOTE)
-                .submittedActions(REGULATOR_ADD_CASE_NOTE)
-                .withdrawnActions(REGULATOR_ADD_CASE_NOTE)
-                .completedActions(REGULATOR_ADD_CASE_NOTE)
-                .build()
-        ),
-        arguments(
-            Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
-            Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(EDIT_FCS_APPLICATIONS),
-            Set.of(WITHDRAWAL_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(EDIT_FCS_APPLICATIONS),
-            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST, IS_REVISABLE),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST, IS_REVISABLE),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_PREPARATION, CLOSE_APPLICATION)
-                .build()
-        ),
-        arguments(
-            Set.of(ALLOCATE_CONSULTATION),
-            Set.of(CONSULTATION_OPEN),
-            ExpectedActions.newBuilder().build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
-            ExpectedActions.newBuilder()
-                .submittedActions()
-                .build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CONSENT_DATA_EXISTS),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_ISSUING)
-                .build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE, MAIL_MERGE_ERROR_NOT_PRESENT),
-            ExpectedActions.newBuilder()
-                .submittedActions(CONSENT_ISSUING)
-                .build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE),
-            ExpectedActions.newBuilder()
-                .submittedActions()
-                .build()
-        ),
-        arguments(
-            Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE, MAIL_MERGE_ERROR_NOT_PRESENT),
-            ExpectedActions.newBuilder()
-                .submittedActions()
+                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE, BREACH_INFORMATION)
                 .build()
         )
     );
@@ -565,7 +394,7 @@ class CaseProcessingActionServiceTest {
       WebUserAccountId caseOfficerWuaId,
       WebUserAccountId technicalReviewerWuaId,
       WebUserAccountId responderWuaId,
-      Map<TeamRole, WebUserAccountId> expectedAssigneeMap
+      Map<Role, WebUserAccountId> expectedAssigneeMap
   ) {
     when(caseAssignmentService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(caseOfficerWuaId));
     when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(technicalReviewerWuaId));
@@ -580,14 +409,14 @@ class CaseProcessingActionServiceTest {
   @Test
   void constructAssigneeMap_whenAssignedToCam() {
     applicationVersion.setCamWuaId(USER_WUA_ID.id());
-    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+    applicationVersion.setCurrentCaseOwner(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER);
 
     when(camAssignmentService.findCamWuaId(applicationVersion)).thenReturn(Optional.of(USER_WUA_ID));
     when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)).thenReturn(Optional.empty());
     when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.empty());
 
     assertThat(caseProcessingActionService.constructAssigneeMap(applicationVersion)).containsExactlyInAnyOrderEntriesOf(Map.of(
-        CONSENTS_AND_AUTHORISATIONS_MANAGER, USER_WUA_ID
+        Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, USER_WUA_ID
     ));
   }
 
@@ -603,28 +432,28 @@ class CaseProcessingActionServiceTest {
             USER_WUA_ID,
             null,
             null,
-            Map.of(CASE_OFFICER, USER_WUA_ID)
+            Map.of(Role.CASE_OFFICER, USER_WUA_ID)
         ),
         arguments(
             null,
             USER_WUA_ID,
             null,
-            Map.of(TECHNICAL_REVIEWER, USER_WUA_ID)
+            Map.of(Role.TECHNICAL_REVIEWER, USER_WUA_ID)
         ),
         arguments(
             null,
             null,
             USER_WUA_ID,
-            Map.of(RESPONDER, USER_WUA_ID)
+            Map.of(Role.RESPONDER, USER_WUA_ID)
         ),
         arguments(
             USER_WUA_ID,
             USER_WUA_ID,
             USER_WUA_ID,
             Map.of(
-                CASE_OFFICER, USER_WUA_ID,
-                TECHNICAL_REVIEWER, USER_WUA_ID,
-                RESPONDER, USER_WUA_ID
+                Role.CASE_OFFICER, USER_WUA_ID,
+                Role.TECHNICAL_REVIEWER, USER_WUA_ID,
+                Role.RESPONDER, USER_WUA_ID
             )
         )
     );
@@ -637,7 +466,7 @@ class CaseProcessingActionServiceTest {
   })
   void isActionEnabledForUser(
       CaseProcessingActionItem actionItem,
-      Map<TeamRole, WebUserAccountId> assigneeMap,
+      Map<Role, WebUserAccountId> assigneeMap,
       boolean isActionEnabledForUser
   ) {
     assertThat(caseProcessingActionService.isActionEnabledForUser(actionItem, assigneeMap, USER)).isEqualTo(isActionEnabledForUser);
@@ -661,10 +490,10 @@ class CaseProcessingActionServiceTest {
   }
 
   private static Stream<Arguments> isActionEnabledForUser_assigneeOnly_arguments() {
-    var caseOfficerAssigneeMap = Map.of(CASE_OFFICER, USER_WUA_ID);
-    var technicalReviewerAssigneeMap = Map.of(TECHNICAL_REVIEWER, USER_WUA_ID);
-    var responderAssigneeMap = Map.of(RESPONDER, USER_WUA_ID);
-    var consentsAndAuthorisationsManagerMap = Map.of(CONSENTS_AND_AUTHORISATIONS_MANAGER, USER_WUA_ID);
+    var caseOfficerAssigneeMap = Map.of(Role.CASE_OFFICER, USER_WUA_ID);
+    var technicalReviewerAssigneeMap = Map.of(Role.TECHNICAL_REVIEWER, USER_WUA_ID);
+    var responderAssigneeMap = Map.of(Role.RESPONDER, USER_WUA_ID);
+    var consentsAndAuthorisationsManagerMap = Map.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, USER_WUA_ID);
 
     return Stream.of(
         arguments(CHANGE_ACE_STATUS, caseOfficerAssigneeMap, true),
@@ -765,24 +594,28 @@ class CaseProcessingActionServiceTest {
   }
 
   private record ExpectedActions(
-      List<CaseProcessingActionItem> inProgressActions,
-      List<CaseProcessingActionItem> awaitingPaymentActions,
-      List<CaseProcessingActionItem> submittedActions,
-      List<CaseProcessingActionItem> withdrawnActions,
-      List<CaseProcessingActionItem> completedActions
+      Set<CaseProcessingActionItem> inProgressActions,
+      Set<CaseProcessingActionItem> awaitingPaymentActions,
+      Set<CaseProcessingActionItem> submittedActions,
+      Set<CaseProcessingActionItem> withdrawnActions,
+      Set<CaseProcessingActionItem> completedActions
   ) {
 
     public static Builder newBuilder() {
       return new Builder();
     }
 
+    public static ExpectedActions empty() {
+      return newBuilder().build();
+    }
+
     public static class Builder {
 
-      private final List<CaseProcessingActionItem> inProgressActions = new ArrayList<>();
-      private final List<CaseProcessingActionItem> awaitingPaymentActions = new ArrayList<>();
-      private final List<CaseProcessingActionItem> submittedActions = new ArrayList<>();
-      private final List<CaseProcessingActionItem> withdrawnActions = new ArrayList<>();
-      private final List<CaseProcessingActionItem> completedActions = new ArrayList<>();
+      private final Set<CaseProcessingActionItem> inProgressActions = new HashSet<>();
+      private final Set<CaseProcessingActionItem> awaitingPaymentActions = new HashSet<>();
+      private final Set<CaseProcessingActionItem> submittedActions = new HashSet<>();
+      private final Set<CaseProcessingActionItem> withdrawnActions = new HashSet<>();
+      private final Set<CaseProcessingActionItem> completedActions = new HashSet<>();
 
       public Builder inProgressActions(CaseProcessingActionItem... caseProcessingActionItems) {
         Collections.addAll(inProgressActions, caseProcessingActionItems);

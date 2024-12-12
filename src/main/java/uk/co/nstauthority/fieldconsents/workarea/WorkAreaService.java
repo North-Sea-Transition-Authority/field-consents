@@ -2,77 +2,76 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class WorkAreaService {
 
-  private final TeamService teamService;
-
   private final WorkAreaFilterService workAreaFilterService;
-
   private final WorkAreaItemDtoService workAreaItemDtoService;
-
   private final OrganisationGroupQueryService organisationGroupQueryService;
-
-  private final PermissionService permissionService;
-
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
-
   private final ApplicationDataItemViewService applicationDataItemViewService;
+  private final TeamQueryService teamQueryService;
 
-  public WorkAreaService(TeamService teamService,
-                         WorkAreaFilterService workAreaFilterService,
-                         WorkAreaItemDtoService workAreaItemDtoService,
-                         OrganisationGroupQueryService organisationGroupQueryService,
-                         PermissionService permissionService,
-                         ApplicationDataItemDtoService applicationDataItemDtoService,
-                         ApplicationDataItemViewService applicationDataItemViewService) {
-    this.teamService = teamService;
+  WorkAreaService(
+      WorkAreaFilterService workAreaFilterService,
+      WorkAreaItemDtoService workAreaItemDtoService,
+      OrganisationGroupQueryService organisationGroupQueryService,
+      ApplicationDataItemDtoService applicationDataItemDtoService,
+      ApplicationDataItemViewService applicationDataItemViewService,
+      TeamQueryService teamQueryService
+  ) {
     this.workAreaFilterService = workAreaFilterService;
     this.workAreaItemDtoService = workAreaItemDtoService;
     this.organisationGroupQueryService = organisationGroupQueryService;
-    this.permissionService = permissionService;
     this.applicationDataItemDtoService = applicationDataItemDtoService;
     this.applicationDataItemViewService = applicationDataItemViewService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<ApplicationDataItemView> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
-    var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.INDUSTRY,
-        EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
-    );
+    var teamRoles = teamQueryService.getTeamRoles(user)
+        .stream()
+        .filter(teamRole -> {
+          var team = teamRole.getTeam();
+          return team.getTeamType() == TeamType.INDUSTRY
+              && team.getScopeType().equals(TeamScopeReference.ORGANISATION_GROUP_ID);
+        })
+        .filter(teamRole -> {
+          var role = teamRole.getRole();
+          return RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES.contains(role)
+              || RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES.contains(role);
+        })
+        .collect(Collectors.toSet());
 
-    if (industryTeams.isEmpty()) {
+    if (teamRoles.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var organisationGroupIds = industryTeams.stream()
-        .map(Team::getOrganisationGroupId)
-        .filter(Objects::nonNull)
+    var organisationGroupIds = teamRoles.stream()
+        .map(teamRole -> teamRole.getTeam().getScopeId())
+        .map(Integer::parseInt)
         .toList();
 
     if (organisationGroupIds.isEmpty()) {
@@ -99,15 +98,12 @@ public class WorkAreaService {
     );
   }
 
-  public List<ApplicationDataItemView> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
-                                                                 WorkAreaTab workAreaTab) {
-    var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.REGULATOR,
-        REGULATOR_PERMISSIONS
-    );
-
-    if (regulatorTeams.isEmpty()) {
+  public List<ApplicationDataItemView> getRegulatorWorkAreaItems(
+      WorkAreaFilter filter,
+      ServiceUserDetail user,
+      WorkAreaTab workAreaTab
+  ) {
+    if (!teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES)) {
       return Collections.emptyList();
     }
 
@@ -124,13 +120,7 @@ public class WorkAreaService {
 
   public List<ApplicationDataItemView> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
                                                                  WorkAreaTab workAreaTab) {
-    var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.OPRED,
-        EnumSet.of(RolePermission.ALLOCATE_CONSULTATION, RolePermission.RESPOND_TO_CONSULTATION)
-    );
-
-    if (consulteeTeams.isEmpty()) {
+    if (!teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, RoleGroup.CONSULTEE_VIEW_CASE_PROCESSING_ROLES)) {
       return Collections.emptyList();
     }
 
@@ -142,12 +132,13 @@ public class WorkAreaService {
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
     return applicationDataItemViewService
-        .getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
+        .getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.CONSULTEE, user);
   }
 
   public List<WorkAreaTab> getTabsAvailableToUser(ServiceUserDetail user) {
+    var roles = teamQueryService.getTeamRoles(user).stream().map(TeamRole::getRole).collect(Collectors.toSet());
     return Arrays.stream(WorkAreaTab.values())
-        .filter(tab -> permissionService.hasPermission(user, tab.getRolePermissions()))
+        .filter(tab -> CollectionUtils.containsAny(roles, tab.getRoles()))
         .sorted(Comparator.comparing(WorkAreaTab::getDisplayOrder))
         .toList();
   }

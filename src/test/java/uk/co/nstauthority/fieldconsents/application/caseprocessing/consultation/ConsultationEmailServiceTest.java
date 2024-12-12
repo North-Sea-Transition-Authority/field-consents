@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationEmailService.CASE_MANAGERS_RECIPIENT_DISPLAY_NAME;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationEmailService.CONSULTATION_AGREE_DECISION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationEmailService.CONSULTATION_DOES_NOT_AGREE_DECISION;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationServiceTest.CONSULTATION_TEAM;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_2;
@@ -37,6 +36,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,18 +53,20 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.Team;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.TeamView;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultationEmailServiceTest {
+
+  private static final Team CONSULTATION_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build();
 
   private static final ServiceUserDetail CONSULTEE_ALLOCATOR_1 = ServiceUserDetailTestUtil.Builder()
       .withForename("Consultee1")
@@ -80,36 +82,17 @@ class ConsultationEmailServiceTest {
       .withWuaId(2L)
       .build();
 
-  private static final TeamMemberView TEAM_MEMBER_VIEW_CONSULTEE_ALLOCATOR_1 = new TeamMemberView(
-      WebUserAccountId.from(CONSULTEE_ALLOCATOR_1),
-      new TeamView(CONSULTATION_TEAM.toTeamId(), TeamType.OPRED, "Consultee team"),
-      "Mr",
-      "Consultee1",
-      "Allocator1",
-      "opred.allocator1@email.co.uk",
-      "012345",
-      Set.of(OpredTeamRole.ALLOCATOR)
-  );
-
-  private static final TeamMemberView TEAM_MEMBER_VIEW_CONSULTEE_ALLOCATOR_2 = new TeamMemberView(
-      WebUserAccountId.from(CONSULTEE_ALLOCATOR_2),
-      new TeamView(CONSULTATION_TEAM.toTeamId(), TeamType.OPRED, "Consultee team"),
-      "Mr",
-      "Consultee2",
-      "Allocator2",
-      "opred.allocator2@email.co.uk",
-      "06789",
-      Set.of(OpredTeamRole.ALLOCATOR)
-  );
-
   @Mock
   private EmailService emailService;
 
   @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private EnergyPortalUserService energyPortalUserService;
 
   @Mock
-  private EnergyPortalUserService energyPortalUserService;
+  private TeamQueryService teamQueryService;
+
+  @InjectMocks
+  private ConsultationEmailService consultationEmailService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -119,8 +102,6 @@ class ConsultationEmailServiceTest {
 
   @Captor
   private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
-
-  private ConsultationEmailService consultationEmailService;
 
   private ApplicationVersion productionApplicationVersion;
 
@@ -148,16 +129,11 @@ class ConsultationEmailServiceTest {
     flareConsultation.setRequestDeadline(requestDeadlineInstant);
     flareConsultation.setRequestApplicationVersion(flareApplicationVersion);
     flareConsultation.setResponderWuaId(ENERGY_PORTAL_USER_DTO.webUserAccountId());
-
-    consultationEmailService = new ConsultationEmailService(emailService, teamMemberViewService, energyPortalUserService);
   }
 
   @Test
   void sendConsultationRequestEmail_withNoConsulteeAllocatorsToNotify() {
-    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
-        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
+    when(teamQueryService.getTeamRoles(TeamType.CONSULTEE))
         .thenReturn(Collections.emptyList());
 
     consultationEmailService.sendConsultationRequestEmail(productionConsultation);
@@ -167,11 +143,22 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationRequestEmail_withOneConsulteeAllocatorToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.ALLOCATOR).build()
+    );
+
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSULTEE_ALLOCATOR_1));
+
+    when(teamQueryService.getTeamRoles(TeamType.CONSULTEE))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
+        .thenReturn(List.of(
+            TeamMemberViewTestUtil.newBuilder()
+                .withUser(CONSULTEE_ALLOCATOR_1)
+                .build()
+        ));
 
     consultationEmailService.sendConsultationRequestEmail(productionConsultation);
 
@@ -184,7 +171,7 @@ class ConsultationEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, consultationDeadline)
         );
 
@@ -200,11 +187,26 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationRequestEmail_withMultipleConsulteeAllocatorsToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.ALLOCATOR).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.ALLOCATOR).build()
+    );
+
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSULTEE_ALLOCATOR_1, TEAM_MEMBER_VIEW_CONSULTEE_ALLOCATOR_2));
+
+    when(teamQueryService.getTeamRoles(TeamType.CONSULTEE))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
+        .thenReturn(List.of(
+            TeamMemberViewTestUtil.newBuilder()
+                .withUser(CONSULTEE_ALLOCATOR_1)
+                .build(),
+            TeamMemberViewTestUtil.newBuilder()
+                .withUser(CONSULTEE_ALLOCATOR_2)
+                .build()
+        ));
 
     consultationEmailService.sendConsultationRequestEmail(productionConsultation);
 
@@ -222,7 +224,7 @@ class ConsultationEmailServiceTest {
     assertThat(firstEmailMergeFields)
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, consultationDeadline)
         );
 
@@ -230,18 +232,15 @@ class ConsultationEmailServiceTest {
     assertThat(secondEmailMergeFields)
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, productionConsultation.getConsultationTeam().getName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, consultationDeadline)
         );
 
     // verify email recipients
-    var testEmailRecipients = emailRecipientCaptor.getAllValues();
-    assertThat(testEmailRecipients).hasSize(2);
-
-    assertThat(testEmailRecipients.get(0).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CONSULTEE_ALLOCATOR_1).getEmailAddress());
-    assertThat(testEmailRecipients.get(1).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CONSULTEE_ALLOCATOR_2).getEmailAddress());
+    assertThat(emailRecipientCaptor.getAllValues()).containsExactlyInAnyOrder(
+        FieldConsentsEmailRecipient.from(CONSULTEE_ALLOCATOR_1),
+        FieldConsentsEmailRecipient.from(CONSULTEE_ALLOCATOR_2)
+    );
 
     // verify domain references
     assertThat(domainReferences.get(0).getDomainId())
@@ -308,7 +307,7 @@ class ConsultationEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
-            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getName()),
             tuple("CONSULTATION_DECISION", CONSULTATION_AGREE_DECISION)
         );
 
@@ -327,9 +326,8 @@ class ConsultationEmailServiceTest {
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(List.of());
 
     consultationEmailService.sendConsultationResponseEmail(productionConsultation);
 
@@ -338,12 +336,17 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationResponseEmail_whenCaseOfficerIsNotAssigned_withOneCaseManagerToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    );
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1));
 
     consultationEmailService.sendConsultationResponseEmail(productionConsultation);
@@ -358,7 +361,7 @@ class ConsultationEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
-            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getName()),
             tuple("CONSULTATION_DECISION", CONSULTATION_AGREE_DECISION)
         );
 
@@ -374,13 +377,19 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationResponseEmail_whenCaseOfficerIsNotAssigned_withMultipleCaseManagersToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    );
 
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2 ));
 
     consultationEmailService.sendConsultationResponseEmail(productionConsultation);
 
@@ -399,7 +408,7 @@ class ConsultationEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
-            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getName()),
             tuple("CONSULTATION_DECISION", CONSULTATION_AGREE_DECISION)
         );
 
@@ -408,7 +417,7 @@ class ConsultationEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
-            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getDisplayName()),
+            tuple("CONSULTEE_NAME", productionConsultation.getConsultationTeam().getName()),
             tuple("CONSULTATION_DECISION", CONSULTATION_AGREE_DECISION)
         );
 

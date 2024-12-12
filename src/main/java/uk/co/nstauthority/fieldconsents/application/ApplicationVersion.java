@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.Objects;
 import org.hibernate.envers.Audited;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Entity
 @Audited
@@ -54,7 +54,7 @@ public class ApplicationVersion implements DomainReference {
   private Long camWuaId;
 
   @Enumerated(EnumType.STRING)
-  private RegulatorTeamRole currentCaseOwner;
+  private Role currentCaseOwner;
 
   private Boolean migrated;
 
@@ -194,12 +194,11 @@ public class ApplicationVersion implements DomainReference {
     this.camWuaId = camWuaId;
   }
 
-  public RegulatorTeamRole getCurrentCaseOwner() {
+  public Role getCurrentCaseOwner() {
     return currentCaseOwner;
   }
 
-  public void setCurrentCaseOwner(
-      RegulatorTeamRole currentCaseOwner) {
+  public void setCurrentCaseOwner(Role currentCaseOwner) {
     this.currentCaseOwner = currentCaseOwner;
   }
 

@@ -3,7 +3,12 @@ package uk.co.nstauthority.fieldconsents.application.submission;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +25,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +55,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSubmissionController.class)
@@ -116,9 +122,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   void getReviewAndSubmit_checkEndPointSecurityOnly_whenUserDoesNotHaveEditPermission_thenForbidden() throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
-    )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getReviewAndSubmit(APPLICATION_ID, null)))
@@ -126,13 +129,15 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(status().isForbidden());
   }
 
-  @ParameterizedTest
+  @ParameterizedSecurityTest
   @MethodSource("getInProgressApplicationVersions")
-  void getReviewAndSubmit_whenInProgressAndNotSubmittableAndUserDoesNotHavePayAndSubmitPermission(
-      ApplicationVersion applicationVersion
-  ) throws Exception {
+  void getReviewAndSubmit_whenInProgressAndNotSubmittableAndUserCannotPayAndSubmit(ApplicationVersion applicationVersion) throws Exception {
+    // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+        .thenReturn(Optional.of(applicationVersion));
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.EDITOR, Role.SUBMITTER, Role.CREATOR)))
+        .thenReturn(true);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
@@ -143,9 +148,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(false);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(NO_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
@@ -171,13 +173,15 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     verify(applicationPaymentService, never()).getPaymentAmountPence(any());
   }
 
-  @ParameterizedTest
+  @ParameterizedSecurityTest
   @MethodSource("getInProgressApplicationVersions")
-  void getReviewAndSubmit_whenInProgressAndSubmittableAndUserDoesNotHavePayAndSubmitPermission(
-      ApplicationVersion applicationVersion
-  ) throws Exception {
+  void getReviewAndSubmit_whenInProgressAndSubmittableAndUserCannotPayAndSubmit(ApplicationVersion applicationVersion) throws Exception {
+    // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+        .thenReturn(Optional.of(applicationVersion));
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.EDITOR, Role.SUBMITTER, Role.CREATOR)))
+        .thenReturn(true);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
@@ -188,9 +192,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(false);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(NO_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
@@ -233,9 +234,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(NO_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
@@ -277,9 +275,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(NO_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
@@ -319,9 +314,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
@@ -471,9 +463,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(true);
     doCallRealMethod().when(applicationUpdateResponseFormValidator).validate(any(), any());
 
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.getApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
     when(applicationSummaryService.getSummarySections(applicationVersion, user))
@@ -547,12 +536,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   ) throws Exception {
     applicationVersion.setStatus(applicationVersionStatus);
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationSubmitted(APPLICATION_ID)))
             .with(user(user)))
@@ -562,12 +545,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @SecurityTest
   void getApplicationSubmitted_userDoesNotHavePayAndSubmitPermission() throws Exception {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationSubmitted(APPLICATION_ID)))
@@ -581,11 +558,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
     var applicationReference = "testApplicationReference";
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
@@ -613,12 +585,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   ) throws Exception {
     applicationVersion.setStatus(applicationVersionStatus);
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationPaidAndSubmitted(APPLICATION_ID)))
             .with(user(user)))
@@ -628,12 +594,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @SecurityTest
   void getApplicationPaidAndSubmitted_userDoesNotHavePayAndSubmitPermission() throws Exception {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationPaidAndSubmitted(APPLICATION_ID)))
@@ -647,11 +607,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
     var applicationReference = "testApplicationReference";
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
@@ -679,12 +634,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   ) throws Exception {
     applicationVersion.setStatus(applicationVersionStatus);
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationUpdateSubmitted(APPLICATION_ID)))
             .with(user(user)))
@@ -694,12 +643,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @SecurityTest
   void getApplicationUpdateSubmitted_userDoesNotHavePayAndSubmitPermission() throws Exception {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationUpdateSubmitted(APPLICATION_ID)))
@@ -713,11 +656,6 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
     var applicationReference = "testApplicationReference";
 
-    when(applicationAccessService.hasApplicationPermission(
-        user,
-        applicationVersion,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)

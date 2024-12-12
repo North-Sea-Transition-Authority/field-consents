@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.fieldequitypartner;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,10 +17,11 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class FieldEquityPartnerService {
@@ -29,19 +31,16 @@ public class FieldEquityPartnerService {
 
   private final ApplicationAssetService applicationAssetService;
   private final FieldApi fieldApi;
-  private final TeamService teamService;
-  private final TeamMemberService teamMemberService;
+  private final TeamQueryService teamQueryService;
 
   FieldEquityPartnerService(
       ApplicationAssetService applicationAssetService,
       FieldApi fieldApi,
-      TeamService teamService,
-      TeamMemberService teamMemberService
+      TeamQueryService teamQueryService
   ) {
     this.applicationAssetService = applicationAssetService;
     this.fieldApi = fieldApi;
-    this.teamService = teamService;
-    this.teamMemberService = teamMemberService;
+    this.teamQueryService = teamQueryService;
   }
 
   public FieldEquityPartnersView getFieldEquityPartnersView(ApplicationVersion applicationVersion) {
@@ -130,22 +129,38 @@ public class FieldEquityPartnerService {
         .flatMap(fieldEquityPartner -> fieldEquityPartner.getOrganisationUnit().getOrganisationGroups().stream())
         .collect(Collectors.toSet());
 
-    var organisationGroupIds = organisationGroups
+    var teamScopeIds = organisationGroups
         .stream()
         .map(OrganisationGroup::getOrganisationGroupId)
+        .map(String::valueOf)
         .collect(Collectors.toSet());
 
-    var teams = teamService.getTeamsByOrganisationGroupIds(organisationGroupIds);
-    var organisationGroupIdsWithConsentRecipients = teamMemberService
-        .getTeamsWhereMemberExistsWithRole(teams, IndustryTeamRole.CONSENT_RECIPIENT)
+    var rolesByTeamScopeId = teamQueryService
+        .getTeamRoles(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, teamScopeIds)
         .stream()
-        .map(Team::getOrganisationGroupId)
-        .collect(Collectors.toSet());
+        .collect(Collectors.groupingBy(
+            teamRole -> teamRole.getTeam().getScopeId(),
+            Collectors.mapping(TeamRole::getRole, Collectors.toSet())
+        ));
+
+    var teamScopeIdsWithoutConsentRecipients = new HashSet<String>();
+
+    for (var teamScopeId : teamScopeIds) {
+      if (!rolesByTeamScopeId.containsKey(teamScopeId)) {
+        teamScopeIdsWithoutConsentRecipients.add(teamScopeId);
+      }
+    }
+
+    for (var entry : rolesByTeamScopeId.entrySet()) {
+      if (entry.getValue().stream().noneMatch(role -> role == Role.CONSENT_RECIPIENT)) {
+        teamScopeIdsWithoutConsentRecipients.add(entry.getKey());
+      }
+    }
 
     return organisationGroups
         .stream()
         .filter(organisationGroup ->
-            !organisationGroupIdsWithConsentRecipients.contains(organisationGroup.getOrganisationGroupId()))
+            teamScopeIdsWithoutConsentRecipients.contains(organisationGroup.getOrganisationGroupId().toString()))
         .map(OrganisationGroup::getName)
         .sorted()
         .toList();

@@ -15,9 +15,10 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class ManageAssetServiceTest {
@@ -29,7 +30,7 @@ class ManageAssetServiceTest {
   private ApplicationDataFilterService applicationDataFilterService;
 
   @Mock
-  private TeamService teamService;
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   @Spy
@@ -44,7 +45,7 @@ class ManageAssetServiceTest {
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(true);
     doReturn(conditions).when(manageAssetService).getConditions(assetKey);
     when(applicationDataItemViewService.getRegulatorApplicationDataItems(conditions, user)).thenReturn(applicationDataItemViews);
 
@@ -60,8 +61,8 @@ class ManageAssetServiceTest {
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(true);
     doReturn(conditions).when(manageAssetService).getConditions(assetKey);
     when(applicationDataItemViewService.getIndustryApplicationDataItems(conditions, user)).thenReturn(applicationDataItemViews);
 
@@ -73,8 +74,8 @@ class ManageAssetServiceTest {
     var user = ServiceUserDetailTestUtil.Builder().build();
     var assetKey = new AssetKey(1, AssetType.FIELD);
 
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(false);
 
     assertThat(manageAssetService.getApplicationDataItemViews(assetKey, user)).isEmpty();
   }

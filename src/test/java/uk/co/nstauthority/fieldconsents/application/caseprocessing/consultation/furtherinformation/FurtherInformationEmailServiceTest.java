@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
@@ -40,16 +41,16 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 @ExtendWith(MockitoExtension.class)
 class FurtherInformationEmailServiceTest {
 
-  static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
-      .withId(1)
-      .withTeamType(TeamType.OPRED)
-      .build();
+  static final Team CONSULTATION_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build();
 
   @Mock
   private EmailService emailService;
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
+
+  @InjectMocks
+  private FurtherInformationEmailService furtherInformationEmailService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -59,8 +60,6 @@ class FurtherInformationEmailServiceTest {
 
   @Captor
   private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
-
-  private FurtherInformationEmailService furtherInformationEmailService;
 
   private FurtherInformation furtherInformation;
 
@@ -79,8 +78,6 @@ class FurtherInformationEmailServiceTest {
     furtherInformation = new FurtherInformation();
     furtherInformation.setRequestedByWuaId(USER.wuaId());
     furtherInformation.setConsultation(consultation);
-
-    furtherInformationEmailService = new FurtherInformationEmailService(emailService, energyPortalUserService);
   }
 
   @Test
@@ -100,7 +97,7 @@ class FurtherInformationEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple("CONSULTEE_NAME", furtherInformation.getConsultation().getConsultationTeam().getDisplayName()),
+            tuple("CONSULTEE_NAME", furtherInformation.getConsultation().getConsultationTeam().getName()),
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_ENERGY_PORTAL_USER_DTO.displayName())
         );
 

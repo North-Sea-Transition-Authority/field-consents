@@ -27,7 +27,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,19 +45,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamId;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.TeamView;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultationServiceTest {
@@ -66,17 +60,11 @@ class ConsultationServiceTest {
   private static final Long WUA_ID = 1L;
   private static final ServiceUserDetail RESPONDER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(WUA_ID).build();
   private static final ServiceUserDetail ASSIGNER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(WUA_ID + 1).build();
-  private static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
+  private static final TeamType CONSULTATION_TEAM_TYPE = TeamType.CONSULTEE;
   private static final Integer CONSULTATION_ID = 1;
-  static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
-      .withId(1)
-      .withTeamType(TeamType.OPRED)
-      .build();
+  private static final Team CONSULTATION_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build();
   private static final Long REQUESTER_USER_WUA_ID = 6L;
   private static final ServiceUserDetail REQUESTER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(REQUESTER_USER_WUA_ID).build();
-
-  @Mock
-  private TeamService teamService;
 
   @Mock
   private ConsultationRepository repository;
@@ -88,16 +76,13 @@ class ConsultationServiceTest {
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @Mock
-  private OpredTeamService opredTeamService;
-
-  @Mock
-  private TeamMemberViewService teamMemberViewService;
-
-  @Mock
   private FieldConsentsFileService fieldConsentsFileService;
 
   @Mock
   private ConsultationEmailService consultationEmailService;
+
+  @Mock
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private ConsultationService consultationService;
@@ -111,8 +96,6 @@ class ConsultationServiceTest {
 
   private Consultation consultation;
 
-  private TeamMemberView teamMemberView;
-
   @BeforeEach
   void setUp() {
     var now = Instant.now();
@@ -123,19 +106,6 @@ class ConsultationServiceTest {
 
     consultation = new Consultation();
     consultation.setConsultationTeam(CONSULTATION_TEAM);
-  }
-
-  private void setTeamMemberViewWithRoles(Set<TeamRole> teamRoles) {
-    teamMemberView = new TeamMemberView(
-        WebUserAccountId.from(RESPONDER_USER),
-        new TeamView(CONSULTATION_TEAM.toTeamId(), CONSULTATION_TEAM_TYPE, "Consultation team"),
-        "Mr",
-        "Consultation",
-        "Responder",
-        "consultation.responder@test-team.com",
-        "0123",
-        teamRoles
-    );
   }
 
   @Test
@@ -169,7 +139,6 @@ class ConsultationServiceTest {
         .hasMessage("Consultation [%s] not found for application [%s]".formatted(consultationId, application.getId()));
   }
 
-
   @Test
   void getConsultationsByApplication() {
     when(repository.findAllByRequestApplicationVersion_ApplicationOrderById(application)).thenReturn(Collections.singletonList(consultation));
@@ -199,7 +168,7 @@ class ConsultationServiceTest {
 
   @Test
   void getConsultationsByApplicationForUser_whenNoConsultationTeamFound() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
+    when(teamQueryService.getStaticTeamRoles(REQUESTER_USER, TeamType.CONSULTEE))
         .thenReturn(Collections.emptyList());
 
     assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
@@ -208,9 +177,14 @@ class ConsultationServiceTest {
 
   @Test
   void getConsultationsByApplicationForUser_whenNoConsultationFoundForTeam() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
-        .thenReturn(List.of(CONSULTATION_TEAM));
-    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
+    when(teamQueryService.getStaticTeamRoles(REQUESTER_USER, TeamType.CONSULTEE))
+        .thenReturn(List.of(
+            TeamRoleTestUtil.newBuilder()
+                .withTeam(CONSULTATION_TEAM)
+                .build()
+        ));
+
+    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamInOrderById(application, List.of(CONSULTATION_TEAM)))
         .thenReturn(Collections.emptyList());
 
     assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
@@ -219,9 +193,14 @@ class ConsultationServiceTest {
 
   @Test
   void getConsultationsByApplicationForUser_whenOneConsultationFoundFromUserTeam() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
-        .thenReturn(List.of(CONSULTATION_TEAM));
-    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
+    when(teamQueryService.getStaticTeamRoles(REQUESTER_USER, TeamType.CONSULTEE))
+        .thenReturn(List.of(
+            TeamRoleTestUtil.newBuilder()
+                .withTeam(CONSULTATION_TEAM)
+                .build()
+        ));
+
+    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamInOrderById(application, List.of(CONSULTATION_TEAM)))
         .thenReturn(List.of(consultation));
 
     assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
@@ -229,27 +208,8 @@ class ConsultationServiceTest {
   }
 
   @Test
-  void getConsultationsByApplicationForUser_whenTwoConsultationFoundFromDifferentTeams_thenOnlyReturnConsultationFromUserTeam() {
-   var anotherConsultationTeam = new TeamTestUtil.TeamBuilder()
-        .withId(1)
-        .withTeamType(TeamType.OPRED)
-        .build();
-
-    var consultation2 = new Consultation();
-    consultation2.setConsultationTeam(anotherConsultationTeam);
-
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
-        .thenReturn(List.of(CONSULTATION_TEAM, anotherConsultationTeam));
-    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
-        .thenReturn(List.of(consultation2));
-
-    assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
-        .containsExactly(consultation2);
-  }
-
-  @Test
   void requestConsultation() {
-    when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+    when(teamQueryService.getStaticTeam(CONSULTATION_TEAM_TYPE)).thenReturn(CONSULTATION_TEAM);
 
     var deadline = clock.instant().plus(1, DAYS);
     consultationService.requestConsultation(applicationVersion, deadline, REQUESTER_USER);
@@ -280,7 +240,7 @@ class ConsultationServiceTest {
 
   @Test
   void requestConsultation_whenSendConsultationRequestEmailFails_thenConsultationRequestIsStillSubmitted() {
-    when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+    when(teamQueryService.getStaticTeam(CONSULTATION_TEAM_TYPE)).thenReturn(CONSULTATION_TEAM);
 
     var deadline = clock.instant().plus(1, DAYS);
 
@@ -319,43 +279,34 @@ class ConsultationServiceTest {
 
   @Test
   void getConsultationTeam() {
-    when(teamService.getTeamsByType(TeamType.OPRED)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+    when(teamQueryService.getStaticTeam(CONSULTATION_TEAM_TYPE)).thenReturn(CONSULTATION_TEAM);
     assertThat(consultationService.getConsultationTeam()).isEqualTo(CONSULTATION_TEAM);
   }
 
   @Test
-  void getConsultationTeam_multipleTeamsFound() {
-    when(teamService.getTeamsByType(TeamType.OPRED)).thenReturn(List.of(CONSULTATION_TEAM, CONSULTATION_TEAM));
-    assertThatThrownBy(() -> consultationService.getConsultationTeam())
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Expected exactly 1 team of type [OPRED]");
-  }
-
-  @Test
-  void getConsultationTeam_noTeamsFound() {
-    when(teamService.getTeamsByType(TeamType.OPRED)).thenReturn(Collections.emptyList());
-    assertThatThrownBy(() -> consultationService.getConsultationTeam())
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Expected exactly 1 team of type [OPRED]");
-  }
-
-  @Test
   void getAllAvailableConsultationResponders_isResponderInTeam() {
-    setTeamMemberViewWithRoles(Collections.singleton(OpredTeamRole.RESPONDER));
+    var responder =TeamRoleTestUtil.newBuilder()
+        .withTeam(CONSULTATION_TEAM)
+        .withRole(Role.RESPONDER)
+        .build();
 
-    when(teamMemberViewService.getTeamMemberViewsForTeam(CONSULTATION_TEAM))
-        .thenReturn(Collections.singletonList(teamMemberView));
+    var teamRoles = List.of(
+        responder, // this is the one we care about
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(CONSULTATION_TEAM)
+            .withRole(Role.ACCESS_MANAGER)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(CONSULTATION_TEAM)
+            .withRole(Role.ALLOCATOR)
+            .build()
+    );
 
-    assertThat(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation))
-        .containsExactly(teamMemberView);
-  }
+    when(teamQueryService.getTeamRoles(CONSULTATION_TEAM)).thenReturn(teamRoles);
 
-  @Test
-  void getAllAvailableConsultationResponders_isResponderAndAllocatorInTeam() {
-    setTeamMemberViewWithRoles(Set.of(OpredTeamRole.RESPONDER, OpredTeamRole.ALLOCATOR));
+    var teamMemberView = mock(TeamMemberView.class);
 
-    when(teamMemberViewService.getTeamMemberViewsForTeam(CONSULTATION_TEAM))
-        .thenReturn(Collections.singletonList(teamMemberView));
+    when(teamQueryService.getTeamMemberViews(List.of(responder))).thenReturn(List.of(teamMemberView));
 
     assertThat(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation))
         .containsExactly(teamMemberView);
@@ -363,25 +314,19 @@ class ConsultationServiceTest {
 
   @Test
   void getAllAvailableConsultationResponders_isNotResponderInTeam() {
-    setTeamMemberViewWithRoles(Collections.emptySet());
+    when(teamQueryService.getTeamRoles(CONSULTATION_TEAM))
+        .thenReturn(List.of(
+            TeamRoleTestUtil.newBuilder()
+                .withTeam(CONSULTATION_TEAM)
+                .withRole(Role.ACCESS_MANAGER)
+                .build(),
+            TeamRoleTestUtil.newBuilder()
+                .withTeam(CONSULTATION_TEAM)
+                .withRole(Role.ALLOCATOR)
+                .build()
+        ));
 
-    when(teamMemberViewService.getTeamMemberViewsForTeam(CONSULTATION_TEAM))
-        .thenReturn(Collections.singletonList(teamMemberView));
-
-    assertThat(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)).isEmpty();
-  }
-
-  @Test
-  void getAllAvailableConsultationResponders_consultationTeamIsDifferent() {
-    var correctTeamId = CONSULTATION_TEAM.getId();
-    var differentTeam = TeamTestUtil.Builder()
-        .withId(correctTeamId + 1) // make it incorrect
-        .build();
-    consultation.setConsultationTeam(differentTeam);
-
-    setTeamMemberViewWithRoles(Collections.singleton(OpredTeamRole.RESPONDER));
-
-    when(teamMemberViewService.getTeamMemberViewsForTeam(differentTeam)).thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamMemberViews(List.of())).thenReturn(List.of());
 
     assertThat(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)).isEmpty();
   }
@@ -390,10 +335,8 @@ class ConsultationServiceTest {
   void assignResponderToConsultation() {
     var consultation = mock(Consultation.class);
     when(consultation.getRequestApplicationVersion()).thenReturn(applicationVersion);
-    when(consultation.getConsultationTeam()).thenReturn(CONSULTATION_TEAM);
 
-    var consultationTeamId = TeamId.valueOf(consultation.getConsultationTeam());
-    when(opredTeamService.isResponder(consultationTeamId, RESPONDER_USER)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(RESPONDER_USER, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(true);
 
     consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER, RESPONDER_USER);
 
@@ -409,10 +352,8 @@ class ConsultationServiceTest {
   void assignResponderToConsultation_whenSendConsultationAssignmentEmailFails_thenConsultationIsStillAssigned() {
     var consultation = mock(Consultation.class);
     when(consultation.getRequestApplicationVersion()).thenReturn(applicationVersion);
-    when(consultation.getConsultationTeam()).thenReturn(CONSULTATION_TEAM);
 
-    var consultationTeamId = TeamId.valueOf(consultation.getConsultationTeam());
-    when(opredTeamService.isResponder(consultationTeamId, RESPONDER_USER)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(RESPONDER_USER, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(true);
 
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))
@@ -433,14 +374,16 @@ class ConsultationServiceTest {
   @Test
   void assignResponderToConsultation_notResponderForTeam() {
     var consultation = mock(Consultation.class);
-    when(consultation.getConsultationTeam()).thenReturn(CONSULTATION_TEAM);
 
-    var consultationTeamId = TeamId.valueOf(consultation.getConsultationTeam());
-    when(opredTeamService.isResponder(consultationTeamId, RESPONDER_USER)).thenReturn(false);
+    when(teamQueryService.userHasStaticRole(RESPONDER_USER, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(false);
 
-    assertThatThrownBy(() -> consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER,RESPONDER_USER))
+    assertThatThrownBy(() -> consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER, RESPONDER_USER))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Responder must be a member of team [%s]".formatted(consultation.getConsultationTeam().getId()));
+        .hasMessage("User [%d] is not a %s in a %s team".formatted(
+            RESPONDER_USER.wuaId(),
+            Role.RESPONDER,
+            TeamType.CONSULTEE
+        ));
 
     verify(consultationEmailService, never()).sendConsultationAssignmentEmail(consultation, ASSIGNER_USER);
   }

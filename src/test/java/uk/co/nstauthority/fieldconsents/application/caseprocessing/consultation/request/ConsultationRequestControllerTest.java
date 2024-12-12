@@ -50,7 +50,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
 
   private static final String VIEW_NAME = "fcs/application/consultation/requestForm";
   private static final String APPLICATION_REFERENCE = "12345";
-  private static final Team TEAM = TeamTestUtil.Builder().withDisplayName("test").build();
+  private static final Team TEAM = TeamTestUtil.newBuilder().withName("test").build();
 
   @MockBean
   private ApplicationService applicationService;
@@ -126,7 +126,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId,
             null, null, null
         )))
-        .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
+        .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", ConsultationRequestForm.empty());
   }
@@ -154,7 +154,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeadingContent("Consultation request has been sent to %s".formatted(TEAM.getDisplayName()))
+        .withHeadingContent("Consultation request has been sent to %s".formatted(TEAM.getName()))
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsultationRequestController.class)
@@ -204,7 +204,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId,
             null, null, null
         )))
-        .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
+        .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", form);
 

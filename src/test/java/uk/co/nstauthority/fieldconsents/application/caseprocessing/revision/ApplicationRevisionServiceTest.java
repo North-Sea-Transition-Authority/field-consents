@@ -19,7 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDupli
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationRevisionServiceTest {
@@ -34,10 +35,10 @@ class ApplicationRevisionServiceTest {
   private ApplicationDuplicationService applicationDuplicationService;
 
   @Mock
-  private TeamService teamService;
+  private ApplicationUnitService applicationUnitService;
 
   @Mock
-  private ApplicationUnitService applicationUnitService;
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private ApplicationRevisionService applicationRevisionService;
@@ -51,7 +52,7 @@ class ApplicationRevisionServiceTest {
     newApplicationVersion.setId(2);
 
     when(applicationService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplicationVersion);
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(true);
 
     applicationRevisionService.startApplicationRevision(applicationVersion, user);
 
@@ -68,7 +69,7 @@ class ApplicationRevisionServiceTest {
     newApplicationVersion.setId(2);
 
     when(applicationService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplicationVersion);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(false);
 
     applicationRevisionService.startApplicationRevision(applicationVersion, user);
 

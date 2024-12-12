@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEA
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,9 +47,10 @@ import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationWithdrawalEmailServiceTest {
@@ -58,16 +59,19 @@ class ApplicationWithdrawalEmailServiceTest {
   private EmailService emailService;
 
   @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private EnergyPortalUserService energyPortalUserService;
 
   @Mock
   private OrganisationUnitService organisationUnitService;
 
   @Mock
-  private EnergyPortalUserService energyPortalUserService;
+  private FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
 
   @Mock
-  private FieldConsentsEmailRecipientService fieldConsentsEmailRecipientService;
+  private TeamQueryService teamQueryService;
+
+  @InjectMocks
+  private ApplicationWithdrawalEmailService applicationWithdrawalEmailService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -78,8 +82,6 @@ class ApplicationWithdrawalEmailServiceTest {
   @Captor
   private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
 
-  private ApplicationWithdrawalEmailService applicationWithdrawalEmailService;
-
   private ApplicationVersion applicationVersion;
 
   private OrganisationUnitJson primaryOperator;
@@ -89,13 +91,6 @@ class ApplicationWithdrawalEmailServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationWithdrawalEmailService = new ApplicationWithdrawalEmailService(
-        emailService,
-        teamMemberViewService,
-        energyPortalUserService,
-        organisationUnitService,
-        fieldConsentsEmailRecipientService
-    );
     primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
     applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
   }
@@ -150,9 +145,9 @@ class ApplicationWithdrawalEmailServiceTest {
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of());
+
+    when(teamQueryService.getTeamMemberViews(List.of())).thenReturn(List.of());
 
     applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
 
@@ -161,6 +156,10 @@ class ApplicationWithdrawalEmailServiceTest {
 
   @Test
   void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsNotAssigned_withOneCaseManagerToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    );
+
     when(organisationUnitService.getOrganisationUnitByIdOrFallback(
         eq(applicationVersion.getPrimaryOperatorOuId()),
         anyString(),
@@ -170,8 +169,10 @@ class ApplicationWithdrawalEmailServiceTest {
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1));
 
     applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
@@ -201,6 +202,11 @@ class ApplicationWithdrawalEmailServiceTest {
 
   @Test
   void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsNotAssigned_withMultipleCaseManagersToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    );
+
     when(organisationUnitService.getOrganisationUnitByIdOrFallback(
         eq(applicationVersion.getPrimaryOperatorOuId()),
         anyString(),
@@ -210,8 +216,10 @@ class ApplicationWithdrawalEmailServiceTest {
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
 
     applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);

@@ -4,7 +4,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,46 +26,37 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
 public class TechnicalReviewController {
 
   private final ApplicationService applicationService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final TechnicalReviewService technicalReviewService;
-
   private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
-
   private final TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator;
-
-  private final TeamMemberViewService teamMemberViewService;
-
   private final EnergyPortalUserService energyPortalUserService;
-
   private final TechnicalReviewSummaryService technicalReviewSummaryService;
-
   private final CaseProcessingActionService caseProcessingActionService;
 
-  @Autowired
-  public TechnicalReviewController(ApplicationService applicationService,
-                                   ApplicationVersionService applicationVersionService,
-                                   TechnicalReviewService technicalReviewService,
-                                   TechnicalReviewAssignmentService technicalReviewAssignmentService,
-                                   TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
-                                   TeamMemberViewService teamMemberViewService,
-                                   EnergyPortalUserService energyPortalUserService,
-                                   TechnicalReviewSummaryService technicalReviewSummaryService,
-                                   CaseProcessingActionService caseProcessingActionService) {
+  TechnicalReviewController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      TechnicalReviewService technicalReviewService,
+      TechnicalReviewAssignmentService technicalReviewAssignmentService,
+      TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
+      EnergyPortalUserService energyPortalUserService,
+      TechnicalReviewSummaryService technicalReviewSummaryService,
+      CaseProcessingActionService caseProcessingActionService
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
     this.technicalReviewAssignmentService = technicalReviewAssignmentService;
     this.technicalReviewRequestFormValidator = technicalReviewRequestFormValidator;
-    this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
     this.technicalReviewSummaryService = technicalReviewSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
@@ -103,19 +93,23 @@ public class TechnicalReviewController {
 
     var technicalReviewRequestForm = technicalReviewService.getTechnicalReviewRequestForm(applicationVersion);
 
-    var modelAndView = getTechnicalReviewRequestModelAndView(applicationVersion, user);
+    var modelAndView = getTechnicalReviewRequestModelAndView(applicationVersion);
     modelAndView.addObject("form", technicalReviewRequestForm);
 
     return modelAndView;
   }
 
-  private ModelAndView getTechnicalReviewRequestModelAndView(ApplicationVersion applicationVersion,
-                                                             ServiceUserDetail user) {
+  private ModelAndView getTechnicalReviewRequestModelAndView(ApplicationVersion applicationVersion) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
-    var technicalReviewerAssignmentCandidatesMap = teamMemberViewService
-        .getUsersMap(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(user));
+    var technicalReviewerAssignmentCandidatesMap =
+        technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates()
+            .stream()
+            .collect(StreamUtils.toLinkedHashMap(
+                teamMemberView -> teamMemberView.wuaId().toString(),
+                TeamMemberView::getDisplayName
+            ));
 
     return new ModelAndView("fcs/application/review/technicalReviewRequest")
         .addObject("applicationReference", applicationReference)
@@ -137,7 +131,7 @@ public class TechnicalReviewController {
     technicalReviewRequestFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getTechnicalReviewRequestModelAndView(applicationVersion, user);
+      return getTechnicalReviewRequestModelAndView(applicationVersion);
     }
 
     var technicalReviewerUser =

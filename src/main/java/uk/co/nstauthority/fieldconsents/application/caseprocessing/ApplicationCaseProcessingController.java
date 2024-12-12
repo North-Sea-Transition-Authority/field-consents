@@ -33,14 +33,12 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasAnyRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -52,24 +50,15 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
     ApplicationVersionStatus.WITHDRAWN,
     ApplicationVersionStatus.CLOSED
 })
-@HasApplicationPermission(permissions = {
-    RolePermission.PROCESS_FCS_APPLICATIONS,
-    RolePermission.ASSIGN_FCS_APPLICATIONS,
-    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
-    RolePermission.AUTHORISE_FCS_CONSENTS,
-    RolePermission.VIEW_FCS_CONSENTS,
+@HasAnyRegulatorRole({
+    // should match RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES
+    Role.CASE_OFFICER,
+    Role.CASE_MANAGER,
+    Role.TECHNICAL_REVIEWER,
+    Role.CONSENTS_AND_AUTHORISATIONS_MANAGER,
+    Role.VIEWER
 })
-@IsMemberOfTeamType(teamType = TeamType.REGULATOR)
 public class ApplicationCaseProcessingController {
-
-  // The list of permissions here must match the permissions used in @HasApplicationPermission above
-  public static final RolePermission[] REGULATOR_PROCESSING_REQUIRED_PERMISSIONS = {
-      RolePermission.PROCESS_FCS_APPLICATIONS,
-      RolePermission.ASSIGN_FCS_APPLICATIONS,
-      RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
-      RolePermission.AUTHORISE_FCS_CONSENTS,
-      RolePermission.VIEW_FCS_CONSENTS
-  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
@@ -81,7 +70,6 @@ public class ApplicationCaseProcessingController {
   private final CaseProcessingTabService caseProcessingTabService;
   private final CaseHistoryTabContentService caseHistoryTabContentService;
   private final TechnicalReviewService technicalReviewService;
-  private final RegulatorTeamService regulatorTeamService;
   private final ConsultationService consultationService;
   private final FurtherInformationService furtherInformationService;
   private final PaymentsTabService paymentsTabService;
@@ -91,6 +79,7 @@ public class ApplicationCaseProcessingController {
   private final ConsentBreachService consentBreachService;
   private final CaseProcessingControllerHelperService caseProcessingControllerHelperService;
   private final LicenceExpiryService licenceExpiryService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -104,7 +93,6 @@ public class ApplicationCaseProcessingController {
       CaseProcessingTabService caseProcessingTabService,
       CaseHistoryTabContentService caseHistoryTabContentService,
       TechnicalReviewService technicalReviewService,
-      RegulatorTeamService regulatorTeamService,
       ConsultationService consultationService,
       FurtherInformationService furtherInformationService,
       PaymentsTabService paymentsTabService,
@@ -113,7 +101,8 @@ public class ApplicationCaseProcessingController {
       ConsentService consentService,
       ConsentBreachService consentBreachService,
       CaseProcessingControllerHelperService caseProcessingControllerHelperService,
-      LicenceExpiryService licenceExpiryService
+      LicenceExpiryService licenceExpiryService,
+      TeamQueryService teamQueryService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -125,7 +114,6 @@ public class ApplicationCaseProcessingController {
     this.caseProcessingTabService = caseProcessingTabService;
     this.caseHistoryTabContentService = caseHistoryTabContentService;
     this.technicalReviewService = technicalReviewService;
-    this.regulatorTeamService = regulatorTeamService;
     this.consultationService = consultationService;
     this.furtherInformationService = furtherInformationService;
     this.paymentsTabService = paymentsTabService;
@@ -135,6 +123,7 @@ public class ApplicationCaseProcessingController {
     this.consentBreachService = consentBreachService;
     this.caseProcessingControllerHelperService = caseProcessingControllerHelperService;
     this.licenceExpiryService = licenceExpiryService;
+    this.teamQueryService = teamQueryService;
   }
 
   @GetMapping("case-processing")
@@ -152,7 +141,7 @@ public class ApplicationCaseProcessingController {
         .map(avid -> caseProcessingControllerHelperService.getApplicationVersionForApplication(application, avid))
         .orElse(latestApplicationVersion);
 
-    var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, latestApplicationVersion);
+    var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user);
     if (tab == null && !caseProcessingTabs.isEmpty()) {
       tab = caseProcessingTabs.getFirst();
     }
@@ -197,13 +186,15 @@ public class ApplicationCaseProcessingController {
       }
     }
 
-    if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
+    var userRegulatorRoles = teamQueryService.getStaticRoles(user, TeamType.REGULATOR);
+
+    if (userRegulatorRoles.contains(Role.TECHNICAL_REVIEWER)) {
       technicalReviewService.findOpenTechnicalReview(latestApplicationVersion)
           .map(TechnicalReviewSummaryView::from)
           .ifPresent(view -> modelAndView.addObject("technicalReviewSummaryView", view));
     }
 
-    if (regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user))) {
+    if (userRegulatorRoles.contains(Role.CASE_OFFICER)) {
       consultationService.findLatestOpenConsultation(application)
           .flatMap(furtherInformationService::findLatestOpenFurtherInformation)
           .map(furtherInformationService::getFurtherInformationView)

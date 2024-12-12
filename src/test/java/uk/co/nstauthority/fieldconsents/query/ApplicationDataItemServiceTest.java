@@ -10,11 +10,8 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,19 +27,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDataItemServiceTest {
@@ -54,13 +52,10 @@ class ApplicationDataItemServiceTest {
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Mock
-  private TeamService teamService;
+  private FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
 
   @Mock
-  private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
-
-  @Mock
-  PermissionService permissionService;
+  private TeamQueryService teamQueryService;
 
   private ApplicationDataItemViewService applicationDataItemService;
 
@@ -68,7 +63,6 @@ class ApplicationDataItemServiceTest {
   private List<Condition> conditions;
   private Map<Integer, FieldJson> fieldJsonById;
   private Team shell1IndustryTeam;
-  private Team regulatorTeam;
 
   @Captor
   private ArgumentCaptor<Map<Integer, String>> organisationUnitNamesByIdCaptor;
@@ -85,13 +79,9 @@ class ApplicationDataItemServiceTest {
 
     conditions = List.of(mock(Condition.class), mock(Condition.class));
 
-    shell1IndustryTeam = TeamTestUtil.Builder()
-        .withOrganisationGroupId(ORG_GROUP_ID_1)
+    shell1IndustryTeam = TeamTestUtil.newBuilder()
         .withTeamType(TeamType.INDUSTRY)
-        .build();
-
-    regulatorTeam = TeamTestUtil.Builder()
-        .withTeamType(TeamType.REGULATOR)
+        .withScopeId(ORG_GROUP_ID_1.toString())
         .build();
 
     fieldJsonById = Map.of(field1Json.getId(), field1Json);
@@ -99,10 +89,9 @@ class ApplicationDataItemServiceTest {
     applicationDataItemService = new ApplicationDataItemViewService(
         applicationDataItemDtoService,
         organisationUnitPermissionService,
-        teamService,
-        permissionService,
-        fieldEquityPartnerPermissionService,
-        new DefaultDSLContext(SQLDialect.DEFAULT)
+        fieldEquityPartnerAccessService,
+        new DefaultDSLContext(SQLDialect.DEFAULT),
+        teamQueryService
     );
   }
 
@@ -120,7 +109,11 @@ class ApplicationDataItemServiceTest {
     var teamType = TeamType.REGULATOR;
     var orgUnit = orgUnit1Json;
 
-    when(permissionService.hasPermission(user, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.EDITOR)
+            .build()
+    ));
 
     var applicationDataItem = mock(ApplicationDataItemView.class);
     when(applicationDataItemDtoService.getApplicationDataItemView(
@@ -148,16 +141,16 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getRegulatorApplicationDataItems_withNoPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(false);
 
     assertThat(applicationDataItemService.getRegulatorApplicationDataItems(conditions, user)).isEmpty();
   }
 
   @Test
   void getRegulatorApplicationDataItems_withNoSearchResultItemsToDisplay() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.emptyList());
 
     assertThat(applicationDataItemService.getRegulatorApplicationDataItems(conditions, user)).isEmpty();
@@ -168,8 +161,8 @@ class ApplicationDataItemServiceTest {
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.singletonList(applicationDataItemDto));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(Collections.singletonList(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
         .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
@@ -179,7 +172,11 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
-    when(permissionService.hasPermission(user, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(false);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withRole(Role.ACCESS_MANAGER)
+            .build()
+    ));
 
     when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
@@ -210,8 +207,8 @@ class ApplicationDataItemServiceTest {
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.singletonList(applicationDataItemDto));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(Collections.singletonList(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES))
+        .thenReturn(true);
 
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
         .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
@@ -247,7 +244,7 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getIndustryApplicationDataItems_withNoOrganisationGroup() {
-    shell1IndustryTeam.setOrganisationGroupId(null);
+    shell1IndustryTeam.setScopeId(null);
     assertThat(applicationDataItemService.getIndustryApplicationDataItems(conditions, user)).isEmpty();
   }
 
@@ -258,7 +255,7 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getIndustryApplicationDataItems_withNoViewPermission() {
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(Collections.emptyList());
 
     assertThat(applicationDataItemService.getIndustryApplicationDataItems(conditions, user)).isEmpty();
@@ -266,7 +263,7 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getIndustryApplicationDataItems_withEmptySearchResultItemsToDisplay() {
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.emptyList());
 
@@ -275,7 +272,7 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getIndustryApplicationDataItems_withFlareSubmitted_forTerminal() {
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
 
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
@@ -316,7 +313,7 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getIndustryApplicationDataItems_withProductionInProgress_forField() {
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(List.of(applicationDataItemDto));
@@ -355,30 +352,32 @@ class ApplicationDataItemServiceTest {
 
   @Test
   void getConsulteeApplicationDataItems_withNoPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE,  Set.of(Role.ALLOCATOR, Role.RESPONDER, Role.VIEWER)))
+        .thenReturn(false);
 
     assertThat(applicationDataItemService.getConsulteeApplicationDataItemViews(conditions, user)).isEmpty();
   }
 
   @Test
   void getConsulteeApplicationDataItems_withNoSearchResultItemsToDisplay() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE,  Set.of(Role.ALLOCATOR, Role.RESPONDER, Role.VIEWER)))
+        .thenReturn(true);
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.emptyList());
 
     assertThat(applicationDataItemService.getConsulteeApplicationDataItemViews(conditions, user)).isEmpty();
   }
 
   @Test
-  void getApplicationDataItemUserActionFromUser_hasEditPermission() {
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
+  void getApplicationDataItemUserActionFromUser_hasEditorRole() {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.EDITOR).build()
+    ));
     assertThat(applicationDataItemService.getApplicationDataItemUserActionFromUser(user)).isEqualTo(ApplicationDataItemUserAction.RESUME_APPLICATION);
   }
 
   @Test
   void getApplicationDataItemUserActionFromUser_doesNotHaveEditPermission() {
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(false);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of());
     assertThat(applicationDataItemService.getApplicationDataItemUserActionFromUser(user)).isEqualTo(ApplicationDataItemUserAction.VIEW_APPLICATION);
   }
 

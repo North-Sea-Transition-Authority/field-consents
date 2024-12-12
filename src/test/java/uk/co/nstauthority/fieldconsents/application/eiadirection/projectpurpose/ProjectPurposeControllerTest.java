@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
@@ -81,9 +80,6 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(applicationAccessService.hasApplicationPermission(user, APPLICATION_VERSION, EDIT_FCS_APPLICATIONS))
-        .thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(ProjectPurposeController.class)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -136,9 +132,6 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(applicationAccessService.hasApplicationPermission(user, APPLICATION_VERSION, EDIT_FCS_APPLICATIONS))
-        .thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(ProjectPurposeController.class)
             .saveForm(APPLICATION_ID, null, null)))
             .with(user(user))

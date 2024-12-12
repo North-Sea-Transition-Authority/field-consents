@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response;
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 
 import java.util.UUID;
 import org.springframework.core.io.InputStreamResource;
@@ -18,9 +16,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @RestController
 @RequestMapping("/applications/{applicationId}/consultations/{consultationId}/response/files")
@@ -41,7 +40,15 @@ public class ConsultationResponseFileController {
   }
 
   @GetMapping("/{fileId}")
-  @HasApplicationPermission(permissions = {VIEW_FCS_CASE_PROCESSING_DOCUMENTS, RESPOND_TO_CONSULTATION})
+  @HasApplicationOrRegulatorRole(
+      regulatorRoles = {
+          Role.CASE_OFFICER,
+          Role.CASE_MANAGER,
+          Role.CONSENTS_AND_AUTHORISATIONS_MANAGER,
+          Role.TECHNICAL_REVIEWER
+      },
+      consulteeRoles = Role.RESPONDER
+  )
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationId,
       @PathVariable Integer consultationId,

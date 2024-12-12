@@ -36,7 +36,8 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = BulkAssignCaseOfficerSearchController.class)
 class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
@@ -52,9 +53,6 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private BulkAssignCaseOfficerSearchFilterService searchFilterService;
-
-  @MockBean
-  private BulkAssignCaseOfficerService bulkAssignCaseOfficerService;
 
   private MockHttpSession httpSession;
 
@@ -79,7 +77,7 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getSearchResults() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(Set.of(1, 2, 3));
     assertThat(this.bulkCaseActionSelectedApplicationsForm.getSelectedApplicationIds()).containsOnly(1, 2, 3);
@@ -170,7 +168,7 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
     this.bulkAssignCaseOfficerSessionContext.setFilters(this.bulkAssignCaseOfficerSearchFiltersForm);
     assertThat(bulkAssignCaseOfficerSessionContext.getSearchFiltersForm()).isEqualTo(this.bulkAssignCaseOfficerSearchFiltersForm);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(BulkAssignCaseOfficerSearchController.class).clearSearchFilters(null)))
             .with(user(user))
@@ -185,7 +183,7 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
   void filterSearchResults() throws Exception {
     assertThat(this.bulkAssignCaseOfficerSessionContext.getSearchFiltersForm().operatorId()).isNull();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     var operatorId = 123;
 
@@ -203,7 +201,7 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void submitAssignCaseOfficerSelection() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     assertThat(this.bulkAssignCaseOfficerSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).isEmpty();
 
@@ -224,7 +222,7 @@ class BulkAssignCaseOfficerSearchControllerTest extends AbstractControllerTest {
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(Set.of(1, 2, 3));
     assertThat(this.bulkAssignCaseOfficerSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).containsOnly(1, 2, 3);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_MANAGER)).thenReturn(true);
 
     mockAddSearchFiltersToModelAndView();
 

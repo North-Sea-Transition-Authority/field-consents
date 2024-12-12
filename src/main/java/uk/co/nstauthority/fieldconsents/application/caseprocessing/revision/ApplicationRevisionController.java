@@ -17,7 +17,8 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryCo
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Controller
 @RequestMapping("applications/{applicationId}/revision")
@@ -27,18 +28,18 @@ public class ApplicationRevisionController {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationRevisionService applicationRevisionService;
-  private final TeamService teamService;
+  private final TeamQueryService teamQueryService;
 
   ApplicationRevisionController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationRevisionService applicationRevisionService,
-      TeamService teamService
+      TeamQueryService teamQueryService
   ) {
     this.applicationService = applicationService;
     this.applicationRevisionService = applicationRevisionService;
     this.applicationVersionService = applicationVersionService;
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
   }
 
   @GetMapping("/start")
@@ -46,7 +47,7 @@ public class ApplicationRevisionController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
-    var regulatorUser = teamService.isRegulatorUser(user);
+    var regulatorUser = teamQueryService.userIsMemberOfTeamType(user, TeamType.REGULATOR);
     var backLinkUrl = regulatorUser
         ? ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .caseProcessing(applicationId, null, null, null))

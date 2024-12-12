@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field2AssetJ
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.math.BigDecimal;
@@ -128,9 +127,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
 
   @SecurityTest
   void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
-        .thenReturn(false);
-
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user)))
@@ -293,9 +289,6 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
 
   @SecurityTest
   void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
-        .thenReturn(false);
-
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
             .saveForm(APPLICATION_ID, null, null)))
             .with(user(user))

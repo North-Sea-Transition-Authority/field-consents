@@ -7,9 +7,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -17,42 +15,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class ApplicationDataItemViewService {
 
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final TeamService teamService;
-  private final PermissionService permissionService;
-  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
   private final DSLContext dslContext;
+  private final TeamQueryService teamQueryService;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationDataItemViewService.class);
 
   ApplicationDataItemViewService(
       ApplicationDataItemDtoService applicationDataItemDtoService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      TeamService teamService,
-      PermissionService permissionService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
-      DSLContext dslContext
+      FieldEquityPartnerAccessService fieldEquityPartnerAccessService,
+      DSLContext dslContext,
+      TeamQueryService teamQueryService
   ) {
     this.applicationDataItemDtoService = applicationDataItemDtoService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.teamService = teamService;
-    this.permissionService = permissionService;
-    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.fieldEquityPartnerAccessService = fieldEquityPartnerAccessService;
     this.dslContext = dslContext;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<ApplicationDataItemView> getItemViewsFromDtos(
@@ -100,19 +95,24 @@ public class ApplicationDataItemViewService {
   }
 
   public ApplicationDataItemUserAction getApplicationDataItemUserActionFromUser(ServiceUserDetail user) {
-    return permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))
+    var hasEditApplicationRole = teamQueryService.getTeamRoles(user)
+        .stream()
+        .map(TeamRole::getRole)
+        .anyMatch(RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES::contains);
+
+    return hasEditApplicationRole
         ? ApplicationDataItemUserAction.RESUME_APPLICATION
         : ApplicationDataItemUserAction.VIEW_APPLICATION;
   }
 
   public List<ApplicationDataItemView> getRegulatorApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
-    var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+    var regulatorViewer = teamQueryService.userHasAtLeastOneStaticRole(
         user,
         TeamType.REGULATOR,
-        RolePermission.VIEW_PERMISSIONS
+        RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES
     );
 
-    if (regulatorTeams.isEmpty()) {
+    if (!regulatorViewer) {
       return Collections.emptyList();
     }
 
@@ -126,15 +126,15 @@ public class ApplicationDataItemViewService {
 
   public List<ApplicationDataItemView> getIndustryApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
     var organisationUnitIds =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+        organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();
 
     var lookupConditions = new ArrayList<>(conditions);
 
-    var fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam = fieldEquityPartnerPermissionService
-        .getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(user, Set.of(RolePermission.VIEW_FCS_CONSENTS));
+    var fieldIdsWhereUserIsFieldEquityPartner =
+        fieldEquityPartnerAccessService.getFieldIdsWhereUserIsFieldEquityPartner(user);
 
     var accessCondition = APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds)
         .or(exists(
@@ -144,7 +144,7 @@ public class ApplicationDataItemViewService {
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
                 .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
                 .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam))
+                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWhereUserIsFieldEquityPartner))
         ));
 
     lookupConditions.add(accessCondition);
@@ -158,13 +158,13 @@ public class ApplicationDataItemViewService {
   }
 
   public List<ApplicationDataItemView> getConsulteeApplicationDataItemViews(List<Condition> conditions, ServiceUserDetail user) {
-    var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+    var consulteeViewer = teamQueryService.userHasAtLeastOneStaticRole(
         user,
-        TeamType.OPRED,
-        RolePermission.VIEW_PERMISSIONS
+        TeamType.CONSULTEE,
+        RoleGroup.CONSULTEE_WITH_VIEWER_ROLES
     );
 
-    if (consulteeTeams.isEmpty()) {
+    if (!consulteeViewer) {
       return Collections.emptyList();
     }
 
@@ -173,6 +173,6 @@ public class ApplicationDataItemViewService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
+    return getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.CONSULTEE, user);
   }
 }

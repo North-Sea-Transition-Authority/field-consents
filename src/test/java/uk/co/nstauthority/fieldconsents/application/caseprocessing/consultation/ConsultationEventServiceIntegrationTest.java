@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
@@ -27,7 +28,10 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRepository;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
 
@@ -53,22 +57,30 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   private ConsultationService consultationService;
 
   @Autowired
-  ConsultationRepository consultationRepository;
+  private ConsultationRepository consultationRepository;
 
   @Autowired
-  ApplicationAssetRepository applicationAssetRepository;
+  private ApplicationAssetRepository applicationAssetRepository;
 
   @Autowired
-  ApplicationAssetLicenceRepository applicationAssetLicenceRepository;
+  private ApplicationAssetLicenceRepository applicationAssetLicenceRepository;
+
+  @Autowired
+  private TeamRepository teamRepository;
 
   @MockBean
-  private OpredTeamService opredTeamService;
+  private TeamQueryService teamQueryService;
 
   private Instant beforeTestRun;
 
   @BeforeEach
   void setUp() {
     beforeTestRun = Instant.now();
+
+    // the real consultation team is needed to satisfy the foreign key constraint. assumes there is exactly one CONSULTEE team
+    doAnswer(invocation -> teamRepository.findByTeamType(invocation.getArgument(0, TeamType.class)).getFirst())
+        .when(teamQueryService)
+        .getStaticTeam(TeamType.CONSULTEE);
   }
 
   @Test
@@ -222,7 +234,7 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
         .withUser(assigner)
         .setSecurityContext();
 
-    when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(responder, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(true);
     consultationService.assignResponderToConsultation(consultation, assigner, responder);
   }
 
@@ -235,7 +247,7 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
         .withUser(responder)
         .setSecurityContext();
 
-    when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(responder, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(true);
     consultationService.saveConsultationResponse(
         applicationVersion,
         consultation,

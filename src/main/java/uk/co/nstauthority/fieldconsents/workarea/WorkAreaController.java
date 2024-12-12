@@ -12,10 +12,9 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,16 +33,17 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasAnyRegulatorRole;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasConsulteeRole;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
@@ -55,62 +55,65 @@ import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 public class WorkAreaController {
 
   public static final String WORK_AREA_TITLE = "Work area";
-  private static final String IS_WORK_AREA_WITH_TABS = "isWorkAreaWithTabs";
   public static final String WORK_AREA_ITEMS = "workAreaItems";
+  private static final String IS_WORK_AREA_WITH_TABS = "isWorkAreaWithTabs";
 
   private final WorkAreaService workAreaService;
-
   private final WorkAreaFilterFormService workAreaFormService;
-
   private final WorkAreaFilterService workAreaFilterService;
-
-  private final TeamService teamService;
-
-  private final PermissionService permissionService;
-
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
-
   private final CaseAssignmentService caseAssignmentService;
-
   private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
+  private final TeamQueryService teamQueryService;
 
-  public WorkAreaController(WorkAreaService workAreaService,
-                            WorkAreaFilterFormService workAreaFormService,
-                            WorkAreaFilterService workAreaFilterService,
-                            TeamService teamService,
-                            PermissionService permissionService,
-                            ApplicationDataFilterFormService applicationDataFilterFormService,
-                            CaseAssignmentService caseAssignmentService,
-                            TechnicalReviewAssignmentService technicalReviewAssignmentService) {
+  WorkAreaController(
+      WorkAreaService workAreaService,
+      WorkAreaFilterFormService workAreaFormService,
+      WorkAreaFilterService workAreaFilterService,
+      ApplicationDataFilterFormService applicationDataFilterFormService,
+      CaseAssignmentService caseAssignmentService,
+      TechnicalReviewAssignmentService technicalReviewAssignmentService,
+      TeamQueryService teamQueryService
+  ) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
-    this.teamService = teamService;
-    this.permissionService = permissionService;
     this.applicationDataFilterFormService = applicationDataFilterFormService;
     this.caseAssignmentService = caseAssignmentService;
     this.technicalReviewAssignmentService = technicalReviewAssignmentService;
+    this.teamQueryService = teamQueryService;
   }
 
   @GetMapping
   public ModelAndView getWorkArea(@ModelAttribute("workAreaFilter") WorkAreaFilter filter, ServiceUserDetail user) {
-    if (teamService.isRegulatorUser(user)) {
-      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))) {
+    var teamRoles = teamQueryService.getTeamRoles(user);
+    var teamTypes = teamRoles.stream().map(teamRole -> teamRole.getTeam().getTeamType()).collect(Collectors.toSet());
+    var roles = teamRoles.stream().map(TeamRole::getRole).collect(Collectors.toSet());
+
+    if (teamTypes.contains(TeamType.REGULATOR)) {
+      if (roles.contains(Role.CASE_OFFICER)) {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
-      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))) {
+      }
+
+      if (roles.contains(Role.CASE_MANAGER)) {
         return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
-      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS))) {
+      }
+
+      if (roles.contains(Role.TECHNICAL_REVIEWER)) {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
-      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))) {
+      }
+
+      if (roles.contains(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)) {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_CAM_APPLICATIONS);
       }
     }
 
-    if (teamService.isConsulteeUser(user)) {
-      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION))) {
+    if (teamTypes.contains(TeamType.CONSULTEE)) {
+      if (roles.contains(Role.ALLOCATOR)) {
         return renderConsulteeWorkAreaOnTab(filter, user, UNASSIGNED_CONSULTATIONS);
       }
-      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.RESPOND_TO_CONSULTATION))) {
+
+      if (roles.contains(Role.RESPONDER)) {
         return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);
       }
     }
@@ -121,142 +124,139 @@ public class WorkAreaController {
   }
 
   @GetMapping("case-officer-my-applications")
-  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.CASE_OFFICER)
   public ModelAndView getWorkAreaCaseOfficerMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                            ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
   }
 
   @PostMapping("case-officer-my-applications")
-  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.CASE_OFFICER)
   public ModelAndView postWorkAreaCaseOfficerMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                             ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerMyApplications(filter, user));
   }
 
   @GetMapping("my-technical-reviews")
-  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView getWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                     ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
   }
 
   @PostMapping("my-technical-reviews")
-  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView postWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                      ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyTechnicalReviews(filter, user));
   }
 
   @GetMapping("case-officer-unassigned")
-  @HasPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
+  @HasAnyRegulatorRole({Role.CASE_OFFICER, Role.CASE_MANAGER})
   public ModelAndView getWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                                    ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, UNASSIGNED_APPLICATIONS);
   }
 
   @PostMapping("case-officer-unassigned")
-  @HasPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
+  @HasAnyRegulatorRole({Role.CASE_OFFICER, Role.CASE_MANAGER})
   public ModelAndView postWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                                     ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(filter, user));
   }
 
   @GetMapping("all-technical-reviews")
-  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView getWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                      ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, ALL_TECHNICAL_REVIEWS);
   }
 
   @PostMapping("all-technical-reviews")
-  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView postWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                       ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllTechnicalReviews(filter, user));
   }
 
   @GetMapping("regulator-all-applications")
-  @HasPermission(permissions = {RolePermission.ASSIGN_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS})
+  @HasAnyRegulatorRole({Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER})
   public ModelAndView getWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                           ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
   }
 
   @PostMapping("regulator-all-applications")
-  @HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+  @HasAnyRegulatorRole({Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER})
   public ModelAndView postWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                            ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(filter, user));
   }
 
   @GetMapping("all-consultations")
-  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  @HasConsulteeRole(Role.ALLOCATOR)
   public ModelAndView getWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                   ServiceUserDetail user) {
     return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
   }
 
   @PostMapping("all-consultations")
-  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  @HasConsulteeRole(Role.ALLOCATOR)
   public ModelAndView postWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                    ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllConsultations(filter, user));
   }
 
   @GetMapping("unassigned-consultations")
-  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  @HasConsulteeRole(Role.ALLOCATOR)
   public ModelAndView getWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                          ServiceUserDetail user) {
     return renderConsulteeWorkAreaOnTab(filter, user, UNASSIGNED_CONSULTATIONS);
   }
 
   @PostMapping("unassigned-consultations")
-  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  @HasConsulteeRole(Role.ALLOCATOR)
   public ModelAndView postWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                           ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(filter, user));
   }
 
   @GetMapping("my-consultations")
-  @HasPermission(permissions = RolePermission.RESPOND_TO_CONSULTATION)
+  @HasConsulteeRole(Role.RESPONDER)
   public ModelAndView getWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                  ServiceUserDetail user) {
     return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);
   }
 
   @PostMapping("my-consultations")
-  @HasPermission(permissions = RolePermission.RESPOND_TO_CONSULTATION)
+  @HasConsulteeRole(Role.RESPONDER)
   public ModelAndView postWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null));
   }
 
   @GetMapping("cam-my-applications")
-  @HasPermission(permissions = RolePermission.AUTHORISE_FCS_CONSENTS)
+  @HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
   public ModelAndView getWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                    ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_CAM_APPLICATIONS);
   }
 
   @PostMapping("cam-my-applications")
-  @HasPermission(permissions = RolePermission.AUTHORISE_FCS_CONSENTS)
+  @HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
   public ModelAndView postWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                     ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCamMyApplications(filter, user));
   }
 
-  private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
-                                                    ServiceUserDetail user,
-                                                    WorkAreaTab workAreaTab) {
-    var caseOfficerFilterEnabled = teamService.hasAnyTeamRoleOf(
-        user,
-        TeamType.REGULATOR,
-        Set.of(
-            RegulatorTeamRole.CASE_MANAGER,
-            RegulatorTeamRole.TECHNICAL_REVIEWER,
-            RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER
-        )
-    );
+  private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab) {
+    var caseOfficerFilterEnabled = teamQueryService.getTeamRoles(user)
+        .stream()
+        .map(TeamRole::getRole)
+        .anyMatch(role -> role == Role.CASE_MANAGER
+            || role == Role.TECHNICAL_REVIEWER
+            || role == Role.CONSENTS_AND_AUTHORISATIONS_MANAGER
+        );
+
     var caseOfficersById = caseOfficerFilterEnabled ? convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers()) : null;
     var technicalReviewersById = convertUsersToMap(technicalReviewAssignmentService.getCurrentTechnicalReviewers());
     return getWorkAreaModelAndView(filter, user)

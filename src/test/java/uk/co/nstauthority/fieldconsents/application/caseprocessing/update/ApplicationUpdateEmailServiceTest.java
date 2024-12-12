@@ -24,9 +24,6 @@ import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
 
 import java.time.Clock;
 import java.util.Collections;
@@ -49,6 +46,7 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailReci
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
@@ -151,11 +149,12 @@ class ApplicationUpdateEmailServiceTest {
 
     when(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
         organisationUnitWithGroupsJson,
-        Set.of(CREATOR, SUBMITTER, EDITOR)))
-        .thenReturn(Set.of(
-            FieldConsentsEmailRecipient.from(OPERATOR_CREATOR),
-            FieldConsentsEmailRecipient.from(OPERATOR_SUBMITTER),
-            FieldConsentsEmailRecipient.from(OPERATOR_EDITOR)));
+        RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES
+    )).thenReturn(Set.of(
+        FieldConsentsEmailRecipient.from(OPERATOR_CREATOR),
+        FieldConsentsEmailRecipient.from(OPERATOR_SUBMITTER),
+        FieldConsentsEmailRecipient.from(OPERATOR_EDITOR)
+    ));
 
     applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);
 
@@ -211,8 +210,8 @@ class ApplicationUpdateEmailServiceTest {
 
     when(fieldConsentsEmailRecipientService.getDistinctEmailRecipientsWithRoles(
         organisationUnitWithGroupsJson,
-        Set.of(CREATOR, SUBMITTER, EDITOR)))
-        .thenReturn(Set.of(FieldConsentsEmailRecipient.from(OPERATOR_SUBMITTER)));
+        RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES
+    )).thenReturn(Set.of(FieldConsentsEmailRecipient.from(OPERATOR_SUBMITTER)));
 
     when(organisationUnitService.getOrganisationUnitByIdOrFallback(
         eq(applicationVersion.getPrimaryOperatorOuId()),
@@ -296,7 +295,7 @@ class ApplicationUpdateEmailServiceTest {
     ).thenReturn(organisationUnitWithGroupsJson);
 
     when(fieldConsentsEmailRecipientService
-        .getDistinctEmailRecipientsWithRoles(organisationUnitWithGroupsJson,Set.of(CREATOR, SUBMITTER, EDITOR)))
+        .getDistinctEmailRecipientsWithRoles(organisationUnitWithGroupsJson, RoleGroup.INDUSTRY_EDIT_APPLICATION_ROLES))
         .thenReturn(Set.of(FieldConsentsEmailRecipient.from(OPERATOR_SUBMITTER)));
 
     applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);

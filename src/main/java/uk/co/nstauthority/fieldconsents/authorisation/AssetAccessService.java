@@ -1,65 +1,68 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
+import static uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService.FIELD_EQUITY_PARTNER_ROLE;
+
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
-public class AssetAccessService {
+class AssetAccessService {
 
-  private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
 
   AssetAccessService(
-      TeamService teamService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
+      FieldEquityPartnerAccessService fieldEquityPartnerAccessService
   ) {
-    this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.fieldEquityPartnerAccessService = fieldEquityPartnerAccessService;
   }
 
-  public boolean hasAssetPermission(ServiceUserDetail user,
-                                    AssetWithOperatorJson assetWithOperatorJson,
-                                    RolePermission... requiredPermissions) {
-    var requiredPermissionsSet = Set.of(requiredPermissions);
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissionsSet);
-
-    // short circuit and return true if the user is a regulator with the required permissions
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
-      return true;
+  boolean userHasAnyIndustryRole(
+      ServiceUserDetail userDetail,
+      AssetWithOperatorJson assetWithOperatorJson,
+      Collection<Role> requiredRoles
+  ) {
+    if (!CollectionUtils.containsAll(TeamType.INDUSTRY.getAllowedRoles(), requiredRoles)) {
+      throw new IllegalArgumentException("Invalid industry roles [%s]".formatted(requiredRoles));
     }
 
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
+    var industryRoles = getIndustryRoles(userDetail, assetWithOperatorJson);
+    return CollectionUtils.containsAny(industryRoles, requiredRoles);
+  }
 
-    // short circuit and return true if the user is a consultee with the required permissions
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
-      return true;
+  Set<Role> getIndustryRoles(ServiceUserDetail userDetail, AssetWithOperatorJson assetWithOperatorJson) {
+    if (!assetWithOperatorJson.operatorExists()) {
+      return Set.of();
     }
 
-    if (assetWithOperatorJson.operatorExists() && organisationUnitPermissionService
-        .hasOperatorPermission(user, assetWithOperatorJson.getOperatorJson().organisationUnitId(), requiredPermissions)) {
-      return true;
+    var userRoles = organisationUnitPermissionService.getUserRolesForOperator(userDetail, assetWithOperatorJson);
+
+    if (userRoles.contains(FIELD_EQUITY_PARTNER_ROLE)) {
+      return userRoles;
     }
 
-    if (assetWithOperatorJson instanceof FieldJson && requiredPermissionsSet.contains(RolePermission.VIEW_FCS_CONSENTS)) {
-      return fieldEquityPartnerPermissionService.userHasPermissionForFieldInFieldEquityPartnerTeam(
-          user,
-          assetWithOperatorJson.getId(),
-          Set.of(RolePermission.VIEW_FCS_CONSENTS)
-      );
+    if (assetWithOperatorJson instanceof FieldWithOperatorJson fieldWithOperatorJson) {
+      var userHasRoleForFieldInFieldEquityPartnerTeam =
+          fieldEquityPartnerAccessService.userIsFieldEquityPartner(userDetail, fieldWithOperatorJson);
+
+      if (userHasRoleForFieldInFieldEquityPartnerTeam) {
+        var userRolesWithFieldEquityPartnerRole = new HashSet<>(userRoles);
+        userRolesWithFieldEquityPartnerRole.add(FIELD_EQUITY_PARTNER_ROLE);
+        return userRolesWithFieldEquityPartnerRole;
+      }
     }
 
-    return false;
+    return userRoles;
   }
 }

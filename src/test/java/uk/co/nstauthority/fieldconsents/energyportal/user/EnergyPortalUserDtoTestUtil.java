@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationException;
 
 public class EnergyPortalUserDtoTestUtil {
@@ -33,6 +34,11 @@ public class EnergyPortalUserDtoTestUtil {
 
     public Builder withWebUserAccountId(Long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
+      return this;
+    }
+
+    public Builder withWebUserAccountId(WebUserAccountId webUserAccountId) {
+      this.webUserAccountId = webUserAccountId.id();
       return this;
     }
 

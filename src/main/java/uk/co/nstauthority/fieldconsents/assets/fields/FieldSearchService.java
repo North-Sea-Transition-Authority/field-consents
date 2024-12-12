@@ -6,7 +6,6 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fields
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldsWithOperatorsProjectionRoot;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
@@ -15,36 +14,36 @@ import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerAccessService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class FieldSearchService {
 
   private final FieldApi fieldApi;
-  private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final FieldEquityPartnerAccessService fieldEquityPartnerAccessService;
   private final ApplicationAssetService applicationAssetService;
+  private final TeamQueryService teamQueryService;
 
   FieldSearchService(
       FieldApi fieldApi,
-      TeamService teamService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
-      ApplicationAssetService applicationAssetService
+      FieldEquityPartnerAccessService fieldEquityPartnerAccessService,
+      ApplicationAssetService applicationAssetService,
+      TeamQueryService teamQueryService
   ) {
     this.fieldApi = fieldApi;
-    this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
-    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.fieldEquityPartnerAccessService = fieldEquityPartnerAccessService;
     this.applicationAssetService = applicationAssetService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
@@ -68,26 +67,18 @@ public class FieldSearchService {
         FieldWithOperatorJson::from
     );
 
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found fields if the user is a regulator with view permissions
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES)) {
       return fieldWithOperatorJsons;
     }
 
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found fields if the user is a consultee with view permissions
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, RoleGroup.CONSULTEE_WITH_VIEWER_ROLES)) {
       return fieldWithOperatorJsons;
     }
 
     // industry access
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+        organisationUnitPermissionService.getOperatorsUserHasRoleFor(user, RoleGroup.INDUSTRY_VIEW_CASE_PROCESSING_ROLES)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();
@@ -111,16 +102,14 @@ public class FieldSearchService {
 
     // industry access - find addition fields user has view consent permission in a FEP team
 
-    var fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam =
-        fieldEquityPartnerPermissionService
-            .getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(
-                user, remainingFieldIds, Set.of(RolePermission.VIEW_FCS_CONSENTS));
+    var fieldIdsWhereUserIsFieldEquityPartner =
+        fieldEquityPartnerAccessService.getFieldIdsWhereUserIsFieldEquityPartner(user, remainingFieldIds);
 
     return fieldWithOperatorJsons
         .stream()
         .filter(field -> (
             fieldWithOperatorJsonsUserHasViewFcsPermissionForInOperatorTeam.contains(field)
-            || fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam.contains(field.getId())
+            || fieldIdsWhereUserIsFieldEquityPartner.contains(field.getId())
             )
         )
         .toList();

@@ -9,7 +9,8 @@ import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDupli
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class ApplicationRevisionService {
@@ -17,21 +18,21 @@ public class ApplicationRevisionService {
   private final ApplicationService applicationService;
   private final ApplicationSubmissionService applicationSubmissionService;
   private final ApplicationDuplicationService applicationDuplicationService;
-  private final TeamService teamService;
   private final ApplicationUnitService applicationUnitService;
+  private final TeamQueryService teamQueryService;
 
   ApplicationRevisionService(
       ApplicationService applicationService,
       ApplicationSubmissionService applicationSubmissionService,
       ApplicationDuplicationService applicationDuplicationService,
-      TeamService teamService,
-      ApplicationUnitService applicationUnitService
+      ApplicationUnitService applicationUnitService,
+      TeamQueryService teamQueryService
   ) {
     this.applicationService = applicationService;
     this.applicationSubmissionService = applicationSubmissionService;
     this.applicationDuplicationService = applicationDuplicationService;
-    this.teamService = teamService;
     this.applicationUnitService = applicationUnitService;
+    this.teamQueryService = teamQueryService;
   }
 
   @Transactional
@@ -40,7 +41,7 @@ public class ApplicationRevisionService {
 
     applicationDuplicationService.duplicateApplicationSections(applicationVersion, newApplicationVersion);
 
-    if (!teamService.isIndustryUser(user)) {
+    if (!teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)) {
       applicationSubmissionService.regulatorAutoSubmitApplication(newApplicationVersion, applicationVersion, user);
     }
 

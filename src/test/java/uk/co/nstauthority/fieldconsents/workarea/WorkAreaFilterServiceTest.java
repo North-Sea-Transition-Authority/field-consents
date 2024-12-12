@@ -39,8 +39,11 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaFilterServiceTest {
@@ -51,10 +54,10 @@ class WorkAreaFilterServiceTest {
   private AssetService assetService;
 
   @Mock
-  private TeamService teamService;
+  private ApplicationDataFilterService applicationDataFilterService;
 
   @Mock
-  private ApplicationDataFilterService applicationDataFilterService;
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private WorkAreaFilterService workAreaFilterService;
@@ -74,7 +77,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_CheckApplicationDataFilterConditions() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var customCondition1 = mock(Condition.class);
@@ -101,7 +112,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_EmptyFilter_Regulator() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
@@ -111,7 +130,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_EmptyFilter_Consultee() {
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.CONSULTEE)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
@@ -121,7 +148,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_EmptyFilter_Industry() {
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.INDUSTRY)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -134,7 +169,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_AssetNotFound() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
@@ -150,7 +193,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_FieldSelected() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
@@ -170,7 +221,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_TerminalSelected() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY);
@@ -190,7 +249,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_SeaLocationsSelected() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
@@ -207,7 +274,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_MyApplicationsCaseOfficer() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
@@ -215,13 +290,21 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
         APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
-            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CASE_OFFICER.name()))
+            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CASE_OFFICER.name()))
     );
   }
 
   @Test
   void getConditions_AllApplications_whenCaseManager() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_APPLICATIONS);
@@ -234,7 +317,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_AllApplications_whenCamUser() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(
         APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
     );
@@ -249,7 +340,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_MyApplications_whenCamUser() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(
         APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
     );
@@ -259,13 +358,21 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
         APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
-            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()))
+            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()))
     );
   }
 
   @Test
   void getConditions_MyConsultations() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_CONSULTATIONS);
@@ -278,7 +385,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_MyTechnicalReviews() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_TECHNICAL_REVIEWS);
@@ -291,7 +406,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_AllTechnicalReviews() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
@@ -304,7 +427,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_UnassignedCaseOfficer() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_APPLICATIONS);
@@ -317,7 +448,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_AllConsultations() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
@@ -330,7 +469,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_UnassignedConsultations() {
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
@@ -344,7 +491,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_ConsulteeApplicationStatusCondition() {
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.CONSULTEE)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
@@ -357,7 +512,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_IndustryApplicationStatusCondition() {
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.INDUSTRY)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -375,7 +538,9 @@ class WorkAreaFilterServiceTest {
     var serviceUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(USER_WUA_ID)
         .build();
-    when(teamService.isIndustryUser(serviceUser)).thenReturn(true);
+
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(true);
+
     var expectedStatuses = List.of(
         ApplicationVersionStatus.IN_PROGRESS,
         ApplicationVersionStatus.AWAITING_PAYMENT,
@@ -394,7 +559,9 @@ class WorkAreaFilterServiceTest {
   @Test
   void getDefaultFilter_forNonIndustryUser() {
     var serviceUser = ServiceUserDetailTestUtil.Builder().withWuaId(USER_WUA_ID).build();
-    when(teamService.isIndustryUser(serviceUser)).thenReturn(false);
+
+    when(teamQueryService.userIsMemberOfTeamType(user, TeamType.INDUSTRY)).thenReturn(false);
+
     var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
 
     var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);
@@ -407,7 +574,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_caseOfficerAssignedCondition() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setCaseOfficerWuaId(123L);
@@ -423,7 +598,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_technicalReviewerAssignedCondition() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setTechnicalReviewerWuaId(123L);
@@ -439,7 +622,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_whenRegulatorWithApprovedForIssueConditionIsTrue_thenApprovedForIssueConditionIsAdded() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
     when(applicationDataFilterService.getApprovedForIssueCondition()).thenReturn(APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
 
@@ -454,7 +645,15 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_whenRegulatorWithApprovedForIssueConditionIsFalse_thenApprovedForIssueConditionIsNotAdded() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     filter.setApprovedForIssue(false);

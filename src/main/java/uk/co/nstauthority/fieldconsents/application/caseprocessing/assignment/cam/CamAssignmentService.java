@@ -1,12 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam;
 
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CAM_ASSIGN_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
@@ -22,10 +18,10 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 @Service
 public class CamAssignmentService {
@@ -36,33 +32,33 @@ public class CamAssignmentService {
       "Cannot assign CAM. User with wua id %s is not in a regulator consents and authorisations manager role"::formatted;
 
   private final ApplicationVersionRepository applicationVersionRepository;
-  private final RegulatorTeamService regulatorTeamService;
-  private final TeamMemberViewService teamMemberViewService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final CaseAssignmentEmailService caseAssignmentEmailService;
+  private final TeamQueryService teamQueryService;
 
-  public CamAssignmentService(ApplicationVersionRepository applicationVersionRepository,
-                              RegulatorTeamService regulatorTeamService,
-                              TeamMemberViewService teamMemberViewService,
-                              ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
-                              CaseAssignmentEmailService caseAssignmentEmailService) {
+  CamAssignmentService(
+      ApplicationVersionRepository applicationVersionRepository,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      CaseAssignmentEmailService caseAssignmentEmailService,
+      TeamQueryService teamQueryService
+  ) {
     this.applicationVersionRepository = applicationVersionRepository;
-    this.regulatorTeamService = regulatorTeamService;
-    this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.caseAssignmentEmailService = caseAssignmentEmailService;
+    this.teamQueryService = teamQueryService;
   }
 
   @Transactional
   public void assignCamUser(ApplicationVersion applicationVersion,
                             ServiceUserDetail camUser,
                             ServiceUserDetail actionUser) {
-    if (!regulatorTeamService.isCamUser(WebUserAccountId.from(camUser))) {
+    if (!teamQueryService.userHasStaticRole(camUser, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)) {
       throw new IllegalArgumentException(
           USER_NOT_IN_CAM_ROLE.apply(String.valueOf(camUser.wuaId())));
     }
+
     applicationVersion.setCamWuaId(camUser.wuaId());
-    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER);
+    applicationVersion.setCurrentCaseOwner(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER);
     applicationVersionRepository.save(applicationVersion);
 
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
@@ -86,19 +82,20 @@ public class CamAssignmentService {
     }
   }
 
-  public List<TeamMemberView> getCamUserAssignmentCandidates(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    return regulatorTeamService.getRegulatorTeamForUser(user)
-        .map(team -> teamMemberViewService.getTeamMemberViewsForTeam(team)
-            .stream()
-            .filter(teamMemberView -> teamMemberView.teamRoles().contains(CONSENTS_AND_AUTHORISATIONS_MANAGER))
-            .filter(teamMemberView -> Objects.isNull(applicationVersion.getCamWuaId())
-                || !applicationVersion.getCamWuaId().equals(teamMemberView.wuaId().id()))
-            .toList()
-        )
-        .orElse(Collections.emptyList())
+  public List<TeamMemberView> getCamUserAssignmentCandidates(ApplicationVersion applicationVersion) {
+    var camTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
-        .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
+        .filter(teamRole -> teamRole.getRole() == Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
+        // exclude the currently assigned cam user if one is assigned
+        .filter(teamRole -> applicationVersion.getCamWuaId() == null
+            || !applicationVersion.getCamWuaId().equals(teamRole.getWuaId()))
         .toList();
+
+    if (camTeamRoles.isEmpty()) {
+      return List.of();
+    }
+
+    return teamQueryService.getTeamMemberViews(camTeamRoles);
   }
 
   public Optional<WebUserAccountId> findCamWuaId(ApplicationVersion applicationVersion) {

@@ -16,7 +16,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_AREA_TITLE;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +39,10 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = WorkAreaController.class)
 class WorkAreaControllerTest extends AbstractControllerTest {
@@ -54,16 +56,16 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   private WorkAreaFilterFormService workAreaFormService;
 
   @MockBean
-  private ApplicationDataFilterFormService applicationDataFilterFormService;
-
-  @MockBean
   private WorkAreaFilterService workAreaFilterService;
 
   @MockBean
-  protected CaseAssignmentService caseAssignmentService;
+  private ApplicationDataFilterFormService applicationDataFilterFormService;
 
   @MockBean
-  protected TechnicalReviewAssignmentService technicalReviewAssignmentService;
+  private CaseAssignmentService caseAssignmentService;
+
+  @MockBean
+  private TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
   private WorkAreaFilter filter;
 
@@ -121,9 +123,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaCaseOfficerMyApplications(filter, user)))
@@ -134,8 +133,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
@@ -147,9 +145,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaCaseOfficerMyApplications(filter, user)))
@@ -161,8 +156,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
@@ -175,9 +169,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaMyTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaMyTechnicalReviews(filter, user)))
@@ -188,8 +179,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaMyTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
@@ -201,9 +191,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaMyTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaMyTechnicalReviews(filter, user)))
@@ -215,8 +202,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaMyTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
@@ -229,9 +215,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
@@ -242,7 +225,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCaseOfficerUnassignedApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, Set.of(Role.CASE_OFFICER, Role.CASE_MANAGER)))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -255,9 +238,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
@@ -269,7 +249,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, Set.of(Role.CASE_OFFICER, Role.CASE_MANAGER)))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -283,9 +263,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaAllTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaAllTechnicalReviews(filter, user)))
@@ -296,8 +273,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaAllTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
@@ -309,9 +285,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaAllTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaAllTechnicalReviews(filter, user)))
@@ -323,8 +296,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaAllTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
@@ -337,9 +309,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaRegulatorAllApplications(filter, user)))
@@ -350,7 +319,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, Set.of(Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -363,9 +332,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaRegulatorAllApplications(filter, user)))
@@ -377,7 +343,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, Set.of(Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -391,9 +357,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaAllConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaAllConsultations(filter, user)))
@@ -404,7 +367,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaAllConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.ALLOCATOR))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -417,9 +380,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaAllConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaAllConsultations(filter, user)))
@@ -431,7 +391,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaAllConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.ALLOCATOR))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -445,9 +405,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaUnassignedConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaUnassignedConsultations(filter, user)))
@@ -458,7 +415,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaUnassignedConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.ALLOCATOR))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -471,9 +428,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaUnassignedConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaUnassignedConsultations(filter, user)))
@@ -485,7 +439,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaUnassignedConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.ALLOCATOR))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -499,9 +453,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaMyConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaMyConsultations(filter, user)))
@@ -512,7 +463,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaMyConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.RESPONDER))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -524,10 +475,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void postWorkAreaMyConsultations_whenUserDoesNotHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
-        .thenReturn(false);
-
+  void postWorkAreaMyConsultations_whenUserDoesNotHaveRole() throws Exception {
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaMyConsultations(filter)))
@@ -538,8 +486,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void postWorkAreaMyConsultations_whenUserDoesHavePermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+  void postWorkAreaMyConsultations_whenUserHasRole() throws Exception {
+    when(teamQueryService.userHasStaticRole(user, TeamType.CONSULTEE, Role.RESPONDER))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -553,9 +501,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCamUserApplications_whenUserDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
             .getWorkAreaCamMyApplications(filter, user)))
@@ -566,8 +511,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getWorkAreaCamUserApplications_whenUserDoesHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class)
@@ -579,9 +523,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCamUserApplications_whenUserDoesNotHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
             .postWorkAreaCamMyApplications(filter, user)))
@@ -593,8 +534,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void postWorkAreaCamUserApplications_whenUserDoesHaveManageFeePeriodsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class)
@@ -607,8 +547,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_RegulatorUser_CaseOfficer() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .withRole(Role.CASE_OFFICER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+
     when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
         workAreaItemViews);
     var caseOfficerTabs = List.of(WorkAreaTab.MY_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
@@ -636,10 +585,20 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_RegulatorUser_CaseManager() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
-    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
-        workAreaItemViews);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .withRole(Role.CASE_MANAGER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
+        .thenReturn(workAreaItemViews);
+
     var caseManagerTabs = List.of(WorkAreaTab.ALL_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseManagerTabs);
 
@@ -665,9 +624,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_RegulatorUser_TechnicalReviewer() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .withRole(Role.TECHNICAL_REVIEWER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+
     when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
         .thenReturn(workAreaItemViews);
     var technicalReviewerTabs = List.of(WorkAreaTab.MY_TECHNICAL_REVIEWS, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
@@ -692,10 +659,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_ConsulteeUser_Allocator() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.CONSULTEE)
+                .build())
+            .withRole(Role.ALLOCATOR)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+
     when(workAreaService.getConsulteeWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
         .thenReturn(workAreaItemViews);
     var consulteeAllocatorTabs = List.of(WorkAreaTab.ALL_CONSULTATIONS, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
@@ -720,17 +694,22 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_regulatorUserAndConsulteeUser_withoutPermissions() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .withRole(null)
+            .build(),
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.CONSULTEE)
+                .build())
+            .withRole(null)
+            .build()
+    );
 
-    when(teamService.isConsulteeUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
 
     when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class)))
         .thenReturn(workAreaItemViews);
@@ -753,8 +732,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
   void getWorkArea_RegulatorUser_CamUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(TeamTestUtil.newBuilder()
+                .withTeamType(TeamType.REGULATOR)
+                .build())
+            .withRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
+            .build()
+    );
+
+    when(teamQueryService.getTeamRoles(user)).thenReturn(teamRoles);
+
     when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
         workAreaItemViews);
     var camTabs = List.of(WorkAreaTab.MY_CAM_APPLICATIONS, WorkAreaTab.ALL_APPLICATIONS);

@@ -3,10 +3,8 @@ package uk.co.nstauthority.fieldconsents.integrationtest.workarea;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService.CONSULTATION_TEAM_TYPE;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperatorAndLicences;
@@ -18,14 +16,11 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataIt
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_MANAGER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_OFFICER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTATION_TEAM;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_ALLOCATOR_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_RESPONDER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.INDUSTRY_TEAM;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.PORTAL_USERS_DTO_MAP;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.REGULATOR_TEAM;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.SHORT_TERM_END_DATE;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.SHORT_TERM_START_DATE;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.TECHNICAL_REVIEWER_DETAIL;
@@ -37,14 +32,13 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTe
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL2_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,12 +52,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
@@ -82,7 +76,6 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicenc
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -94,25 +87,19 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.Team;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRepository;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilterForm;
 
-@Transactional
 class WorkAreaIntegrationTest extends AbstractIntegrationTest {
-
-  @MockBean
-  private TeamService teamService;
-
-  @MockBean
-  private PermissionService permissionService;
 
   @MockBean
   private OrganisationUnitService organisationUnitService;
@@ -133,10 +120,10 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   private EnergyPortalUserService energyPortalUserService;
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  private TeamQueryService teamQueryService;
 
-  @MockBean
-  private OpredTeamService opredTeamService;
+  @Autowired
+  private TeamRepository teamRepository;
 
   @Autowired
   private CaseAssignmentService caseAssignmentService;
@@ -177,12 +164,56 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   private RestSearchItem orgUnitRestSearchItem;
   private ZonedDateTime zonedDateTime;
 
+  private Team consulteeTeam;
+
   @BeforeEach
   void setUp() {
     truncateApplicationsCascade();
     workAreaFilterForm = new WorkAreaFilterForm();
     zonedDateTime = ZonedDateTime.now(clock.getZone());
-    when(teamService.isIndustryUser(USER_DETAIL)).thenReturn(true);
+
+    var industryTeam = TeamTestUtil.newBuilder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withScopeType(TeamScopeReference.ORGANISATION_GROUP_ID)
+        .withScopeId("123")
+        .build();
+    var regualtorTeam = TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build();
+
+    // the real consultation team is needed to satisfy the foreign key constraint, assumes there is exactly one CONSULTEE team
+    consulteeTeam = teamRepository.findByTeamType(TeamType.CONSULTEE).getFirst();
+
+    var editorTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.EDITOR).withTeam(industryTeam).build();
+    var caseManagerTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).withTeam(regualtorTeam).build();
+    var caseOfficerTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.CASE_OFFICER).withTeam(regualtorTeam).build();
+    var technicalReviewerTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.TECHNICAL_REVIEWER).withTeam(regualtorTeam).build();
+    var camTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER).withTeam(regualtorTeam).build();
+    var allocatorTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.ALLOCATOR).withTeam(consulteeTeam).build();
+    var responderTeamRole = TeamRoleTestUtil.newBuilder().withRole(Role.RESPONDER).withTeam(consulteeTeam).build();
+
+    when(teamQueryService.getTeamRoles(USER_DETAIL)).thenReturn(List.of(editorTeamRole));
+    when(teamQueryService.getTeamRoles(CASE_MANAGER_DETAIL)).thenReturn(List.of(caseManagerTeamRole));
+    when(teamQueryService.getTeamRoles(CASE_OFFICER_DETAIL)).thenReturn(List.of(caseOfficerTeamRole));
+    when(teamQueryService.getTeamRoles(TECHNICAL_REVIEWER_DETAIL)).thenReturn(List.of(technicalReviewerTeamRole));
+    when(teamQueryService.getTeamRoles(CAM_USER_DETAIL)).thenReturn(List.of(camTeamRole));
+    when(teamQueryService.getTeamRoles(CONSULTEE_ALLOCATOR_DETAIL)).thenReturn(List.of(allocatorTeamRole));
+    when(teamQueryService.getTeamRoles(CONSULTEE_RESPONDER_DETAIL)).thenReturn(List.of(responderTeamRole));
+
+    var regulatorRoles = new HashSet<>(RoleGroup.REGULATOR_CASE_PROCESSING_ROLES);
+    regulatorRoles.add(Role.VIEWER);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(CASE_MANAGER_DETAIL, TeamType.REGULATOR, regulatorRoles))
+        .thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, regulatorRoles))
+        .thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(TECHNICAL_REVIEWER_DETAIL, TeamType.REGULATOR, regulatorRoles))
+        .thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(CAM_USER_DETAIL, TeamType.REGULATOR, regulatorRoles))
+        .thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(CONSULTEE_ALLOCATOR_DETAIL, TeamType.CONSULTEE, Set.of(Role.ALLOCATOR, Role.RESPONDER)))
+        .thenReturn(true);
+    when(teamQueryService.userHasAtLeastOneStaticRole(CONSULTEE_RESPONDER_DETAIL, TeamType.CONSULTEE, Set.of(Role.ALLOCATOR, Role.RESPONDER)))
+        .thenReturn(true);
+
     when(organisationUnitService.getOrganisationUnitsByIds(
         ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(Collections.singletonList(
         OrganisationUnitTestUtil.orgUnit1Json));
@@ -190,60 +221,20 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     orgUnitRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+
     when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
     when(applicationDataFilterFormService.getPrefilledOrganisation(null)).thenReturn(orgUnitRestSearchItem);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        USER_DETAIL,
-        TeamType.INDUSTRY,
-        EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS))
-    ).thenReturn(Collections.singletonList(INDUSTRY_TEAM));
 
     when(organisationGroupQueryService
-        .getOrganisationUnitsByOrganisationGroupIds(List.of(INDUSTRY_TEAM.getOrganisationGroupId())))
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(Integer.valueOf(industryTeam.getScopeId()))))
         .thenReturn(List.of(orgUnit1Json));
 
-    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
-        field1JsonWithOperatorAndLicences));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(List.of(field1JsonWithOperatorAndLicences));
 
     when(energyPortalUserService.getEnergyPortalUserMap(ArgumentMatchers.anyList())).thenReturn(PORTAL_USERS_DTO_MAP);
-
-    when(teamService.isRegulatorUser(CASE_MANAGER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(CASE_MANAGER_DETAIL, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CASE_MANAGER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
-
-    when(teamService.isRegulatorUser(CASE_OFFICER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(CASE_OFFICER_DETAIL, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CASE_OFFICER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
-
-    when(teamService.isRegulatorUser(TECHNICAL_REVIEWER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(TECHNICAL_REVIEWER_DETAIL, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(TECHNICAL_REVIEWER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
-
-    when(teamService.isConsulteeUser(CONSULTEE_ALLOCATOR_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(CONSULTEE_ALLOCATOR_DETAIL, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CONSULTEE_ALLOCATOR_DETAIL, TeamType.OPRED, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION, RolePermission.RESPOND_TO_CONSULTATION)))
-        .thenReturn(Collections.singletonList(CONSULTATION_TEAM));
-
-    when(teamService.isConsulteeUser(CONSULTEE_RESPONDER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(CONSULTEE_RESPONDER_DETAIL, EnumSet.of(RolePermission.RESPOND_TO_CONSULTATION))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CONSULTEE_RESPONDER_DETAIL, TeamType.OPRED, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION, RolePermission.RESPOND_TO_CONSULTATION)))
-        .thenReturn(Collections.singletonList(CONSULTATION_TEAM));
-
-    when(teamService.isRegulatorUser(CAM_USER_DETAIL)).thenReturn(true);
-    when(permissionService.hasPermission(CAM_USER_DETAIL, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CAM_USER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
-
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.OPRED,
-        Set.of(OpredTeamRole.ALLOCATOR)
-    )).thenReturn(List.of(WebUserAccountId.from(CONSULTEE_ALLOCATOR_DETAIL)));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CONSULTEE_ALLOCATOR_DETAIL))))
         .thenReturn(List.of(CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO));
-    when(opredTeamService.isAccessManager(CONSULTATION_TEAM.toTeamId(), CONSULTEE_ALLOCATOR_DETAIL)).thenReturn(true);
   }
 
   /*********************************** REFERENCE NUMBER ***********************************/
@@ -293,6 +284,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -347,6 +339,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -369,6 +362,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -402,6 +396,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -420,6 +415,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withDuration(getConsentDurationString(ConsentLengthType.SHORT_TERM))
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -438,6 +434,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withDuration(getConsentDurationString(ConsentLengthType.LONG_TERM))
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -456,6 +453,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withDuration(getConsentDurationString(ConsentLengthType.ANNUAL))
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -474,6 +472,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withDuration(getConsentDurationString(ConsentLengthType.SHORT_TERM))
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -492,6 +491,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withDuration(getConsentDurationString(ConsentLengthType.LONG_TERM))
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -545,6 +545,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -580,6 +581,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withAsset(terminal1JsonWithOperator.getName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withGeographicArea("")
             .withLicences("")
             .build()
@@ -620,6 +622,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(field1JsonWithOperatorAndLicences.getName())
             .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .build()
     );
   }
@@ -692,6 +695,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(fieldWithOperatorAndLicencesJson.getName())
             .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
             .build()
     );
@@ -749,6 +753,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(fieldWithOperatorAndLicencesJson.getName())
             .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
             .build()
     );
@@ -776,6 +781,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(primaryFieldWithOperatorAndLicencesJson.getName())
             .withGeographicArea(primaryFieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withLicences(primaryFieldWithOperatorAndLicencesJson.getLicencesAsString())
             .build()
     );
@@ -800,6 +806,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withAsset(fieldWithOperatorAndLicencesJson.getName())
             .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
             .build()
     );
@@ -834,6 +841,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withAsset(terminal1JsonWithOperator.getName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withGeographicArea("")
             .withLicences("")
             .build()
@@ -869,6 +877,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
             .withApplicationId(applicationId)
             .withAsset(terminal1JsonWithOperator.getName())
             .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withReference("Resume application")
             .withGeographicArea("")
             .withLicences("")
             .build()
@@ -910,13 +919,8 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   /********************************** CASE OFFICER ASSIGNED **********************************/
   @Test
   void getWorkAreaItemsForRegulatorByCaseOfficerAssigned_whenFound() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.CASE_OFFICER)
-    )).thenReturn(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL)));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL))))
         .thenReturn(List.of(CASE_OFFICER_ENERGY_PORTAL_USER_DTO));
-    when(teamService.hasAnyTeamRoleOf(any(), any(), anySet())).thenReturn(true);
     workAreaFilterForm.setCaseOfficerWuaId(CASE_OFFICER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
@@ -945,10 +949,6 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   @Test
   void getWorkAreaItemsForRegulatorByCaseOfficerAssigned_whenNotFound() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.CASE_OFFICER)
-    )).thenReturn(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL), WebUserAccountId.from(USER_DETAIL)));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL), WebUserAccountId.from(USER_DETAIL))))
         .thenReturn(List.of(CASE_OFFICER_ENERGY_PORTAL_USER_DTO, ENERGY_PORTAL_USER_DTO));
 
@@ -1043,13 +1043,9 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   @Test
   void getWorkAreaItemsForConsulteeResponder_whenNoConsultationOpen() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.OPRED,
-        Set.of(OpredTeamRole.RESPONDER)
-    )).thenReturn(List.of(WebUserAccountId.from(CONSULTEE_RESPONDER_DETAIL)));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CONSULTEE_RESPONDER_DETAIL))))
         .thenReturn(List.of(CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO));
-    when(opredTeamService.isResponder(CONSULTATION_TEAM.toTeamId(), CONSULTEE_RESPONDER_DETAIL)).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(CONSULTEE_RESPONDER_DETAIL, TeamType.CONSULTEE, Role.RESPONDER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
@@ -1112,7 +1108,6 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   @Test
   void getWorkAreaItemsForRegulatorCaseOfficer_sortDescending() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    when(teamService.hasAnyTeamRoleOf(any(), any(), anySet())).thenReturn(true);
     var productionAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
     var flareAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL);
 
@@ -1258,7 +1253,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
                                                                            ServiceUserDetail caseOfficer) {
     var applicationVersion = createSubmittedApplicationVersion(applicationType, consentLengthForm);
 
-    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(caseOfficer.wuaId()))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(caseOfficer, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficer, CASE_MANAGER_DETAIL);
 
@@ -1271,7 +1266,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
                                                                    ServiceUserDetail camUser) {
     var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
 
-    when(regulatorTeamService.isCamUser(WebUserAccountId.from(camUser.wuaId()))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(camUser, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     camAssignmentService.assignCamUser(applicationVersion, camUser, CASE_OFFICER_DETAIL);
 
@@ -1286,7 +1281,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
     applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
 
-    when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(technicalReviewer.wuaId()))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(technicalReviewer, TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)).thenReturn(true);
 
     technicalReviewService.saveTechnicalReviewRequest(applicationVersion, deadlineInstant,
         "request text", technicalReviewer, caseOfficer);
@@ -1301,7 +1296,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
     applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
 
-    when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+    when(teamQueryService.getStaticTeam(TeamType.CONSULTEE)).thenReturn(consulteeTeam);
 
     consultationService.requestConsultation(applicationVersion, deadlineInstant, caseOfficer);
 

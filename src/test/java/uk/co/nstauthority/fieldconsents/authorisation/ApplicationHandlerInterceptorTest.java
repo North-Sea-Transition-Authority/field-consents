@@ -14,6 +14,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,8 +30,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionNotFoundException;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanViewConsent;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = ApplicationHandlerInterceptorTest.TestController.class)
 class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTest {
@@ -118,30 +121,55 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersionInProgress);
 
-    when(applicationAccessService
-        .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
-        .thenReturn(false);
-
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
-                .userDoesntHavePermission(APPLICATION_ID)))
+                .userDoesntHaveRole(APPLICATION_ID)))
                 .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
-  void userHasPermission() throws Exception {
-    // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersionInProgress);
+  void userHasRole_regulator() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionInProgress));
 
-    when(applicationAccessService
-        .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
+    when(fieldConsentsAccessService.userHasAnyRegulatorRole(user, Set.of(Role.CASE_OFFICER)))
         .thenReturn(true);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
-                .userHasPermission(APPLICATION_ID)))
+                .userHasRole(APPLICATION_ID)))
+                .with(user(user)))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void userHasRole_consultee() throws Exception {
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
+
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersionInProgress, Set.of(Role.CREATOR)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .userHasRole(APPLICATION_ID)))
+                .with(user(user)))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void userHasRole_industry() throws Exception {
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersionInProgress);
+
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersionInProgress, Set.of(Role.CREATOR)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .userHasRole(APPLICATION_ID)))
                 .with(user(user)))
         .andExpect(status().isOk());
   }
@@ -292,29 +320,29 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
     @GetMapping("/no-org-groups/{applicationId}")
     @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-    @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
     public ModelAndView noOrgGroups(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
 
     @GetMapping("/no-team-for-org-group/{applicationId}")
     @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-    @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
     public ModelAndView noTeamForOrgGroup(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
 
     @GetMapping("/user-doesnt-have-permission/{applicationId}")
     @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-    @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
-    public ModelAndView userDoesntHavePermission(@PathVariable Integer applicationId) {
+    @UserCanViewConsent
+    public ModelAndView userDoesntHaveRole(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
 
-    @GetMapping("/user-has-permission/{applicationId}")
-    @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-    @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
-    public ModelAndView userHasPermission(@PathVariable Integer applicationId) {
+    @GetMapping("/user-has-role/{applicationId}")
+    @HasApplicationOrRegulatorRole(
+        regulatorRoles = Role.CASE_OFFICER,
+        industryRoles = Role.CREATOR
+    )
+    public ModelAndView userHasRole(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
 

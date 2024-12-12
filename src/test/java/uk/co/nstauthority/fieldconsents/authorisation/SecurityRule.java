@@ -7,6 +7,8 @@ import com.tngtech.archunit.lang.ArchRule;
 import org.springframework.web.bind.annotation.RequestMapping;
 import uk.co.nstauthority.fieldconsents.fds.footer.FooterLinkController;
 import uk.co.nstauthority.fieldconsents.mvc.error.DefaultErrorController;
+import uk.co.nstauthority.fieldconsents.teams.management.ScopedTeamManagementController;
+import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementController;
 
 public class SecurityRule {
 
@@ -15,6 +17,8 @@ public class SecurityRule {
       .that().areNotDeclaredIn(DefaultErrorController.class)
       .and().areNotDeclaredIn(FooterLinkController.class)
       .and().areMetaAnnotatedWith(RequestMapping.class)
+      .and().areNotDeclaredIn(ScopedTeamManagementController.class)
+      .and().areNotDeclaredIn(TeamManagementController.class)
       .should()
         // meta annotated as the annotation is included as part of other annotations
         .beMetaAnnotatedWith(Security.class)

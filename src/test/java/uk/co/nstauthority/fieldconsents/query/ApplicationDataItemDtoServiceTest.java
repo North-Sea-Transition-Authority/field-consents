@@ -463,7 +463,7 @@ class ApplicationDataItemDtoServiceTest {
     when(dto.applicationUpdateOpen()).thenReturn(applicationUpdateOpen);
     when(dto.consultationOpen()).thenReturn(false);
 
-    var teamType = TeamType.OPRED;
+    var teamType = TeamType.CONSULTEE;
     mockGetDisplayMethodCalls(dto, VIEW_APPLICATION, teamType);
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
@@ -488,7 +488,7 @@ class ApplicationDataItemDtoServiceTest {
     when(dto.applicationUpdateOpen()).thenReturn(false);
     when(dto.consultationOpen()).thenReturn(false);
 
-    var teamType = TeamType.OPRED;
+    var teamType = TeamType.CONSULTEE;
     mockGetDisplayMethodCalls(dto, VIEW_APPLICATION, teamType);
 
     assertThat(applicationDataItemDtoService.getApplicationDataItemView(
@@ -658,7 +658,7 @@ class ApplicationDataItemDtoServiceTest {
   void removeTagsForTeamType_opred() {
     var builder = mock(ApplicationDataItemView.Builder.class, new SelfReturningAnswer());
 
-    applicationDataItemDtoService.removeTagsForTeamType(TeamType.OPRED, builder);
+    applicationDataItemDtoService.removeTagsForTeamType(TeamType.CONSULTEE, builder);
 
     verify(builder).withWithdrawalOpen(null);
     verifyTechnicalReviewDeadlineTagRemoved(builder);

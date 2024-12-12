@@ -17,7 +17,6 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEA
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_OFFICER;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,9 +41,10 @@ import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationSubmissionEmailServiceTest {
@@ -52,10 +53,13 @@ class ApplicationSubmissionEmailServiceTest {
   private EmailService emailService;
 
   @Mock
-  private TeamMemberViewService teamMemberViewService;
+  private OrganisationUnitService organisationUnitService;
 
   @Mock
-  private OrganisationUnitService organisationUnitService;
+  private TeamQueryService teamQueryService;
+
+  @InjectMocks
+  private ApplicationSubmissionEmailService applicationSubmissionEmailService;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -70,34 +74,19 @@ class ApplicationSubmissionEmailServiceTest {
 
   private OrganisationUnitJson primaryOperator;
 
-  private ApplicationSubmissionEmailService applicationSubmissionEmailService;
-
-
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationSubmissionEmailService = new ApplicationSubmissionEmailService(
-        emailService,
-        teamMemberViewService,
-        organisationUnitService
-    );
     primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
   }
 
   @Test
   void sendNonAceApplicationSubmissionEmail_withNoCaseOfficersOrCaseManagersToNotify() {
-    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
-        eq(applicationVersion.getPrimaryOperatorOuId()),
-        anyString(),
-        eq(applicationVersion.getCachedPrimaryOperatorName()))
-    ).thenReturn(primaryOperator);
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(List.of());
 
-    when(emailService.getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
-        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER, RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.getTeamMemberViews(List.of()))
+        .thenReturn(List.of());
 
     applicationSubmissionEmailService.sendNonAceApplicationSubmissionEmail(applicationVersion);
 
@@ -106,6 +95,12 @@ class ApplicationSubmissionEmailServiceTest {
 
   @Test
   void sendNonAceApplicationSubmissionEmail_withCaseOfficersAndCaseManagersToNotify() {
+    var teamRoles = List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_OFFICER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    );
+
     when(organisationUnitService.getOrganisationUnitByIdOrFallback(
         eq(applicationVersion.getPrimaryOperatorOuId()),
         anyString(),
@@ -115,9 +110,15 @@ class ApplicationSubmissionEmailServiceTest {
     when(emailService.getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER, RegulatorTeamRole.CASE_MANAGER)))
-        .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_OFFICER, TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR))
+        .thenReturn(teamRoles);
+
+    when(teamQueryService.getTeamMemberViews(teamRoles))
+        .thenReturn(List.of(
+            TEAM_MEMBER_VIEW_CASE_OFFICER,
+            TEAM_MEMBER_VIEW_CASE_MANAGER_1,
+            TEAM_MEMBER_VIEW_CASE_MANAGER_2
+        ));
 
     applicationSubmissionEmailService.sendNonAceApplicationSubmissionEmail(applicationVersion);
 
@@ -153,15 +154,11 @@ class ApplicationSubmissionEmailServiceTest {
         );
 
     // verify email recipients
-    var testEmailRecipients = emailRecipientCaptor.getAllValues();
-    assertThat(testEmailRecipients).hasSize(3);
-
-    assertThat(testEmailRecipients.get(0).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER).getEmailAddress());
-    assertThat(testEmailRecipients.get(1).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_1).getEmailAddress());
-    assertThat(testEmailRecipients.get(2).getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_2).getEmailAddress());
+    assertThat(emailRecipientCaptor.getAllValues()).containsExactlyInAnyOrder(
+        FieldConsentsEmailRecipient.from(CASE_OFFICER),
+        FieldConsentsEmailRecipient.from(CASE_MANAGER_1),
+        FieldConsentsEmailRecipient.from(CASE_MANAGER_2)
+    );
 
     // verify domain references
     assertThat(domainReferences.get(0).getDomainId())

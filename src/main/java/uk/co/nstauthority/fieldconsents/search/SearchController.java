@@ -6,6 +6,8 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm.A
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -28,7 +30,10 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRole;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Controller
 @RequestMapping("/search")
@@ -42,42 +47,51 @@ public class SearchController {
 
   public static final int SEARCH_RESULT_RENDER_LIMIT = 300;
 
-  private final TeamService teamService;
-
   private final SearchService searchService;
 
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
   private final SearchFilterFormService searchFilterFormService;
 
+  private final TeamQueryService teamQueryService;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(SearchController.class);
 
   SearchController(
-      TeamService teamService,
       SearchService searchService,
       ApplicationDataFilterFormService applicationDataFilterFormService,
-      SearchFilterFormService searchFilterFormService
+      SearchFilterFormService searchFilterFormService,
+      TeamQueryService teamQueryService
   ) {
-    this.teamService = teamService;
+    this.teamQueryService = teamQueryService;
     this.searchService = searchService;
     this.applicationDataFilterFormService = applicationDataFilterFormService;
     this.searchFilterFormService = searchFilterFormService;
   }
 
   @GetMapping
-  public ModelAndView getSearch(@ModelAttribute("searchSession") SearchSession searchSession,
-                                ServiceUserDetail user) {
-    if (searchSession.hasSearchBeenInvoked()) {
-      List<ApplicationDataItemView> results = getApplicationDataItemViews(searchSession, user);
+  public ModelAndView getSearch(
+      @ModelAttribute("searchSession") SearchSession searchSession,
+      ServiceUserDetail user
+  ) {
+    var rolesByTeamType = teamQueryService.getTeamRoles(user)
+        .stream()
+        .collect(Collectors.groupingBy(
+            teamRole -> teamRole.getTeam().getTeamType(),
+            Collectors.mapping(TeamRole::getRole, Collectors.toSet())
+        ));
 
-      return getSearchModelAndView(searchSession, user)
+    if (searchSession.hasSearchBeenInvoked()) {
+      List<ApplicationDataItemView> results = getApplicationDataItemViews(searchSession, user, rolesByTeamType);
+
+      return getSearchModelAndView(searchSession, rolesByTeamType)
           .addObject(SEARCH_RESULT_ITEMS, results.stream().limit(SEARCH_RESULT_RENDER_LIMIT).toList())
           .addObject("searchResultsLimited", results.size() > SEARCH_RESULT_RENDER_LIMIT);
     }
-    return getSearchModelAndView(searchSession, user);
+    return getSearchModelAndView(searchSession, rolesByTeamType);
   }
 
-  private ModelAndView getSearchModelAndView(SearchSession searchSession, ServiceUserDetail user) {
+  private ModelAndView getSearchModelAndView(SearchSession searchSession, Map<TeamType, Set<Role>> rolesByTeamType) {
     var appStatuses = ApplicationVersionStatus.getSearchOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
@@ -87,8 +101,8 @@ public class SearchController {
     var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(searchFilterForm.getOperatorId());
     var prefilledOperatorGroup = searchFilterFormService.getPrefilledOrganisationGroup(searchFilterForm.getOperatorGroupId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
-    var isRegulator = teamService.isRegulatorUser(user);
-    var isRegulatorOrConsultee = isRegulator || teamService.isConsulteeUser(user);
+    var isRegulator = rolesByTeamType.containsKey(TeamType.REGULATOR);
+
     var modelAndView = new ModelAndView("fcs/search/search")
         .addObject("clearFiltersUrl",
             ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
@@ -113,12 +127,13 @@ public class SearchController {
         .addObject("pageTitle", SEARCH_TITLE)
         .addObject("searchInvoked", searchSession.hasSearchBeenInvoked());
 
+
     if (isRegulator) {
       modelAndView.addObject("approvedForIssue",
           Map.of(APPROVED_FOR_ISSUE_FILTER_OPTION, Boolean.TRUE.equals(searchFilterForm.getApprovedForIssue())));
     }
 
-    if (isRegulatorOrConsultee) {
+    if (isRegulator || rolesByTeamType.containsKey(TeamType.CONSULTEE)) {
       modelAndView.addObject("aceStatuses", AceFlagStatus.getDisplayableOptions());
     }
 
@@ -132,16 +147,20 @@ public class SearchController {
     return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
   }
 
-  private List<ApplicationDataItemView> getApplicationDataItemViews(SearchSession searchSession, ServiceUserDetail user) {
+  private List<ApplicationDataItemView> getApplicationDataItemViews(
+      SearchSession searchSession,
+      ServiceUserDetail user,
+      Map<TeamType, Set<Role>> rolesByTeamType
+  ) {
     List<ApplicationDataItemView> results = new ArrayList<>();
 
-    if (teamService.isRegulatorUser(user)) {
+    if (rolesByTeamType.containsKey(TeamType.REGULATOR)) {
       LOGGER.info("Starting Search [Regulator] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getRegulatorApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
-    } else if (teamService.isIndustryUser(user)) {
+    } else if (rolesByTeamType.containsKey(TeamType.INDUSTRY)) {
       LOGGER.info("Starting Search [Industry] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getIndustryApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
-    } else if (teamService.isConsulteeUser(user)) {
+    } else if (rolesByTeamType.containsKey(TeamType.CONSULTEE)) {
       LOGGER.info("Starting Search [Consultee] with filters: {}", searchSession.getSearchFilterForm().prettyPrint());
       results = searchService.getConsulteeApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }

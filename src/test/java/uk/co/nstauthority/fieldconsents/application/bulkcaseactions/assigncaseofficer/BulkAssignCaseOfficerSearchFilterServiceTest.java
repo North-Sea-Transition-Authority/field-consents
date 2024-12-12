@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_3;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,14 +38,16 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class BulkAssignCaseOfficerSearchFilterServiceTest {
 
   private static final Condition CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION =
       APPLICATION_VERSIONS.CURRENT_CASE_OWNER.isNull()
-          .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(CASE_OFFICER.name()));
+          .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(Role.CASE_OFFICER.name()));
 
   @Mock
   private ApplicationDataFilterFormService filterFormService;
@@ -55,10 +56,10 @@ class BulkAssignCaseOfficerSearchFilterServiceTest {
   private ApplicationDataFilterService applicationDataFilterService;
 
   @Mock
-  private TeamService teamService;
+  private CaseAssignmentService caseAssignmentService;
 
   @Mock
-  private CaseAssignmentService caseAssignmentService;
+  private TeamQueryService teamQueryService;
 
   @Spy
   @InjectMocks
@@ -99,16 +100,15 @@ class BulkAssignCaseOfficerSearchFilterServiceTest {
 
   @Test
   void getConditions_emptyForm_isNotRegulator() {
-    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(false);
-
     assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(BulkAssignCaseOfficerSearchFiltersForm.empty(), caseManagerUser))
         .containsExactly(CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION);
   }
 
   @Test
   void getConditions_emptyForm_isRegulator() {
+    when(teamQueryService.userIsMemberOfTeamType(caseManagerUser, TeamType.REGULATOR)).thenReturn(true);
+
     var condition = mock(Condition.class);
-    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(condition);
 
     assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(BulkAssignCaseOfficerSearchFiltersForm.empty(), caseManagerUser))
@@ -149,8 +149,9 @@ class BulkAssignCaseOfficerSearchFilterServiceTest {
     doReturn(Optional.of(caseOfficerCondition)).when(bulkAssignCaseOfficerSearchFilterService).getCaseOfficerCondition(form.caseOfficerWuaId());
 
     var userCondition = mock(Condition.class);
-    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(userCondition);
+
+    when(teamQueryService.userIsMemberOfTeamType(caseManagerUser, TeamType.REGULATOR)).thenReturn(true);
 
     assertThat(bulkAssignCaseOfficerSearchFilterService.getConditions(form, caseManagerUser)).containsExactly(
         operatorCondition,

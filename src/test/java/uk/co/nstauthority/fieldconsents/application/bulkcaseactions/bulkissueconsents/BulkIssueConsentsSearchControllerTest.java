@@ -35,7 +35,8 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ContextConfiguration(classes = BulkIssueConsentsSearchController.class)
 class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
@@ -76,7 +77,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getSearchResults() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(Set.of(1, 2, 3));
     assertThat(this.bulkIssueConsentsSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).containsOnly(1, 2, 3);
@@ -168,7 +169,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
     this.bulkIssueConsentsSessionContext.setFilters(this.bulkIssueConsentsSearchFiltersForm);
     assertThat(bulkIssueConsentsSessionContext.getSearchFiltersForm()).isEqualTo(this.bulkIssueConsentsSearchFiltersForm);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(BulkIssueConsentsSearchController.class).clearSearchFilters(null)))
         .with(user(user))
@@ -183,7 +184,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
   void filterSearchResults() throws Exception {
     assertThat(this.bulkIssueConsentsSessionContext.getSearchFiltersForm().operatorId()).isNull();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     var operatorId = 123;
 
@@ -201,7 +202,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void submitBulkIssueConsentsSelection() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     assertThat(this.bulkIssueConsentsSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).isEmpty();
 
@@ -222,7 +223,7 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
     this.bulkCaseActionSelectedApplicationsForm.setSelectedApplicationIds(Set.of(1, 2, 3));
     assertThat(this.bulkIssueConsentsSessionContext.getSelectedApplicationsForm().getSelectedApplicationIds()).containsOnly(1, 2, 3);
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamQueryService.userHasStaticRole(user, TeamType.REGULATOR, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)).thenReturn(true);
 
     mockAddSearchFiltersToModelAndView();
 

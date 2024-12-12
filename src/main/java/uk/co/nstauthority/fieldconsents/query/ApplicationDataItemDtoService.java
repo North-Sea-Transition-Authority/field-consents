@@ -308,7 +308,7 @@ public class ApplicationDataItemDtoService {
       return;
     }
 
-    if (TeamType.OPRED.equals(teamType)) {
+    if (TeamType.CONSULTEE.equals(teamType)) {
       removeTechnicalReviewTag(builder);
       removeApplicationUpdateTag(builder);
       removeWithdrawalTag(builder);

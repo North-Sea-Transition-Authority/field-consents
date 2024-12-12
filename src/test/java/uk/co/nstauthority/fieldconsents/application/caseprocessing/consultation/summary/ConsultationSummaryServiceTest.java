@@ -69,7 +69,7 @@ class ConsultationSummaryServiceTest {
   private static final Instant REQUESTED_ON = Instant.now();
   private static final Instant CONSULTATION_DEADLINE = Instant.now();
   private static final Instant RESPONDED_ON = Instant.now();
-  private static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder().withTeamType(TeamType.OPRED).build();
+  private static final Team CONSULTATION_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build();
   private static final WebUserAccountId USER_WUA_ID = WebUserAccountId.from(1L);
   private static final WebUserAccountId REQUESTER_WUA_ID = WebUserAccountId.from(2L);
   private static final WebUserAccountId RESPONDER_WUA_ID = WebUserAccountId.from(3L);
@@ -184,7 +184,7 @@ class ConsultationSummaryServiceTest {
 
   @Test
   void getConsultationSummaryItemsForUser_noConsultationsExist() {
-    when(consultationService.getConsultationsByApplicationForUser(application, RESPONDER_USER)).thenReturn(Collections.emptySet());
+    when(consultationService.getConsultationsByApplicationForUser(application, RESPONDER_USER)).thenReturn(List.of());
     assertThat(consultationSummaryService.getConsultationSummaryItemsForUser(application, RESPONDER_USER)).isEmpty();
   }
 
@@ -202,7 +202,7 @@ class ConsultationSummaryServiceTest {
         .when(consultationSummaryService)
         .getConsultationSummaryItem(integerCaptor.capture(), consultationCaptor.capture(), eq(Collections.emptyList()), energyPortalUserByWuaIdCaptor.capture());
 
-    var consultations = Set.of(consultation2, consultation);
+    var consultations = List.of(consultation2, consultation);
     when(consultationService.getConsultationsByApplicationForUser(application, RESPONDER_USER)).thenReturn(consultations);
 
     assertThat(consultationSummaryService.getConsultationSummaryItemsForUser(application, RESPONDER_USER))
@@ -441,7 +441,7 @@ class ConsultationSummaryServiceTest {
             SummaryDataView
                 .newWithKeyValue("Consultation status", ConsultationStatus.OPEN.getDisplayName())
                 .addKeyValue("Deadline", DateUtils.format(CONSULTATION_DEADLINE, DateUtils.DATE_TIME))
-                .addKeyValue("Consultee", CONSULTATION_TEAM.getDisplayName())
+                .addKeyValue("Consultee", CONSULTATION_TEAM.getName())
                 .addKeyValue("Responder", responder.displayName())
                 .addKeyValue("Request application version", applicationVersion.getVersion())
                 .addKeyValue("Requested by", requester.displayName())
@@ -464,7 +464,7 @@ class ConsultationSummaryServiceTest {
             SummaryDataView
                 .newWithKeyValue("Consultation status", ConsultationStatus.OPEN.getDisplayName())
                 .addKeyValue("Deadline", DateUtils.format(CONSULTATION_DEADLINE, DateUtils.DATE_TIME))
-                .addKeyValue("Consultee", CONSULTATION_TEAM.getDisplayName())
+                .addKeyValue("Consultee", CONSULTATION_TEAM.getName())
                 .addKeyValue("Responder", "")
                 .addKeyValue("Request application version", applicationVersion.getVersion())
                 .addKeyValue("Requested by", requester.displayName())
@@ -491,7 +491,7 @@ class ConsultationSummaryServiceTest {
             SummaryDataView
                 .newWithKeyValue("Consultation status", ConsultationStatus.CLOSED.getDisplayName())
                 .addKeyValue("Deadline", DateUtils.format(CONSULTATION_DEADLINE, DateUtils.DATE_TIME))
-                .addKeyValue("Consultee", CONSULTATION_TEAM.getDisplayName())
+                .addKeyValue("Consultee", CONSULTATION_TEAM.getName())
                 .addKeyValue("Responder", responder.displayName())
                 .addKeyValue("Request application version", applicationVersion.getVersion())
                 .addKeyValue("Requested by", requester.displayName())
@@ -538,7 +538,7 @@ class ConsultationSummaryServiceTest {
             SummaryDataView
                 .newWithKeyValue("Consultation status", ConsultationStatus.CLOSED.getDisplayName())
                 .addKeyValue("Deadline", DateUtils.format(CONSULTATION_DEADLINE, DateUtils.DATE_TIME))
-                .addKeyValue("Consultee", CONSULTATION_TEAM.getDisplayName())
+                .addKeyValue("Consultee", CONSULTATION_TEAM.getName())
                 .addKeyValue("Responder", user.displayName())
                 .addKeyValue("Request application version", applicationVersion.getVersion())
                 .addKeyValue("Requested by", user.displayName())
@@ -579,7 +579,7 @@ class ConsultationSummaryServiceTest {
             SummaryDataView
                 .newWithKeyValue("Consultation status", ConsultationStatus.CLOSED.getDisplayName())
                 .addKeyValue("Deadline", DateUtils.format(CONSULTATION_DEADLINE, DateUtils.DATE_TIME))
-                .addKeyValue("Consultee", CONSULTATION_TEAM.getDisplayName())
+                .addKeyValue("Consultee", CONSULTATION_TEAM.getName())
                 .addKeyValue("Responder", user.displayName())
                 .addKeyValue("Request application version", applicationVersion.getVersion())
                 .addKeyValue("Requested by", user.displayName())

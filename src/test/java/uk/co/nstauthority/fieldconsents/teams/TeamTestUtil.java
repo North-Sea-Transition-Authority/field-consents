@@ -1,61 +1,60 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
-import java.util.Random;
-import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationException;
+import java.util.UUID;
 
 public class TeamTestUtil {
 
-  public static Integer randomInteger() {
-    var random = new Random();
-    return random.nextInt();
+  public static Builder newBuilder() {
+    return new Builder();
   }
 
-  public static TeamView createTeamView(Team team) {
-    return new TeamView(new TeamId(team.getId()), team.getTeamType(), team.getDisplayName());
-  }
+  public static class Builder {
 
-  private TeamTestUtil() {
-    throw new IllegalUtilClassInstantiationException(this.getClass());
-  }
-
-  public static TeamBuilder Builder() {
-    return new TeamBuilder();
-  }
-
-  public static class TeamBuilder {
-
-    private Integer id = randomInteger();
+    private UUID id = UUID.randomUUID();
+    private String name = "Test team";
     private TeamType teamType = TeamType.REGULATOR;
-    private String displayName = "team name";
+    private String scopeType = null;
+    private String scopeId = null;
 
-    private Integer organisationGroupId = randomInteger();
-
-    public TeamBuilder withId(Integer id) {
+    public Builder withId(UUID id) {
       this.id = id;
       return this;
     }
 
-    public TeamBuilder withTeamType(TeamType teamType) {
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withTeamType(TeamType teamType) {
       this.teamType = teamType;
       return this;
     }
 
-    public TeamBuilder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withScopeType(String scopeType) {
+      this.scopeType = scopeType;
       return this;
     }
 
-    public TeamBuilder withOrganisationGroupId(Integer id) {
-      this.organisationGroupId = id;
+    public Builder withScopeId(String scopeId) {
+      this.scopeId = scopeId;
       return this;
     }
 
     public Team build() {
       var team = new Team(id);
+      team.setName(name);
       team.setTeamType(teamType);
-      team.setDisplayName(displayName);
-      team.setOrganisationGroupId(organisationGroupId);
+      team.setScopeType(scopeType);
+      team.setScopeId(scopeId);
+
       return team;
     }
+
+    private Builder() {
+
+    }
+
   }
+
 }

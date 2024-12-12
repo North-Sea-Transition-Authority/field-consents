@@ -5,8 +5,9 @@ import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
-import java.util.Set;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
@@ -15,53 +16,60 @@ import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 class ConsultationEmailService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConsultationEmailService.class);
 
   static final String CONSULTATION_AGREE_DECISION = "agrees";
   static final String CONSULTATION_DOES_NOT_AGREE_DECISION = "does not agree";
   static final String CASE_MANAGERS_RECIPIENT_DISPLAY_NAME = "Case Managers";
 
   private final EmailService emailService;
-  private final TeamMemberViewService teamMemberViewService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final TeamQueryService teamQueryService;
 
-  @Autowired
-  public ConsultationEmailService(EmailService emailService,
-                                  TeamMemberViewService teamMemberViewService,
-                                  EnergyPortalUserService energyPortalUserService) {
+  ConsultationEmailService(
+      EmailService emailService,
+      EnergyPortalUserService energyPortalUserService,
+      TeamQueryService teamQueryService
+  ) {
     this.emailService = emailService;
-    this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
+    this.teamQueryService = teamQueryService;
   }
 
   public void sendConsultationRequestEmail(Consultation consultation) {
+    var allocatorTeamRoles = teamQueryService.getTeamRoles(TeamType.CONSULTEE)
+        .stream()
+        .filter(teamRole -> teamRole.getRole() == Role.ALLOCATOR)
+        .toList();
+
+    var emailRecipients = teamQueryService.getTeamMemberViews(allocatorTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .collect(Collectors.toSet());
+
+    var emailTemplate = GovukNotifyTemplate.CONSULTATION_REQUEST;
+
+    if (emailRecipients.isEmpty()) {
+      LOGGER.info("Didn't find any consultee allocators to send [{}] email to", emailTemplate);
+      return;
+    }
+
     var applicationVersion = consultation.getRequestApplicationVersion();
 
     var mergedTemplate = emailService
-        .getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, applicationVersion)
-        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consultation.getConsultationTeam().getDisplayName())
+        .getTemplateForApplication(emailTemplate, applicationVersion)
+        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consultation.getConsultationTeam().getName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(consultation.getRequestDeadline(), DATE_TIME))
         .merge();
 
-    var allocatorEmailRecipients = teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(consultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR))
-        .stream()
-        .map(FieldConsentsEmailRecipient::from)
-        .toList();
-
-    // iterate over the list of allocators to send an email out to each recipient
-    allocatorEmailRecipients.forEach(opredAllocator ->
-        emailService.sendEmail(
-            mergedTemplate,
-            opredAllocator,
-            applicationVersion
-        ));
+    emailRecipients.forEach(emailRecipient -> emailService.sendEmail(mergedTemplate, emailRecipient, applicationVersion));
   }
 
   public void sendConsultationAssignmentEmail(Consultation consultation, ServiceUserDetail consulteeAllocator) {
@@ -90,7 +98,7 @@ class ConsultationEmailService {
     var consultationDecision = getConsultationDecision(consultation);
     var mergedTemplateBuilder = emailService
         .getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, applicationVersion)
-        .withMailMergeField("CONSULTEE_NAME", consultation.getConsultationTeam().getDisplayName())
+        .withMailMergeField("CONSULTEE_NAME", consultation.getConsultationTeam().getName())
         .withMailMergeField("CONSULTATION_DECISION", consultationDecision);
 
     // email the case officer if available
@@ -112,23 +120,20 @@ class ConsultationEmailService {
       return;
     }
 
-    // otherwise email all case managers
-    var caseManagerEmailRecipients = teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER))
+    var caseManagerTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
-        .map(FieldConsentsEmailRecipient::from)
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_MANAGER)
         .toList();
 
     var mergedTemplate = mergedTemplateBuilder
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME)
         .merge();
 
-    caseManagerEmailRecipients.forEach(caseManagerEmailRecipient ->
-        emailService.sendEmail(
-            mergedTemplate,
-            caseManagerEmailRecipient,
-            applicationVersion
-        ));
+    // otherwise email all case managers
+    teamQueryService.getTeamMemberViews(caseManagerTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .forEach(emailRecipient -> emailService.sendEmail(mergedTemplate, emailRecipient, applicationVersion));
   }
 
   String getConsultationDecision(Consultation consultation) {

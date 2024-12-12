@@ -8,7 +8,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Service
 public class ApplicationVersionAuditService {
@@ -54,7 +54,7 @@ public class ApplicationVersionAuditService {
               (Long) objects[3],
               (ApplicationVersionStatus) objects[4],
               (Long) objects[5],
-              (RegulatorTeamRole) objects[6]
+              (Role) objects[6]
           )).toList();
     });
   }

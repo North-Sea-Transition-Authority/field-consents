@@ -1,0 +1,1 @@
+UPDATE teams SET type = 'CONSULTEE' WHERE type = 'OPRED';

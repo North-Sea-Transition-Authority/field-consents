@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,13 +14,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
-import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,9 +34,19 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = FieldController.class)
 public class FieldControllerTest extends AbstractControllerTest {
+
+  private static final Set<Role> INDUSTRY_ROLES = EnumSet.of(
+      Role.CREATOR,
+      Role.EDITOR,
+      Role.SUBMITTER,
+      Role.FINANCE_ADMINISTRATOR,
+      Role.VIEWER,
+      Role.CONSENT_RECIPIENT
+  );
 
   @MockBean
   private ManageAssetService manageAssetService;
@@ -54,22 +65,42 @@ public class FieldControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void manageField_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
-        .thenReturn(false);
+  void manageField_whenFieldNotFound() throws Exception {
+    var fieldId = field1JsonWithOperator.getId();
+
+    when(fieldService.findFieldWithOperator(eq(fieldId), anyString()))
+        .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
-            .manageField(field1JsonWithOperatorAndLicences.getId(), null)))
+            .manageField(field1JsonWithOperator.getId(), null)))
+            .with(user(user))
+        )
+        .andExpect(status().isNotFound());
+  }
+
+  @SecurityTest
+  void manageField_whenUserDoesNotHaveAnyRequiredRoles_thenIsForbidden() throws Exception {
+    var fieldId = field1JsonWithOperator.getId();
+
+    when(fieldService.findFieldWithOperator(eq(fieldId), anyString()))
+        .thenReturn(Optional.of(field1JsonWithOperator));
+
+    mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
+            .manageField(field1JsonWithOperator.getId(), null)))
             .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void manageField() throws Exception {
-    // Required for HasAssetPermissionInterceptor
-    when(fieldService.getFieldWithOperator(field1JsonWithOperator.getId(), "Search field for asset permission")).thenReturn(field1JsonWithOperator);
-    when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS)).thenReturn(true);
+    var fieldId = field1JsonWithOperator.getId();
+
+    // Required for AssetRoleInterceptor
+    when(fieldService.findFieldWithOperator(eq(fieldId), anyString()))
+        .thenReturn(Optional.of(field1JsonWithOperator));
+    when(fieldConsentsAccessService.userHasAnyIndustryRole(user, field1JsonWithOperator, INDUSTRY_ROLES))
+        .thenReturn(true);
 
     when(fieldService.getFieldWithOperatorAndLicences(field1JsonWithOperatorAndLicences.getId(), "Get field details for management screen"))
         .thenReturn(field1JsonWithOperatorAndLicences);

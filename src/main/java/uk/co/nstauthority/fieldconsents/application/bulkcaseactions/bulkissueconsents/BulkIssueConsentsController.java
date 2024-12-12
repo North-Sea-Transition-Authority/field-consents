@@ -15,15 +15,15 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("bulk-case-actions/issue-consents")
-@HasPermission(permissions = RolePermission.AUTHORISE_FCS_CONSENTS)
+@HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
 public class BulkIssueConsentsController {
 
   public static final String BULK_ISSUE_CONSENTS = "Bulk issue consents";

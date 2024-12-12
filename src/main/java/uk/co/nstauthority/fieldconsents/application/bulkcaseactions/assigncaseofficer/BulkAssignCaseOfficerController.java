@@ -16,19 +16,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("bulk-case-actions/assign-case-officer")
-@HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+@HasRegulatorRole(Role.CASE_MANAGER)
 public class BulkAssignCaseOfficerController {
 
   public static final String ASSIGN_CASE_OFFICER = "Assign case officer";
@@ -82,7 +82,8 @@ public class BulkAssignCaseOfficerController {
 
     sessionContext.clearSelectedApplications();
 
-    var bannerMessage = bulkAssignCaseOfficerService.getNotificationBannerSuccessMessage(applicationIds.size(), caseOfficer);
+    var bannerMessage = bulkAssignCaseOfficerService.getNotificationBannerSuccessMessage(applicationIds.size(),
+        caseOfficer);
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, bannerMessage);
 
     return ReverseRouter.redirect(on(BulkAssignCaseOfficerSearchController.class).getSearchResults(null, null));
@@ -94,7 +95,8 @@ public class BulkAssignCaseOfficerController {
       BulkAssignCaseOfficerForm form
   ) {
     var selectedApplicationIds = sessionContext.getSelectedApplicationsForm().getSelectedApplicationIds();
-    var applicationDataItemViews = bulkCaseActionService.getSelectedApplicationDataItemViews(selectedApplicationIds, user);
+    var applicationDataItemViews = bulkCaseActionService.getSelectedApplicationDataItemViews(selectedApplicationIds,
+        user);
 
     var caseOfficerOptions = bulkAssignCaseOfficerService.getAvailableCaseOfficers()
         .stream()

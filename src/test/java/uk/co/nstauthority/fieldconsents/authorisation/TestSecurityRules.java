@@ -43,5 +43,6 @@ public class TestSecurityRules {
       .and().doNotHaveSimpleName("AbstractApplicationControllerTest")
       .and().doNotHaveSimpleName("AbstractActuatorControllerTest")
       .and().doNotHaveSimpleName("FooterLinkControllerTest")
+      .and().resideOutsideOfPackage("uk.co.nstauthority.fieldconsents.teams.management")
       .should(containAtLeastOneSecurityTest);
 }

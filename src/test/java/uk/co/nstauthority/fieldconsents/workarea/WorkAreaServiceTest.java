@@ -1,52 +1,47 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
+import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaServiceTest {
-
-  private static final Set<RolePermission> CONSULTEE_ALLOCATE_RESPOND_PERMISSIONS =
-      EnumSet.of(ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION);
 
   @Mock
   private WorkAreaItemDtoService workAreaItemDtoService;
@@ -58,16 +53,13 @@ class WorkAreaServiceTest {
   private OrganisationGroupQueryService organisationGroupQueryService;
 
   @Mock
-  private TeamService teamService;
-
-  @Mock
-  private PermissionService permissionService;
-
-  @Mock
   private ApplicationDataItemDtoService applicationDataItemDtoService;
 
   @Mock
   private ApplicationDataItemViewService applicationDataItemViewService;
+
+  @Mock
+  private TeamQueryService teamQueryService;
 
   @InjectMocks
   private WorkAreaService workAreaService;
@@ -86,17 +78,18 @@ class WorkAreaServiceTest {
   void setUp() {
     user = ServiceUserDetailTestUtil.Builder().build();
 
-    shell1IndustryTeam = TeamTestUtil.Builder()
-        .withOrganisationGroupId(ORG_GROUP_ID_1)
+    shell1IndustryTeam = TeamTestUtil.newBuilder()
+        .withScopeId(ORG_GROUP_ID_1.toString())
+        .withScopeType(TeamScopeReference.ORGANISATION_GROUP_ID)
         .withTeamType(TeamType.INDUSTRY)
         .build();
 
-    regulatorTeam = TeamTestUtil.Builder()
+    regulatorTeam = TeamTestUtil.newBuilder()
         .withTeamType(TeamType.REGULATOR)
         .build();
 
-    consulteeTeam = TeamTestUtil.Builder()
-        .withTeamType(TeamType.OPRED)
+    consulteeTeam = TeamTestUtil.newBuilder()
+        .withTeamType(TeamType.CONSULTEE)
         .build();
 
     filter = new WorkAreaFilter();
@@ -104,7 +97,7 @@ class WorkAreaServiceTest {
 
   @Test
   void getIndustryWorkAreaItemViews_withNoOrganisationGroup() {
-    shell1IndustryTeam.setOrganisationGroupId(null);
+    shell1IndustryTeam.setScopeId(null);
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
@@ -114,23 +107,25 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getIndustryWorkAreaItemViews_withNoEditPermissionOrPayAndSubmitPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.INDUSTRY,
-        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
-    ).thenReturn(Collections.emptyList());
+  void getIndustryWorkAreaItemViews_noEditOrSubmitApplicationRoles() {
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(shell1IndustryTeam)
+            .withRole(Role.INDUSTRY_ACCESS_MANAGER)
+            .build()
+    ));
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
   @Test
-  void getIndustryWorkAreaItemViews_withWorkAreaItemsToDisplay() {
+  void getIndustryWorkAreaItemViews_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.INDUSTRY,
-        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
-    ).thenReturn(List.of(shell1IndustryTeam));
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(shell1IndustryTeam)
+            .withRole(Role.EDITOR)
+            .build()
+    ));
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
@@ -138,20 +133,19 @@ class WorkAreaServiceTest {
 
   @Test
   void getRegulatorWorkAreaItemViews_withNoPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.REGULATOR, REGULATOR_PERMISSIONS
-    ))
-        .thenReturn(Collections.emptyList());
+    var regulatorRoles = new HashSet<>(RoleGroup.REGULATOR_CASE_PROCESSING_ROLES);
+    regulatorRoles.add(Role.VIEWER);
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, regulatorRoles)).thenReturn(false);
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
   }
 
   @Test
   void getRegulatorWorkAreaItemViews_withNoWorkAreaItemsToDisplay() {
+    var regulatorRoles = new HashSet<>(RoleGroup.REGULATOR_CASE_PROCESSING_ROLES);
+    regulatorRoles.add(Role.VIEWER);
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, regulatorRoles)).thenReturn(true);
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
@@ -163,8 +157,10 @@ class WorkAreaServiceTest {
     var workAreaItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal();
     var workAreaItemDtos = List.of(workAreaItemDto);
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(workAreaItemDtos);
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
+
+    var regulatorRoles = new HashSet<>(RoleGroup.REGULATOR_CASE_PROCESSING_ROLES);
+    regulatorRoles.add(Role.VIEWER);
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.REGULATOR, regulatorRoles)).thenReturn(true);
 
     var organisationUnitJson = List.of(field1JsonWithOperator.getOperatorJson());
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(workAreaItemDtos))
@@ -186,11 +182,12 @@ class WorkAreaServiceTest {
   @Test
   void getIndustryWorkAreaItemViews_withProductionInProgress_forField() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.INDUSTRY,
-        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
-    ).thenReturn(List.of(shell1IndustryTeam));
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder()
+            .withTeam(shell1IndustryTeam)
+            .withRole(Role.SUBMITTER)
+            .build()
+    ));
 
     var organisationUnitJsons = List.of(field1JsonWithOperator.getOperatorJson());
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
@@ -219,12 +216,7 @@ class WorkAreaServiceTest {
 
   @Test
   void getConsulteeWorkAreaItemViews_withNoPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.OPRED,
-        CONSULTEE_ALLOCATE_RESPOND_PERMISSIONS
-    ))
-        .thenReturn(Collections.emptyList());
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, Set.of(Role.ALLOCATOR, Role.RESPONDER))).thenReturn(true);
 
     assertThat(workAreaService.getConsulteeWorkAreaItems(filter, user, WorkAreaTab.ALL_CONSULTATIONS)).isEmpty();
   }
@@ -232,9 +224,7 @@ class WorkAreaServiceTest {
   @Test
   void getConsulteeWorkAreaItemViews_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED,
-        CONSULTEE_ALLOCATE_RESPOND_PERMISSIONS))
-        .thenReturn(List.of(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, Set.of(Role.ALLOCATOR, Role.RESPONDER))).thenReturn(true);
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getConsulteeWorkAreaItems(filter, user, WorkAreaTab.ALL_CONSULTATIONS)).isEmpty();
@@ -250,8 +240,7 @@ class WorkAreaServiceTest {
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any()))
         .thenReturn(Collections.singletonList(workAreaItemDto));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, CONSULTEE_ALLOCATE_RESPOND_PERMISSIONS))
-        .thenReturn(Collections.singletonList(consulteeTeam));
+    when(teamQueryService.userHasAtLeastOneStaticRole(user, TeamType.CONSULTEE, Set.of(Role.ALLOCATOR, Role.RESPONDER))).thenReturn(true);
 
     var organisationUnitJsons = List.of(field1JsonWithOperator.getOperatorJson());
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(workAreaItemDto)))
@@ -261,7 +250,7 @@ class WorkAreaServiceTest {
     when(applicationDataItemViewService.getItemViewsFromDtos(
         workAreaItemDtos,
         organisationUnitJsons,
-        TeamType.OPRED,
+        TeamType.CONSULTEE,
         user
     )).thenReturn(Collections.singletonList(applicationDataItemView));
 
@@ -271,238 +260,29 @@ class WorkAreaServiceTest {
 
   @Test
   void getTabsAvailableToUser_withNoPermissionForAnyTab() {
-    when(permissionService.hasPermission(any(), any()))
-        .thenReturn(false);
-
+    when(teamQueryService.getTeamRoles(user)).thenReturn(List.of());
     assertThat(workAreaService.getTabsAvailableToUser(user)).isEmpty();
   }
 
-  @Test
-  void getTabsAvailableToUser_withProcessFcsApplications() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
+  @ParameterizedTest
+  @MethodSource("getTabsAvailableToUser_arguments")
+  void getTabsAvailableToUser(Role role, List<WorkAreaTab> expectedWorkAreaTabs) {
+    when(teamQueryService.getTeamRoles(user))
+        .thenReturn(List.of(TeamRoleTestUtil.newBuilder().withRole(role).build()
+    ));
 
     assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
+        .isEqualTo(expectedWorkAreaTabs);
   }
 
-  @Test
-  void getTabsAvailableToUser_withAssignFcsApplicationsAndAuthoriseFcsConsents() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.ALL_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withTechnicalReviewFcsApplications() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_TECHNICAL_REVIEWS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withCamUserAuthoriseFcsConsents() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_CAM_APPLICATIONS,
-            WorkAreaTab.ALL_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withAllocationConsultation() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(true);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.UNASSIGNED_CONSULTATIONS,
-            WorkAreaTab.ALL_CONSULTATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndAuthoriseFcsConsents() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_APPLICATIONS,
-            WorkAreaTab.ALL_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withProcessFcsApplicationsAndTechnicalReviewFcsApplications() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_APPLICATIONS,
-            WorkAreaTab.MY_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withAssignFcsApplicationsAndAuthoriseFcsConsentsAndTechnicalReviewFcsApplications() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndAuthoriseFcsConsentsAndTechnicalReviewFcsApplications() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(false);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_APPLICATIONS,
-            WorkAreaTab.MY_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS
-        );
-  }
-
-  @Test
-  void getTabsAvailableToUser_withAllRegulatorAndConsulteePermissions() {
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
-        .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ALLOCATE_CONSULTATION)))
-        .thenReturn(true);
-
-    assertThat(workAreaService.getTabsAvailableToUser(user))
-        .containsExactly(
-            WorkAreaTab.MY_APPLICATIONS,
-            WorkAreaTab.MY_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
-            WorkAreaTab.ALL_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_APPLICATIONS,
-            WorkAreaTab.UNASSIGNED_CONSULTATIONS,
-            WorkAreaTab.ALL_CONSULTATIONS
-        );
+  private static Stream<Arguments> getTabsAvailableToUser_arguments() {
+    return Stream.of(
+        arguments(Role.CASE_OFFICER, List.of(WorkAreaTab.MY_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS)),
+        arguments(Role.CASE_MANAGER, List.of(WorkAreaTab.ALL_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS)),
+        arguments(Role.TECHNICAL_REVIEWER, List.of(WorkAreaTab.MY_TECHNICAL_REVIEWS, WorkAreaTab.ALL_TECHNICAL_REVIEWS)),
+        arguments(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, List.of(WorkAreaTab.MY_CAM_APPLICATIONS, WorkAreaTab.ALL_APPLICATIONS)),
+        arguments(Role.ALLOCATOR, List.of(WorkAreaTab.UNASSIGNED_CONSULTATIONS, WorkAreaTab.ALL_CONSULTATIONS)),
+        arguments(Role.RESPONDER, List.of(WorkAreaTab.MY_CONSULTATIONS))
+    );
   }
 }

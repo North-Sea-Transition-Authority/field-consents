@@ -3,8 +3,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.SENDER_IDENTIFIER_MERGE_FIELD_NAME;
 
-import java.util.Set;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -14,24 +14,27 @@ import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class CaseAssignmentEmailService {
 
-  private final EmailService emailService;
-  private final TeamMemberViewService teamMemberViewService;
-  private final EnergyPortalUserService energyPortalUserService;
+  private static final Logger LOGGER = LoggerFactory.getLogger(CaseAssignmentEmailService.class);
 
-  @Autowired
-  public CaseAssignmentEmailService(EmailService emailService,
-                                    TeamMemberViewService teamMemberViewService,
-                                    EnergyPortalUserService energyPortalUserService) {
+  private final EmailService emailService;
+  private final EnergyPortalUserService energyPortalUserService;
+  private final TeamQueryService teamQueryService;
+
+  CaseAssignmentEmailService(
+      EmailService emailService,
+      EnergyPortalUserService energyPortalUserService,
+      TeamQueryService teamQueryService
+  ) {
     this.emailService = emailService;
-    this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
+    this.teamQueryService = teamQueryService;
   }
 
   public void sendCaseAssignmentEmail(ApplicationVersion applicationVersion,
@@ -52,28 +55,36 @@ public class CaseAssignmentEmailService {
   }
 
   void sendCaseOwnershipReleasedEmail(ApplicationVersion applicationVersion, ServiceUserDetail caseOfficerUser) {
-    var mergedTemplateBuilder = emailService
-        .getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion)
-        .withMailMergeField(SENDER_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerUser.displayName());
-
-    var caseManagerEmailRecipients = teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER))
+    var caseManagerTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
-        .map(FieldConsentsEmailRecipient::from)
+        .filter(teamRole -> teamRole.getRole() == Role.CASE_MANAGER)
         .toList();
 
-    // iterate over the list of manager views to send an email out to each recipient
-    caseManagerEmailRecipients.forEach(caseManager -> {
-      var mergedTemplate = mergedTemplateBuilder
-          .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseManager.displayName())
-          .merge();
+    var emailTemplate = GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER;
 
-      emailService.sendEmail(
-          mergedTemplate,
-          caseManager,
-          applicationVersion
-      );
-    });
+    if (caseManagerTeamRoles.isEmpty()) {
+      LOGGER.info("Didn't find any case managers to send [{}] email to", emailTemplate);
+      return;
+    }
+
+    var mergedTemplateBuilder = emailService
+        .getTemplateForApplication(emailTemplate, applicationVersion)
+        .withMailMergeField(SENDER_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerUser.displayName());
+
+    teamQueryService.getTeamMemberViews(caseManagerTeamRoles)
+        .stream()
+        .map(FieldConsentsEmailRecipient::from)
+        .forEach(emailRecipient -> {
+          var mergedTemplate = mergedTemplateBuilder
+              .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, emailRecipient.displayName())
+              .merge();
+
+          emailService.sendEmail(
+              mergedTemplate,
+              emailRecipient,
+              applicationVersion
+          );
+        });
   }
 
   void sendCaseReturnedToCaseOfficerByCamEmail(ApplicationVersion applicationVersion, ServiceUserDetail camUser) {

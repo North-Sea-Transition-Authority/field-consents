@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @Controller
 @RequestMapping("/document-templates")
-@HasPermission(permissions = RolePermission.MANAGE_DOCUMENT_TEMPLATES)
+@HasRegulatorRole(Role.DOCUMENT_TEMPLATE_MANAGER)
 public class DocumentTemplateController {
 
   private final FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService;
