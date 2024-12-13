@@ -26,14 +26,12 @@ public class CorrelationIdUtil {
     MDC.put(MDC_CORRELATION_ID_ATTR, value);
   }
 
-  public static String setCorrelationIdOnMdcFromRequest(HttpServletRequest request) {
+  public static void setCorrelationIdOnMdcFromRequest(HttpServletRequest request) {
     var newCorrelationId = Optional
         .ofNullable(request.getHeader(HTTP_CORRELATION_ID_HEADER))
         .orElseGet(() -> UUID.randomUUID().toString());
 
     setCorrelationIdOnMdc(newCorrelationId);
-
-    return newCorrelationId;
   }
 
 

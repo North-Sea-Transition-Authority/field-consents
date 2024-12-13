@@ -182,3 +182,9 @@ To view metrics data, you can use the explore section. Select the Prometheus dat
 
 ### User data
 Run the appropriate `insert-all-users-*.sql` in order to create the basic users to test the application.
+
+## Logging
+
+Field Consents can log in either JSON or text mode.
+
+In order to turn on JSON logging, set the profile 'json-logging'. This will automatically include any MDC attributes.
