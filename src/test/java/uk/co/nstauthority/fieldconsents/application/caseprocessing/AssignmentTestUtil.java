@@ -152,7 +152,7 @@ public class AssignmentTestUtil {
           CAM_USER_TEAM_MEMBER_VIEW_2
       );
 
-  public static final List<TeamMemberView> CASE_OFFICER_ASSIGNMENT_CANDIDATES =
+  public static final List<TeamMemberView> CASE_OFFICERS =
       List.of(CASE_OFFICER_TEAM_MEMBER_VIEW_1, CASE_OFFICER_TEAM_MEMBER_VIEW_2);
 
   public static final Map<String, String> CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP =

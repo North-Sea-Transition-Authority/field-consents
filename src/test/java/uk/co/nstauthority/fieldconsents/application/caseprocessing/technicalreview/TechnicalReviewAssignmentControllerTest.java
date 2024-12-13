@@ -74,7 +74,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
   @SecurityTest
   void getTechnicalReviewAssignment_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
-            .getCaseAssignment(APPLICATION_ID, null))))
+            .getCaseAssignment(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 

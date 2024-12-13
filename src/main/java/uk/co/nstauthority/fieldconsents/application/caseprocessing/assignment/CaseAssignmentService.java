@@ -135,13 +135,10 @@ public class CaseAssignmentService {
         && Role.CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner());
   }
 
-  public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var caseOfficerTeamRoles = teamQueryService.getStaticTeamRoles(user, TeamType.REGULATOR)
+  public List<TeamMemberView> getCaseOfficers() {
+    var caseOfficerTeamRoles = teamQueryService.getTeamRoles(TeamType.REGULATOR)
         .stream()
         .filter(teamRole -> teamRole.getRole() == Role.CASE_OFFICER)
-        // exclude the currently assigned case officer if one is assigned
-        .filter(teamRole -> applicationVersion.getCaseOfficerWuaId() == null
-            || !applicationVersion.getCaseOfficerWuaId().equals(teamRole.getWuaId()))
         .toList();
 
     if (caseOfficerTeamRoles.isEmpty()) {

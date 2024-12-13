@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -50,6 +51,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.TeamRoleTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 
 @ExtendWith(MockitoExtension.class)
 class CaseAssignmentServiceTest {
@@ -285,9 +287,29 @@ class CaseAssignmentServiceTest {
   }
 
   @Test
-  void getCaseOfficerCandidates_whenRegulatorUserAndCaseOfficersDontExist_thenEmpty() {
-    when(teamQueryService.getStaticTeamRoles(USER, TeamType.REGULATOR)).thenReturn(List.of());
-    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER)).isEmpty();
+  void getCaseOfficers() {
+    var caseOfficer = TeamRoleTestUtil.newBuilder().withRole(Role.CASE_OFFICER).build();
+    var teamMemberViews = List.of(mock(TeamMemberView.class));
+
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of(
+        caseOfficer,
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build()
+    ));
+    when(teamQueryService.getTeamMemberViews(List.of(caseOfficer))).thenReturn(teamMemberViews);
+
+    assertThat(caseAssignmentService.getCaseOfficers()).isEqualTo(teamMemberViews);
+  }
+
+  @Test
+  void getCaseOfficers_whenCaseOfficersDontExist_thenEmpty() {
+    when(teamQueryService.getTeamRoles(TeamType.REGULATOR)).thenReturn(List.of(
+        TeamRoleTestUtil.newBuilder().withRole(Role.CASE_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.TECHNICAL_REVIEWER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.VIEWER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.ACCESS_MANAGER).build(),
+        TeamRoleTestUtil.newBuilder().withRole(Role.INDUSTRY_ACCESS_MANAGER).build()
+    ));
+    assertThat(caseAssignmentService.getCaseOfficers()).isEmpty();
   }
 
   @Test

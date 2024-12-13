@@ -61,10 +61,10 @@ public enum CaseProcessingActionItem implements Displayable {
   // Case manager actions
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .getCaseAssignment(applicationId, null))),
+          .getCaseAssignment(applicationId))),
   CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .getCaseAssignment(applicationId, null))),
+          .getCaseAssignment(applicationId))),
   // Regulator user actions
   TECHNICAL_REVIEWS("Technical reviews", 4, false, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)

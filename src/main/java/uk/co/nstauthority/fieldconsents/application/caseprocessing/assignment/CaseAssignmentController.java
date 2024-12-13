@@ -7,6 +7,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 
+import java.util.Objects;
+import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,20 +58,23 @@ public class CaseAssignmentController {
 
   @GetMapping("assign")
   @ActionEndPoint({CASE_OFFICER_ASSIGN_OWNERSHIP, CASE_OFFICER_REASSIGN_OWNERSHIP})
-  public ModelAndView getCaseAssignment(@PathVariable Integer applicationId,
-                                        ServiceUserDetail user) {
+  public ModelAndView getCaseAssignment(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    return getCaseAssignmentModelAndView(applicationVersion, user)
-        .addObject("form", new CaseAssignmentForm());
+    var form = new CaseAssignmentForm();
+    Optional.ofNullable(applicationVersion.getCaseOfficerWuaId())
+        .map(WebUserAccountId::from)
+        .ifPresent(form::setCaseOfficerWuaId);
+
+    return getCaseAssignmentModelAndView(applicationVersion)
+        .addObject("form", form);
   }
 
-  private ModelAndView getCaseAssignmentModelAndView(ApplicationVersion applicationVersion,
-                                                     ServiceUserDetail user) {
+  private ModelAndView getCaseAssignmentModelAndView(ApplicationVersion applicationVersion) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
-    var caseOfficerAssignmentCandidatesMap = caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user)
+    var caseOfficers = caseAssignmentService.getCaseOfficers()
         .stream()
         .collect(StreamUtils.toLinkedHashMap(
             teamMemberView -> teamMemberView.wuaId().toString(),
@@ -78,7 +83,7 @@ public class CaseAssignmentController {
 
     return new ModelAndView("fcs/application/caseAssignment")
         .addObject("applicationReference", applicationReference)
-        .addObject("caseOfficerAssignmentCandidates", caseOfficerAssignmentCandidatesMap)
+        .addObject("caseOfficerAssignmentCandidates", caseOfficers)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .caseProcessing(applicationId, null, null, null)));
@@ -96,20 +101,20 @@ public class CaseAssignmentController {
     caseAssignmentFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getCaseAssignmentModelAndView(applicationVersion, user);
+      return getCaseAssignmentModelAndView(applicationVersion);
     }
 
-    var caseOfficerUser = ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getCaseOfficerWuaId()));
+    if (!Objects.equals(form.getCaseOfficerWuaId().id(), applicationVersion.getCaseOfficerWuaId())) {
+      var caseOfficerUser = ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getCaseOfficerWuaId()));
+      caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficerUser, user);
 
-    caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficerUser, user);
+      NotificationBannerUtil.addSuccessNotification(
+          redirectAttributes,
+          "You have assigned this case to %s".formatted(caseOfficerUser.displayName())
+      );
+    }
 
-    NotificationBannerUtil.addSuccessNotification(
-        redirectAttributes,
-        "You have assigned this case to %s".formatted(caseOfficerUser.displayName())
-    );
-
-    return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null, null));
+    return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null, null));
   }
 
   @PostMapping("take-ownership-case-officer")

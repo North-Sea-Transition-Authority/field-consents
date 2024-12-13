@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICERS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
@@ -65,7 +65,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void getCaseAssignment_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
-            .getCaseAssignment(APPLICATION_ID, null))))
+            .getCaseAssignment(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -78,7 +78,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
-            .getCaseAssignment(APPLICATION_ID, null)))
+            .getCaseAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -93,13 +93,13 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
-        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficers())
+        .thenReturn(CASE_OFFICERS);
     when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CASE_OFFICER_ASSIGN_OWNERSHIP, CASE_OFFICER_REASSIGN_OWNERSHIP))
         .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
-            .getCaseAssignment(APPLICATION_ID, null)))
+            .getCaseAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -115,11 +115,11 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
-        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficers())
+        .thenReturn(CASE_OFFICERS);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
-            .getCaseAssignment(APPLICATION_ID, null)))
+            .getCaseAssignment(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -185,8 +185,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
-        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficers())
+        .thenReturn(CASE_OFFICERS);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
