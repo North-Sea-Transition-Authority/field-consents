@@ -148,7 +148,7 @@ class TopNavigationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = Role.class, names = {"CASE_OFFICER", "CASE_MANAGER"}, mode = Mode.INCLUDE)
+  @EnumSource(value = Role.class, names = {"CASE_MANAGER", "CONSENTS_AND_AUTHORISATIONS_MANAGER"}, mode = Mode.INCLUDE)
   void getTopNavigationItems_userCanSeeBulkCaseActions(Role role) {
     when(teamQueryService.getTeamRoles(user)).thenReturn(List.of(
         TeamRoleTestUtil.newBuilder()

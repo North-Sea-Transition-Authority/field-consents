@@ -56,7 +56,7 @@ public enum TopNavigationItem {
   BULK_ACTIONS("Bulk actions",
       ReverseRouter.route(on(BulkCaseActionController.class).getBulkCaseActions(null)),
       Map.of(
-          TeamType.REGULATOR, EnumSet.of(Role.CASE_OFFICER, Role.CASE_MANAGER)
+          TeamType.REGULATOR, EnumSet.of(Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
       )
   ),
   ENERGY_PORTAL("UK Energy Portal",
