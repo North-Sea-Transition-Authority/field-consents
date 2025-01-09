@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.query;
 
-import static org.jooq.impl.DSL.exists;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
@@ -136,16 +135,15 @@ public class ApplicationDataItemViewService {
     var fieldIdsWhereUserIsFieldEquityPartner =
         fieldEquityPartnerAccessService.getFieldIdsWhereUserIsFieldEquityPartner(user);
 
+    var applicationVersionIdsWithFieldWhereUserIsFieldEquityPartner = dslContext
+        .select(APPLICATION_ASSETS.APPLICATION_VERSION_ID)
+        .from(APPLICATION_ASSETS)
+        .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+        .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
+        .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWhereUserIsFieldEquityPartner));
+
     var accessCondition = APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds)
-        .or(exists(
-            dslContext
-                .selectOne()
-                .from(APPLICATION_ASSETS)
-                .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
-                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-                .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWhereUserIsFieldEquityPartner))
-        ));
+        .or(APPLICATION_VERSIONS.ID.in(applicationVersionIdsWithFieldWhereUserIsFieldEquityPartner));
 
     lookupConditions.add(accessCondition);
 
