@@ -1,14 +1,9 @@
+# ch.qos.logback:logback-core
+CVE-2024-12798
+CVE-2024-12801
+
 # com.google.protobuf:protobuf-java
 CVE-2024-7254
 
 # commons-io:commons-io
 CVE-2024-47554
-
-# org.springframework:spring-context
-CVE-2024-38820
-
-# io.netty:netty-common
-CVE-2024-47535
-
-# org.springframework.security:spring-security-web
-CVE-2024-38821
