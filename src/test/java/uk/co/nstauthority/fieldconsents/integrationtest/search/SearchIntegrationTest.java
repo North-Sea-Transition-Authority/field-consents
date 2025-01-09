@@ -730,7 +730,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
-    consentData.setConsentEndDate(zonedDateTime.toLocalDate().minusDays(30));
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate());
 
     var applicationVersion = createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
     var applicationId = applicationVersion.getApplication().getId();
@@ -757,7 +757,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     var consentData = new ConsentData(1);
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
-    consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1));
 
     createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
 

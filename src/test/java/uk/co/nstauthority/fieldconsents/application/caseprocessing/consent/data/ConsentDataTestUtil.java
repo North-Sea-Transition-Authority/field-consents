@@ -16,7 +16,7 @@ public class ConsentDataTestUtil {
 
     private Integer id = 1;
     private Application application = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION).getApplication();
-    private LocalDate consentStartDate = LocalDate.parse("2024-01-01");
+    private LocalDate consentStartDate = LocalDate.now();
     private LocalDate consentEndDate = consentStartDate.plusYears(1);
     private LocalDate longTermProductionConsentProductionFromDate;
     private BigDecimal shortTermOrAnnualProductionMinOil = BigDecimal.valueOf(235.79);
