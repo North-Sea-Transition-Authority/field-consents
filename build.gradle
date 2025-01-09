@@ -23,7 +23,7 @@ java {
   }
 }
 
-def fileUploadLibraryVersion = 'v2.6.0'
+def fileUploadLibraryVersion = 'v2.7.0'
 
 sourceSets {
   epmqMessagesJarIntegrationTest {}

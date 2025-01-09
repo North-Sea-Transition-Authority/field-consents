@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
@@ -14,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.validation.FileValidationUtil;
 
 @Component
-class ConsultationResponseFormValidator implements SmartValidator {
+class ConsultationResponseFormValidator {
 
   private static final String HABITATS_REGS_RESPONSE_TYPE = "habitatsRegsResponseType";
   private static final String EIA_REGS_RESPONSE_TYPE = "eiaRegsResponseType";
@@ -26,21 +25,7 @@ class ConsultationResponseFormValidator implements SmartValidator {
     this.consultationService = consultationService;
   }
 
-  @Override
-  public boolean supports(Class<?> clazz) {
-    return ConsultationResponseForm.class.equals(clazz);
-  }
-
-  @Override
-  public void validate(Object target, Errors errors) {
-    throw new IllegalStateException("You must pass an ApplicationVersion as a validation hint");
-  }
-
-  @Override
-  public void validate(Object target, Errors errors, Object... validationHints) {
-    var form = (ConsultationResponseForm) target;
-    var applicationVersion = (ApplicationVersion) validationHints[0];
-
+  void validate(ConsultationResponseForm form, Errors errors, ApplicationVersion applicationVersion) {
     validateRadioOption(
         form.habitatsRegsResponseType(),
         form.getHabitatsRegsDescription().orElse(null),
@@ -59,10 +44,6 @@ class ConsultationResponseFormValidator implements SmartValidator {
       );
     }
 
-    if (errors.hasFieldErrors(HABITATS_REGS_RESPONSE_TYPE) || errors.hasFieldErrors(EIA_REGS_RESPONSE_TYPE)) {
-      return;
-    }
-
     var habitatsRegsOptionRequiresDocumentUpload = Optional.ofNullable(form.habitatsRegsResponseType())
         .map(ConsultationResponseType::isSecretaryOfStateDecisionRequired)
         .orElse(false);
@@ -72,17 +53,8 @@ class ConsultationResponseFormValidator implements SmartValidator {
         .orElse(false);
 
     var documentUploadRequired = habitatsRegsOptionRequiresDocumentUpload || eiaRegsOptionRequiresDocumentUpload;
-
-    if (!documentUploadRequired) {
-      return;
-    }
-
-    if (form.documents().isEmpty()) {
+    if (documentUploadRequired && form.documents().isEmpty()) {
       errors.rejectValue(DOCUMENTS, "required", "Upload a copy of the Secretary of State's decision");
-    }
-
-    if (errors.hasFieldErrors(DOCUMENTS)) {
-      return;
     }
 
     FileValidationUtil.validateFilesHaveDescriptions(form.documents(), DOCUMENTS, errors);

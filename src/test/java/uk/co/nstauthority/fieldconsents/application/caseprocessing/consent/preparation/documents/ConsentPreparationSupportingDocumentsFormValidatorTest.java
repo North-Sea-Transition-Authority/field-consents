@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
-import uk.co.fivum.fileuploadlibrary.core.UploadedFileTestUtil;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFileTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentPreparationSupportingDocumentsFormValidatorTest {

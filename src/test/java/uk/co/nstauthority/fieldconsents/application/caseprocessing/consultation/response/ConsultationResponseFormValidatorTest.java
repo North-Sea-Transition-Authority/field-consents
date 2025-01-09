@@ -8,11 +8,9 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Stream;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFileFormTestUtil;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -40,12 +39,7 @@ class ConsultationResponseFormValidatorTest {
   private static final String FILE_UPLOAD_ERROR_MESSAGE = "Upload a copy of the Secretary of State's decision";
 
   private static final String DESCRIPTION_TEXT = "description text";
-  private static final UploadedFileForm UPLOADED_FILE_FORM = new UploadedFileForm();
-  static {
-    UPLOADED_FILE_FORM.setFileId(UUID.randomUUID());
-    UPLOADED_FILE_FORM.setFileName("decision-letter.pdf");
-    UPLOADED_FILE_FORM.setFileDescription("This is the decision letter");
-  }
+  private static final UploadedFileForm UPLOADED_FILE_FORM = UploadedFileFormTestUtil.newBuilder().build();
 
   @Mock
   private ConsultationService consultationService;
@@ -58,11 +52,6 @@ class ConsultationResponseFormValidatorTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-  }
-
-  @Test
-  void supports() {
-    assertThat(validator.supports(ConsultationResponseForm.class)).isTrue();
   }
 
   @ParameterizedTest
@@ -241,6 +230,75 @@ class ConsultationResponseFormValidatorTest {
         arguments(
             formWithValues(HabitatsRegsResponseType.DOES_NOT_APPLY, DESCRIPTION_TEXT, null, null, Collections.emptyList()),
             errors()
+        )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("validateDocumentsAlwaysHaveDescription_arguments")
+  void validateDocumentsAlwaysHaveDescription(ConsultationResponseForm form, List<Tuple> expectedErrors) {
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    validator.validate(form, bindingResult, applicationVersion);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getDefaultMessage)
+        .containsExactlyElementsOf(expectedErrors);
+  }
+
+  private static Stream<Arguments> validateDocumentsAlwaysHaveDescription_arguments() {
+    return Stream.of(
+        arguments(
+            formWithValues(
+                HabitatsRegsResponseType.DOES_NOT_APPLY,
+                null,
+                EiaRegsResponseType.DOES_NOT_APPLY,
+                null,
+                List.of(
+                    UploadedFileFormTestUtil.newBuilder().build(),
+                    UploadedFileFormTestUtil.newBuilder().withFileDescription(null).build(),
+                    UploadedFileFormTestUtil.newBuilder().build()
+                )
+            ),
+            errors(tuple("documents[1].uploadedFileDescription", "Enter a file description"))
+        ),
+        arguments(
+            formWithValues(
+                HabitatsRegsResponseType.DOES_NOT_APPLY,
+                null,
+                EiaRegsResponseType.DOES_NOT_APPLY,
+                null,
+                List.of()
+            ),
+            List.of()
+        ),
+        arguments(
+            formWithValues(
+                HabitatsRegsResponseType.AGREE,
+                "description",
+                EiaRegsResponseType.DOES_NOT_APPLY,
+                null,
+                List.of(
+                    UploadedFileFormTestUtil.newBuilder().build(),
+                    UploadedFileFormTestUtil.newBuilder().withFileDescription(null).build(),
+                    UploadedFileFormTestUtil.newBuilder().build()
+                )
+            ),
+            errors(tuple("documents[1].uploadedFileDescription", "Enter a file description"))
+        ),
+        arguments(
+            formWithValues(
+                HabitatsRegsResponseType.DOES_NOT_APPLY,
+                null,
+                EiaRegsResponseType.AGREE,
+                "description",
+                List.of(
+                    UploadedFileFormTestUtil.newBuilder().build(),
+                    UploadedFileFormTestUtil.newBuilder().withFileDescription(null).build(),
+                    UploadedFileFormTestUtil.newBuilder().build()
+                )
+            ),
+            errors(tuple("documents[1].uploadedFileDescription", "Enter a file description"))
         )
     );
   }

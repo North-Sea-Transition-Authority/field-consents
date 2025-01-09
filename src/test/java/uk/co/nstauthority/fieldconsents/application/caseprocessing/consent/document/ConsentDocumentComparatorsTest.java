@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import uk.co.fivum.fileuploadlibrary.core.UploadedFileTestUtil;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFileTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 
