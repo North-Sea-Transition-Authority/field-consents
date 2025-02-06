@@ -22,6 +22,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -112,7 +113,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, null);
     assertThat(model)
         .containsEntry("isWorkAreaWithTabs", false)
         .containsEntry("workAreaTabs", Collections.emptyList());
@@ -573,7 +574,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, WorkAreaTab.MY_APPLICATIONS);
     assertThat(model)
         .containsEntry("isWorkAreaWithTabs", true)
         .containsEntry("selectedTab", WorkAreaTab.MY_APPLICATIONS.getValue())
@@ -612,7 +613,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, WorkAreaTab.ALL_APPLICATIONS);
     assertThat(model)
         .containsEntry("isWorkAreaWithTabs", true)
         .containsEntry("selectedTab", WorkAreaTab.ALL_APPLICATIONS.getValue())
@@ -654,7 +655,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, WorkAreaTab.MY_TECHNICAL_REVIEWS);
   }
 
   @Test
@@ -689,7 +690,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
   }
 
   @Test
@@ -727,7 +728,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, null);
   }
 
   @Test
@@ -758,7 +759,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertWorkAreaModel(model);
+    assertWorkAreaModel(model, WorkAreaTab.MY_CAM_APPLICATIONS);
     assertThat(model)
         .containsEntry("isWorkAreaWithTabs", true)
         .containsEntry("selectedTab", WorkAreaTab.MY_CAM_APPLICATIONS.getValue())
@@ -768,10 +769,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
   }
 
-  private void assertWorkAreaModel(Map<String, Object> model) {
+  private void assertWorkAreaModel(Map<String, Object> model, WorkAreaTab expectedTab) {
     assertThat(model)
         .containsEntry("workAreaItems", workAreaItemViews)
-        .containsEntry("clearFiltersUrl", ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
+        .containsEntry("clearFiltersUrl", ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(expectedTab, null, null)))
         .containsEntry("appStatuses", ApplicationVersionStatus.getWorkAreaOptions())
         .containsEntry("appTypes", ApplicationType.getDisplayableOptions())
         .containsEntry("durationTypes", ConsentLengthType.getConsentLengthOptions())
@@ -819,21 +820,47 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     form.setStatuses(Collections.singletonList(ApplicationVersionStatus.IN_PROGRESS));
     form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
     form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
+
     var filter = new WorkAreaFilter();
     filter.update(form);
+
+    var session = new MockHttpSession();
+    session.setAttribute("workAreaFilter", filter);
+
     var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
+        get(ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null, null)))
             .with(user(user))
-            .flashAttr("workAreaFilter", filter))
+            .session(session))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(expectedRedirectUrl));
 
-    assertThat(filter).extracting(
-        WorkAreaFilter::getStatuses,
-        WorkAreaFilter::getApplicationTypes,
-        WorkAreaFilter::getDurationTypes
-    ).containsOnlyNulls();
+    assertThat(session.getAttribute("workAreaFilter")).isNull();
+  }
+
+  @Test
+  void clearWorkAreaFilter_fromTab() throws Exception {
+    var form = new WorkAreaFilterForm();
+    form.setStatuses(Collections.singletonList(ApplicationVersionStatus.IN_PROGRESS));
+    form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
+    form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
+
+    var filter = new WorkAreaFilter();
+    filter.update(form);
+
+    var session = new MockHttpSession();
+    session.setAttribute("workAreaFilter", filter);
+
+    var tab = WorkAreaTab.ALL_TECHNICAL_REVIEWS;
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(tab, null, null)))
+                .with(user(user))
+                .session(session))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(tab.getUrl()));
+
+    assertThat(session.getAttribute("workAreaFilter")).isNull();
   }
 }

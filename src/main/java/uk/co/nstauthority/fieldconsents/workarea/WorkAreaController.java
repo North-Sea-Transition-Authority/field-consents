@@ -12,14 +12,18 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
 
+import jakarta.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
@@ -118,7 +122,7 @@ public class WorkAreaController {
       }
     }
 
-    return getWorkAreaModelAndView(filter, user)
+    return getWorkAreaModelAndView(filter, user, null)
         .addObject(IS_WORK_AREA_WITH_TABS, false)
         .addObject(WORK_AREA_ITEMS, workAreaService.getIndustryWorkAreaItems(filter, user));
   }
@@ -259,7 +263,7 @@ public class WorkAreaController {
 
     var caseOfficersById = caseOfficerFilterEnabled ? convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers()) : null;
     var technicalReviewersById = convertUsersToMap(technicalReviewAssignmentService.getCurrentTechnicalReviewers());
-    return getWorkAreaModelAndView(filter, user)
+    return getWorkAreaModelAndView(filter, user, workAreaTab)
         .addObject("selectedTab", workAreaTab.getValue())
         .addObject(WORK_AREA_ITEMS, workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
         .addObject(IS_WORK_AREA_WITH_TABS, true)
@@ -272,13 +276,17 @@ public class WorkAreaController {
   private ModelAndView renderConsulteeWorkAreaOnTab(WorkAreaFilter filter,
                                                     ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
-    return getWorkAreaModelAndView(filter, user)
+    return getWorkAreaModelAndView(filter, user, workAreaTab)
         .addObject("selectedTab", workAreaTab.getValue())
         .addObject(WORK_AREA_ITEMS, workAreaService.getConsulteeWorkAreaItems(filter, user, workAreaTab))
         .addObject(IS_WORK_AREA_WITH_TABS, true);
   }
 
-  private ModelAndView getWorkAreaModelAndView(WorkAreaFilter filter, ServiceUserDetail user) {
+  private ModelAndView getWorkAreaModelAndView(
+      WorkAreaFilter filter,
+      ServiceUserDetail user,
+      @Nullable WorkAreaTab currentTab
+  ) {
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
@@ -290,7 +298,7 @@ public class WorkAreaController {
 
     return new ModelAndView("fcs/workarea/workArea")
         .addObject("clearFiltersUrl",
-            ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
+            ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(currentTab, null, null)))
         .addObject("appStatuses", appStatuses)
         .addObject("appTypes", appTypes)
         .addObject("durationTypes", durationTypes)
@@ -322,11 +330,16 @@ public class WorkAreaController {
   }
 
   @GetMapping("/clear-filters")
-  public ModelAndView clearWorkAreaFilter(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                          SessionStatus sessionStatus) {
-    sessionStatus.setComplete();
-    filter.clearSession();
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
+  public ModelAndView clearWorkAreaFilter(
+      @RequestParam(required = false) WorkAreaTab tab,
+      @ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+      SessionStatus sessionStatus
+  ) {
+    sessionStatus.setComplete(); // removes the work area filter session attribute
+
+    return Optional.ofNullable(tab)
+        .map(t -> new ModelAndView("redirect:" + tab.getUrl()))
+        .orElse(ReverseRouter.redirect(on(this.getClass()).getWorkArea(null, null)));
   }
 
   @ModelAttribute("workAreaFilter")
