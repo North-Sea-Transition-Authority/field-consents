@@ -45,7 +45,7 @@ class ServiceUserDetailTest {
   void getName_displayName_displayNameAndEmail_displayNameIncludingAnyProxyUser_whenProxyUserExists() {
     var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
     assertThat(serviceUserDetail.getName())
-        .isEqualTo(serviceUserDetail.wuaId().toString());
+        .isEqualTo(serviceUserDetail.proxyWuaId().toString());
     assertThat(serviceUserDetail.displayName())
         .isEqualTo(UserDisplayNameUtil.getUserDisplayName(serviceUserDetail.forename(), serviceUserDetail.surname()));
     assertThat(serviceUserDetail.displayNameAndEmail())

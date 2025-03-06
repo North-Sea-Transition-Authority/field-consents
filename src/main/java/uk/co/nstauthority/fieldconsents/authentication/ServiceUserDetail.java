@@ -29,7 +29,8 @@ public record ServiceUserDetail(
 
   @Override
   public String getName() {
-    return wuaId.toString();
+    // The 'name' is a unique identifier for this principal, it is not related to the users forename/surname
+    return proxyWuaId != null ? proxyWuaId.toString() : wuaId.toString();
   }
 
   public String displayName() {
