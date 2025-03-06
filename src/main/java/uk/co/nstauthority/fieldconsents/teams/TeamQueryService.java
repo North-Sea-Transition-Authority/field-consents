@@ -43,7 +43,6 @@ public class TeamQueryService {
   }
 
   private boolean userHasAtLeastOneStaticRole(Long wuaId, TeamType teamType, Collection<Role> roles) {
-    assertRolesValidForTeamType(roles, teamType);
     if (teamType.isScoped()) {
       throw new IllegalArgumentException("TeamType %s is not static".formatted(teamType));
     }
@@ -64,7 +63,6 @@ public class TeamQueryService {
       TeamScopeReference scopeRef,
       Set<Role> roles
   ) {
-    assertRolesValidForTeamType(roles, teamType);
     if (!teamType.isScoped()) {
       throw new IllegalArgumentException("TeamType %s is not scoped".formatted(teamType));
     }
@@ -134,13 +132,5 @@ public class TeamQueryService {
     return teamRoleRepository.findByWuaIdAndTeam(wuaId, team)
         .stream()
         .anyMatch(teamRole -> roles.contains(teamRole.getRole()));
-  }
-
-  private void assertRolesValidForTeamType(Collection<Role> roles, TeamType teamType) {
-    roles.forEach(role -> {
-      if (!teamType.getAllowedRoles().contains(role)) {
-        throw new IllegalArgumentException("Role %s is not valid for TeamType %s".formatted(role, teamType));
-      }
-    });
   }
 }

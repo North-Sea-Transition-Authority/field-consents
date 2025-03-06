@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,8 +55,8 @@ class TeamQueryServiceTest {
 
   @Test
   void userHasStaticRole_invalidRole() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> teamQueryService.userHasStaticRole(serviceUserDetail, TeamType.REGULATOR, Role.EDITOR));
+    assertThat(teamQueryService.userHasStaticRole(serviceUserDetail, TeamType.REGULATOR, Role.EDITOR))
+        .isFalse();
   }
 
   @Test
@@ -92,8 +90,8 @@ class TeamQueryServiceTest {
 
   @Test
   void userHasAtLeastOneStaticRole_invalidRole() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> teamQueryService.userHasAtLeastOneStaticRole(serviceUserDetail, TeamType.REGULATOR, Set.of(Role.EDITOR)));
+    assertThat(teamQueryService.userHasAtLeastOneStaticRole(serviceUserDetail, TeamType.REGULATOR, Set.of(Role.EDITOR)))
+        .isFalse();
   }
 
   @Test
@@ -129,8 +127,12 @@ class TeamQueryServiceTest {
 
   @Test
   void userHasScopedRole_invalidRole() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> teamQueryService.userHasScopedRole(serviceUserDetail, TeamType.INDUSTRY, TeamScopeReference.from("1", TeamScopeReference.ORGANISATION_GROUP_ID), Role.INDUSTRY_ACCESS_MANAGER));
+    assertThat(teamQueryService.userHasScopedRole(
+        serviceUserDetail,
+        TeamType.INDUSTRY,
+        TeamScopeReference.from("1", TeamScopeReference.ORGANISATION_GROUP_ID),
+        Role.INDUSTRY_ACCESS_MANAGER
+    )).isFalse();
   }
 
   @Test
@@ -166,8 +168,12 @@ class TeamQueryServiceTest {
 
   @Test
   void userHasAtLeastOneScopedRole_invalidRole() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> teamQueryService.userHasScopedRole(serviceUserDetail, TeamType.INDUSTRY, TeamScopeReference.from("1", TeamScopeReference.ORGANISATION_GROUP_ID), Role.CONSENTS_AND_AUTHORISATIONS_MANAGER));
+    assertThat(teamQueryService.userHasScopedRole(
+        serviceUserDetail,
+        TeamType.INDUSTRY,
+        TeamScopeReference.from("1", TeamScopeReference.ORGANISATION_GROUP_ID),
+        Role.CONSENTS_AND_AUTHORISATIONS_MANAGER
+    )).isFalse();
   }
 
   @Test
