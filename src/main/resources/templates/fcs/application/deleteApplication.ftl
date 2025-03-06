@@ -8,16 +8,17 @@
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)
   backLinkUrl=springUrl(backLinkUrl)
 >
-
-<@fdsForm.htmlForm actionUrl=springUrl(deleteUrl)>
   <@fdsDetails.summaryDetails summaryTitle="View the draft application to be deleted">
     <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
-  <@fdsAction.submitButtons
-    primaryButtonText="Delete draft application"
-    secondaryLinkText="Back to application"
-    linkSecondaryAction=true
-    linkSecondaryActionUrl=springUrl(backLinkUrl)
-    primaryButtonClass="govuk-button govuk-button--warning"/>
-</@fdsForm.htmlForm>
+
+  <@fdsForm.htmlForm actionUrl=springUrl(deleteUrl)>
+    <@fdsAction.submitButtons
+      primaryButtonText="Delete draft application"
+      secondaryLinkText="Back to application"
+      linkSecondaryAction=true
+      linkSecondaryActionUrl=springUrl(backLinkUrl)
+      primaryButtonClass="govuk-button govuk-button--warning"
+    />
+  </@fdsForm.htmlForm>
 </@defaultPage>
