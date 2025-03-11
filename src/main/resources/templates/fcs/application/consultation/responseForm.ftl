@@ -28,10 +28,11 @@
       path="form.habitatsRegsResponseType"
       labelText="What is your response to the NSTA's grant of consent under the Habitats regulations?"
       hiddenContent=true>
+      <#assign isFirstItem = true/>
       <#list habitatsRegsRadioOptions as radioOption>
         <#assign key = radioOption.name() />
         <#assign value = radioOption.getDisplayName() />
-        <@fdsRadio.radioItem path="form.habitatsRegsResponseType" itemMap={key: value}>
+        <@fdsRadio.radioItem path="form.habitatsRegsResponseType" itemMap={key: value} isFirstItem=isFirstItem>
           <@fdsTextarea.textarea
             path=radioOption.getTextAreaInputName()
             optionalLabel=!radioOption.isTextAreaInputRequired()
@@ -39,6 +40,7 @@
             labelText=radioOption.getTextAreaDisplayText()
             hintText=radioOption.getTextAreaHintText(applicationReference)/>
         </@fdsRadio.radioItem>
+        <#assign isFirstItem = false/>
       </#list>
     </@fdsRadio.radioGroup>
 
@@ -47,10 +49,11 @@
         path="form.eiaRegsResponseType"
         labelText="What is your response to the NSTA's grant of consent under the EIA regulations?"
         hiddenContent=true>
+        <#assign isFirstItem = true/>
         <#list eiaRegsRadioOptions as radioOption>
           <#assign key = radioOption.name() />
           <#assign value = radioOption.getDisplayName() />
-          <@fdsRadio.radioItem path="form.eiaRegsResponseType" itemMap={key: value}>
+          <@fdsRadio.radioItem path="form.eiaRegsResponseType" itemMap={key: value} isFirstItem=isFirstItem>
             <@fdsTextarea.textarea
               path=radioOption.getTextAreaInputName()
               optionalLabel=!radioOption.isTextAreaInputRequired()
@@ -58,6 +61,7 @@
               labelText=radioOption.getTextAreaDisplayText()
               hintText=radioOption.getTextAreaHintText(applicationReference)/>
           </@fdsRadio.radioItem>
+          <#assign isFirstItem = false/>
         </#list>
       </@fdsRadio.radioGroup>
     </#if>
