@@ -8,11 +8,12 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_4;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_5;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNoOperatorButLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorButEmptyLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field4JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field5JsonWithOperatorAndLicences;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.TERMINAL_INACTIVE_VALIDATION_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_4;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_5;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
@@ -181,12 +182,12 @@ class ApplicationRationaleFormValidatorHelperTest {
         .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
-                "%s %s".formatted(terminal4JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
+                "All locations must be active. T4 is an inactive facility")
         );
   }
 
   @Test
-  void validateLocationAssets_terminalsDontHaveAllowedStatuses() {
+  void validateLocationAssets_terminalsAreAllActive() {
     var locations = List.of(terminal4Json.getSelectionId(), "1FIELD", terminal5Json.getSelectionId());
     var form = new Form(locations, null);
     var bindingResult = getBindingResult(form);
@@ -200,9 +201,9 @@ class ApplicationRationaleFormValidatorHelperTest {
         .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
-                "%s %s".formatted(terminal4JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE)),
+               "All locations must be active. T4 is an inactive facility"),
             tuple(NON_HOST_LOCATIONS_FIELD, "invalid",
-                "%s %s".formatted(terminal5JsonWithOperator.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
+                "All locations must be active. T5 is an inactive facility")
         );
   }
 
@@ -213,6 +214,40 @@ class ApplicationRationaleFormValidatorHelperTest {
 
     when(fieldService.findFieldsWithOperatorAndLicences(eq(Collections.singletonList(1)), anyString()))
         .thenReturn(Collections.singletonList(field1JsonWithNullOperatorAndLicences));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid", "One or more locations don't have an operator or licenses")
+        );
+  }
+
+  @Test
+  void validateLocationAssets_fieldsDontHaveOperator() {
+    var form = new Form(NON_HOST_LOCATIONS, null);
+    var bindingResult = getBindingResult(form);
+
+    when(fieldService.findFieldsWithOperatorAndLicences(eq(Collections.singletonList(1)), anyString()))
+        .thenReturn(Collections.singletonList(field1JsonWithNoOperatorButLicences));
+
+    validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(NON_HOST_LOCATIONS_FIELD, "invalid", "One or more locations don't have an operator or licenses")
+        );
+  }
+
+  @Test
+  void validateLocationAssets_fieldsDontHaveLicenses() {
+    var form = new Form(NON_HOST_LOCATIONS, null);
+    var bindingResult = getBindingResult(form);
+
+    when(fieldService.findFieldsWithOperatorAndLicences(eq(Collections.singletonList(1)), anyString()))
+        .thenReturn(Collections.singletonList(field1JsonWithOperatorButEmptyLicences));
 
     validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
 
@@ -237,6 +272,21 @@ class ApplicationRationaleFormValidatorHelperTest {
     validatorHelper.validateLocationAssets(form.nonHostLocations(), NON_HOST_LOCATIONS_FIELD, bindingResult);
 
     assertThat(bindingResult.getFieldErrors()).isEmpty();
+  }
+
+  @Test
+  void validateHostLocationAsset() {
+    var hostLocationAssetKey = NON_HOST_LOCATIONS.get(1);
+    var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
+    var bindingResult = getBindingResult(form);
+
+    when(terminalService.findTerminalsWithOperator(eq(Collections.singletonList(2)), anyString()))
+        .thenReturn(Collections.singletonList(terminal1JsonWithOperator));
+
+    validatorHelper.validateHostLocationAsset(form.hostLocationAssetKey(), NON_HOST_LOCATIONS_ASSET_KEYS, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .isEmpty();
   }
 
   @ParameterizedTest
@@ -271,6 +321,19 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
+  void validateHostLocationAsset_noLocations() {
+    var hostLocationAssetKey = "99FIELD";
+    var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
+    var bindingResult = getBindingResult(form);
+
+    validatorHelper.validateHostLocationAsset(form.hostLocationAssetKey(), Collections.emptyList(), bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .isEmpty();
+  }
+
+
+  @Test
   void validateHostLocationAsset_notFlaringLocation() {
     var hostLocationAssetKey = "99FIELD";
     var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
@@ -300,6 +363,25 @@ class ApplicationRationaleFormValidatorHelperTest {
         .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(HOST_LOCATION_FIELD, "invalid", "Select a location with an operator")
+        );
+  }
+
+  @Test
+  void validateHostLocationAsset_hostTerminalIsActive() {
+    var hostLocationAssetKey = NON_HOST_LOCATIONS.get(1);
+    var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
+    var bindingResult = getBindingResult(form);
+
+    when(terminalService.findTerminalsWithOperator(eq(Collections.singletonList(2)), anyString()))
+        .thenReturn(Collections.singletonList(terminal4JsonWithOperator));
+
+    validatorHelper.validateHostLocationAsset(form.hostLocationAssetKey(), NON_HOST_LOCATIONS_ASSET_KEYS, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(HOST_LOCATION_FIELD, "invalid",
+                "The host location must be active. T4 is an inactive facility")
         );
   }
 

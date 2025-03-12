@@ -69,7 +69,7 @@ public class ApplicationRationaleFormValidatorHelper {
 
     var terminals = getTerminalsWithOperatorJsonsFromAssetKeys(assetKeys);
 
-    addTerminalStatusErrors(terminals, formField, errors);
+    addTerminalStatusErrors(terminals, formField, "All locations must be active.", errors);
 
     if (errors.hasFieldErrors(formField)) {
       return;
@@ -114,7 +114,7 @@ public class ApplicationRationaleFormValidatorHelper {
 
     var terminals = getTerminalsWithOperatorJsonsFromAssetKeys(Collections.singletonList(hostLocationAssetKey));
 
-    addTerminalStatusErrors(terminals, HOST_LOCATION_ASSET_KEY, errors);
+    addTerminalStatusErrors(terminals, HOST_LOCATION_ASSET_KEY, "The host location must be active.", errors);
 
     if (errors.hasFieldErrors(HOST_LOCATION_ASSET_KEY)) {
       return;
@@ -166,13 +166,18 @@ public class ApplicationRationaleFormValidatorHelper {
         );
   }
 
-  private void addTerminalStatusErrors(List<? extends TerminalJson> terminalJsons, String formField, Errors errors) {
+  private void addTerminalStatusErrors(
+      List<? extends TerminalJson> terminalJsons,
+      String formField,
+      String locationTypeMessage,
+      Errors errors
+  ) {
     terminalJsons
         .stream()
         .filter(terminal -> !TerminalStatus.ACTIVE.equals(terminal.getStatus()))
         .forEach(terminal ->
             errors.rejectValue(formField, INVALID,
-                "%s %s".formatted(terminal.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
+                "%s %s %s".formatted(locationTypeMessage, terminal.getName(), TERMINAL_INACTIVE_VALIDATION_MESSAGE))
         );
   }
 }
