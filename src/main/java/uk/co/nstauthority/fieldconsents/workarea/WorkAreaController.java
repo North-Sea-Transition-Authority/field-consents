@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
 
-import jakarta.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -134,25 +133,11 @@ public class WorkAreaController {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
   }
 
-  @PostMapping("case-officer-my-applications")
-  @HasRegulatorRole(Role.CASE_OFFICER)
-  public ModelAndView postWorkAreaCaseOfficerMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                            ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerMyApplications(filter, user));
-  }
-
   @GetMapping("my-technical-reviews")
   @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView getWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                     ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
-  }
-
-  @PostMapping("my-technical-reviews")
-  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
-  public ModelAndView postWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                     ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyTechnicalReviews(filter, user));
   }
 
   @GetMapping("case-officer-unassigned")
@@ -162,25 +147,11 @@ public class WorkAreaController {
     return renderRegulatorWorkAreaOnTab(filter, user, UNASSIGNED_APPLICATIONS);
   }
 
-  @PostMapping("case-officer-unassigned")
-  @HasAnyRegulatorRole({Role.CASE_OFFICER, Role.CASE_MANAGER})
-  public ModelAndView postWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                                    ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(filter, user));
-  }
-
   @GetMapping("all-technical-reviews")
   @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
   public ModelAndView getWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                      ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, ALL_TECHNICAL_REVIEWS);
-  }
-
-  @PostMapping("all-technical-reviews")
-  @HasRegulatorRole(Role.TECHNICAL_REVIEWER)
-  public ModelAndView postWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                      ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllTechnicalReviews(filter, user));
   }
 
   @GetMapping("regulator-all-applications")
@@ -190,25 +161,11 @@ public class WorkAreaController {
     return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
   }
 
-  @PostMapping("regulator-all-applications")
-  @HasAnyRegulatorRole({Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER})
-  public ModelAndView postWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                           ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(filter, user));
-  }
-
   @GetMapping("all-consultations")
   @HasConsulteeRole(Role.ALLOCATOR)
   public ModelAndView getWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                   ServiceUserDetail user) {
     return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
-  }
-
-  @PostMapping("all-consultations")
-  @HasConsulteeRole(Role.ALLOCATOR)
-  public ModelAndView postWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                   ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllConsultations(filter, user));
   }
 
   @GetMapping("unassigned-consultations")
@@ -218,13 +175,6 @@ public class WorkAreaController {
     return renderConsulteeWorkAreaOnTab(filter, user, UNASSIGNED_CONSULTATIONS);
   }
 
-  @PostMapping("unassigned-consultations")
-  @HasConsulteeRole(Role.ALLOCATOR)
-  public ModelAndView postWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                          ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(filter, user));
-  }
-
   @GetMapping("my-consultations")
   @HasConsulteeRole(Role.RESPONDER)
   public ModelAndView getWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
@@ -232,24 +182,11 @@ public class WorkAreaController {
     return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);
   }
 
-  @PostMapping("my-consultations")
-  @HasConsulteeRole(Role.RESPONDER)
-  public ModelAndView postWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null));
-  }
-
   @GetMapping("cam-my-applications")
   @HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
   public ModelAndView getWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                    ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, MY_CAM_APPLICATIONS);
-  }
-
-  @PostMapping("cam-my-applications")
-  @HasRegulatorRole(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
-  public ModelAndView postWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
-                                                    ServiceUserDetail user) {
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCamMyApplications(filter, user));
   }
 
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab) {
@@ -312,7 +249,8 @@ public class WorkAreaController {
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE)
-        .addObject("workAreaTabs", workAreaService.getTabsAvailableToUser(user));
+        .addObject("workAreaTabs", workAreaService.getTabsAvailableToUser(user))
+        .addObject("filterResultsUrl", ReverseRouter.route(on(this.getClass()).filterWorkArea(currentTab, null, null)));
   }
 
   private Map<String, String> convertUsersToMap(List<EnergyPortalUserDto> energyPortalUserDtos) {
@@ -323,10 +261,13 @@ public class WorkAreaController {
   }
 
   @PostMapping
-  ModelAndView filterWorkArea(@ModelAttribute("form") WorkAreaFilterForm form,
-                              @ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
+  ModelAndView filterWorkArea(
+      @RequestParam(required = false) WorkAreaTab tab,
+      @ModelAttribute("form") WorkAreaFilterForm form,
+      @ModelAttribute("workAreaFilter") WorkAreaFilter filter
+  ) {
     filter.update(form);
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
+    return redirectToWorkArea(tab);
   }
 
   @GetMapping("/clear-filters")
@@ -336,7 +277,10 @@ public class WorkAreaController {
       SessionStatus sessionStatus
   ) {
     sessionStatus.setComplete(); // removes the work area filter session attribute
+    return redirectToWorkArea(tab);
+  }
 
+  private ModelAndView redirectToWorkArea(@Nullable WorkAreaTab tab) {
     return Optional.ofNullable(tab)
         .map(t -> new ModelAndView("redirect:" + tab.getUrl()))
         .orElse(ReverseRouter.redirect(on(this.getClass()).getWorkArea(null, null)));

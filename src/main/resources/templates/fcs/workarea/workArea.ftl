@@ -10,7 +10,7 @@
   pageSize=PageSize.FULL_PAGE_WIDTH
 >
   <@fdsSearch.searchPage>
-    <@fdsSearch.searchFilter oneThirdWidth=true>
+    <@fdsSearch.searchFilter oneThirdWidth=true formActionUrl=springUrl(filterResultsUrl)>
       <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
         <@dataItemFilter.referenceNumberFilter form=form/>
         <@dataItemFilter.statusFilter form=form statusCheckboxes=appStatuses/>
