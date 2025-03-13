@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingService;
+import uk.co.nstauthority.fieldconsents.audit.AuditRevisionUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -93,7 +94,7 @@ public class BulkIssueConsentsService {
           bulkIssueConsentRun,
           run -> energyPortalUserService.getServiceUserByWuaId(WebUserAccountId.from(bulkIssueConsentRun.getIssuedByWuaId())));
 
-      issueConsent(task, user);
+      AuditRevisionUtil.withFallbackAuditUser(user, () -> issueConsent(task, user));
     });
   }
 

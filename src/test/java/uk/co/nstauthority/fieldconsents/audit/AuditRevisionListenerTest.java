@@ -74,4 +74,17 @@ class AuditRevisionListenerTest {
     assertThat(auditRevision.getUserWuaId()).isNull();
     assertThat(auditRevision.getProxyUserWuaId()).isNull();
   }
+
+  @Test
+  void newRevision_fallbackAuditUserSet() {
+    var fallbackAuditUser = ServiceUserDetailTestUtil.Builder()
+        .buildWithoutProxy();
+
+    var auditRevision = new AuditRevision();
+
+    AuditRevisionUtil.withFallbackAuditUser(fallbackAuditUser, () -> auditRevisionListener.newRevision(auditRevision));
+
+    assertThat(auditRevision.getUserWuaId()).isEqualTo(fallbackAuditUser.wuaId());
+    assertThat(auditRevision.getProxyUserWuaId()).isNull();
+  }
 }
