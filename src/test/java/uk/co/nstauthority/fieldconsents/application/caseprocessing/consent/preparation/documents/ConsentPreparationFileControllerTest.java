@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -42,10 +42,10 @@ class ConsentPreparationFileControllerTest extends AbstractApplicationController
   private final Class<ConsentPreparationFileController> consentPreparationFileControllerClass = ConsentPreparationFileController.class;
   private final UUID fileId = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
   @Captor

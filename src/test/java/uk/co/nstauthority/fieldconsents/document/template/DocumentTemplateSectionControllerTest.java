@@ -23,7 +23,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldView;
@@ -45,16 +45,16 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
   private static final UUID DOCUMENT_TEMPLATE_SECTION_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private DocumentTemplateSectionService documentTemplateSectionService;
 
-  @MockBean
+  @MockitoBean
   private DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
 
-  @MockBean
+  @MockitoBean
   private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
-  @MockBean
+  @MockitoBean
   private DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
 
   @SecurityTest

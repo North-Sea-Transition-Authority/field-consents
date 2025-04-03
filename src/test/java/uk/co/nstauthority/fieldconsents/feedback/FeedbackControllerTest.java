@@ -21,7 +21,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -40,13 +40,13 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ContextConfiguration(classes = FeedbackController.class)
 class FeedbackControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private FeedbackService feedbackService;
 
-  @MockBean
+  @MockitoBean
   private FeedbackFormValidator feedbackFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
   private ApplicationVersion applicationVersion;

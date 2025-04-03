@@ -20,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -56,16 +56,16 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
 
   private int applicationNumber = 8000;
 
-  @MockBean
+  @MockitoBean
   private UserDetailService userDetailService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
-  @MockBean
+  @MockitoBean
   private OrganisationUnitService organisationUnitService;
 
-  @MockBean
+  @MockitoBean
   private TeamQueryService teamQueryService;
 
   @Autowired

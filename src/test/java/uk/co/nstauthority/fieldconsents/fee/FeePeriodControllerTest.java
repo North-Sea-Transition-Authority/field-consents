@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeeLineDto;
@@ -42,13 +42,13 @@ class FeePeriodControllerTest extends AbstractControllerTest {
 
   private static final UUID FEE_PERIOD_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private FieldConsentsFeePeriodService fieldConsentsFeePeriodService;
 
-  @MockBean
+  @MockitoBean
   private FeePeriodService feePeriodService;
 
-  @MockBean
+  @MockitoBean
   private FeePeriodFormValidator feePeriodFormValidator;
 
   @SecurityTest

@@ -44,7 +44,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -90,28 +90,28 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 class SearchIntegrationTest extends AbstractIntegrationTest {
 
-  @MockBean
+  @MockitoBean
   private OrganisationUnitService organisationUnitService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDataFilterFormService applicationDataFilterFormService;
 
-  @MockBean
+  @MockitoBean
   private FieldService fieldService;
 
-  @MockBean
+  @MockitoBean
   private TerminalService terminalService;
 
-  @MockBean
+  @MockitoBean
   private TeamQueryService teamQueryService;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
 
-  @MockBean
+  @MockitoBean
   private SearchFilterFormService searchFilterFormService;
 
-  @MockBean
+  @MockitoBean
   private OrganisationGroupQueryService organisationGroupQueryService;
 
   @Autowired
@@ -349,7 +349,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
     when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
-    var consentData = new ConsentData(1);
+    var consentData = new ConsentData();
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1));
 
@@ -685,7 +685,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var consentData = new ConsentData(1);
+    var consentData = new ConsentData();
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
 
@@ -712,7 +712,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var consentData = new ConsentData(1);
+    var consentData = new ConsentData();
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
 
@@ -728,7 +728,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var consentData = new ConsentData(1);
+    var consentData = new ConsentData();
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate());
 
@@ -755,7 +755,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     when(teamQueryService.userHasStaticRole(CASE_OFFICER_DETAIL, TeamType.REGULATOR, Role.CASE_OFFICER)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var consentData = new ConsentData(1);
+    var consentData = new ConsentData();
     consentData.setConsentStartDate(zonedDateTime.toLocalDate());
     consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1));
 

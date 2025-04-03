@@ -51,7 +51,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -101,25 +101,25 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilterForm;
 
 class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
-  @MockBean
+  @MockitoBean
   private OrganisationUnitService organisationUnitService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDataFilterFormService applicationDataFilterFormService;
 
-  @MockBean
+  @MockitoBean
   private FieldService fieldService;
 
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
-  @MockBean
+  @MockitoBean
   private OrganisationGroupQueryService organisationGroupQueryService;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
 
-  @MockBean
+  @MockitoBean
   private TeamQueryService teamQueryService;
 
   @Autowired

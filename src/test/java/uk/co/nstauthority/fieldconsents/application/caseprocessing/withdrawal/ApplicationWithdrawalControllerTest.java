@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -44,19 +44,19 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ContextConfiguration(classes = ApplicationWithdrawalController.class)
 class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationWithdrawalService applicationWithdrawalService;
 
-  @MockBean
+  @MockitoBean
   private WithdrawalRequestFormValidator withdrawalRequestFormValidator;
 
-  @MockBean
+  @MockitoBean
   private WithdrawalResponseFormValidator withdrawalResponseFormValidator;
 
-  @MockBean
+  @MockitoBean
   private WithdrawalRequestViewService withdrawalRequestViewService;
 
   @SecurityTest

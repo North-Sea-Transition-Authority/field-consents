@@ -19,7 +19,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -36,7 +36,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 @ContextConfiguration(classes = BulkCaseActionController.class)
 class BulkCaseActionControllerTest extends AbstractControllerTest {
 
-  @MockBean
+  @MockitoBean
   private BulkCaseActionSelectionFormValidator bulkCaseActionSelectionFormValidator;
 
   private final Team regulatorTeam = TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build();

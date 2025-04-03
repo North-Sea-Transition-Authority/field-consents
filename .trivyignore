@@ -1,18 +1,2 @@
-# ch.qos.logback:logback-core
-CVE-2024-12798
-CVE-2024-12801
-
-# com.google.protobuf:protobuf-java
 CVE-2024-7254
-
-# commons-io:commons-io
 CVE-2024-47554
-
-# io.netty:netty-common
-CVE-2025-25193
-
-# io.netty:netty-handler
-CVE-2025-24970
-
-# net.minidev:json-smart
-CVE-2024-57699

@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -27,7 +27,7 @@ class LogoutRestControllerTest extends AbstractControllerTest {
   @Autowired
   protected WebApplicationContext context;
 
-  @MockBean
+  @MockitoBean
   private LogoutService logoutService;
 
   @SecurityTest

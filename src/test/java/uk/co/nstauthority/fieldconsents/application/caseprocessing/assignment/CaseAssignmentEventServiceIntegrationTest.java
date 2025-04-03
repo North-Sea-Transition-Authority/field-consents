@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.annotation.DirtiesContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -67,7 +67,7 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
   @Autowired
   private CaseAssignmentEventService caseAssignmentEventService;
 
-  @MockBean
+  @MockitoBean
   private TeamQueryService teamQueryService;
 
   private ApplicationVersion applicationVersion;

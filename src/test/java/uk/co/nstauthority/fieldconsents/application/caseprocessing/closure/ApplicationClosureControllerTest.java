@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -46,10 +46,10 @@ class ApplicationClosureControllerTest extends AbstractApplicationControllerTest
   private static final int APPLICATION_ID = APPLICATION_VERSION.getId();
   protected ServiceUserDetail user;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
   @BeforeEach

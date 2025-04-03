@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.fieldconsents.AbstractActuatorControllerTest;
 import uk.co.nstauthority.fieldconsents.actuator.ActuatorConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -21,10 +21,10 @@ class ApplicationSubmittedSnsMessageActuatorEndpointTest extends AbstractActuato
 
   private static final int APPLICATION_VERSION_ID = 7;
 
-  @MockBean
+  @MockitoBean
   private ApplicationVersionService applicationVersionService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSnsService applicationSnsService;
 
   @Autowired

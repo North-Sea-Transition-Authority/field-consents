@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -38,7 +38,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
 
   private static final String PAGE_TITLE = "Are you sure you want to delete this draft application?";
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
   @SecurityTest

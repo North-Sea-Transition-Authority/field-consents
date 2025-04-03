@@ -32,7 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -66,22 +66,22 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
   private static final Class<ApplicationRationaleVentController> CONTROLLER_CLASS = ApplicationRationaleVentController.class;
   private static final String VIEW_NAME = "fcs/application/application-rationale/vent-form";
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleVentService applicationRationaleVentService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationAssetService applicationAssetService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleEmissionsFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleService applicationRationaleService;
 
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleEmissionService applicationRationaleEmissionService;
 
   private ApplicationVersion applicationVersion;

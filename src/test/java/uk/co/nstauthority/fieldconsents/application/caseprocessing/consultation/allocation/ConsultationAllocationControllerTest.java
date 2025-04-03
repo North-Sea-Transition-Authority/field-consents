@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -76,13 +76,13 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
           TeamMemberView::getDisplayName
       ));
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
 
   private ApplicationVersion applicationVersion;

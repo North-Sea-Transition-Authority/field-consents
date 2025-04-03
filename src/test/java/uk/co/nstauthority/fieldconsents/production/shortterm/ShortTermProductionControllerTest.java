@@ -20,7 +20,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -36,13 +36,13 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 @ContextConfiguration(classes = ShortTermProductionController.class)
 class ShortTermProductionControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ApplicationUnitService applicationUnitService;
 
-  @MockBean
+  @MockitoBean
   private ShortTermProductionService shortTermProductionService;
 
-  @MockBean
+  @MockitoBean
   private ShortTermProductionFormValidator shortTermProductionFormValidator;
 
   private ShortTermProductionForm shortTermProductionForm;

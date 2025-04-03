@@ -23,7 +23,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -45,13 +45,13 @@ class BulkIssueConsentsControllerTest extends AbstractControllerTest {
   private static final String SESSION_ATTRIBUTE = "bulkCaseActions-issueConsents";
   private static final String BULK_ISSUE_CONSENTS = "Bulk issue consents";
 
-  @MockBean
+  @MockitoBean
   private BulkIssueConsentsFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private BulkIssueConsentsService bulkIssueConsentsTaskService;
 
-  @MockBean
+  @MockitoBean
   private BulkCaseActionService bulkCaseActionService;
 
   @Autowired

@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
@@ -45,25 +45,25 @@ import uk.co.nstauthority.fieldconsents.teams.Role;
 @ContextConfiguration(classes = ApplicationTaskListController.class)
 class ApplicationTaskListControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ApplicationTaskListService applicationTaskListService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationContextService applicationContextService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateService applicationUpdateService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsentService consentService;
 
-  @MockBean
+  @MockitoBean
   private LicenceExpiryService licenceExpiryService;
 
   private List<TaskListSection> flareTaskListSections;

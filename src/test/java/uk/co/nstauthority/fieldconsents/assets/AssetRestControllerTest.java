@@ -10,7 +10,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
@@ -38,7 +38,7 @@ class AssetRestControllerTest extends AbstractControllerTest {
       FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE,
       OrganisationUnitTestUtil.orgUnit1Json);
 
-  @MockBean
+  @MockitoBean
   private AssetSearchService assetSearchService;
 
   @SecurityTest

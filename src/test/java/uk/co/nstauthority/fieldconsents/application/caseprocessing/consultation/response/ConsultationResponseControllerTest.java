@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
@@ -61,19 +61,19 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
   private static final String PAGE_TITLE = "Consultation response";
   private static final String VIEW_NAME = "fcs/application/consultation/responseForm";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationResponseFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
   private ApplicationVersion applicationVersion;

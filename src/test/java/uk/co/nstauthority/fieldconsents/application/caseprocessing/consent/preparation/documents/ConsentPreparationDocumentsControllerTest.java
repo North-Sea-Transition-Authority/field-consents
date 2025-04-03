@@ -28,7 +28,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
@@ -52,19 +52,19 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = ConsentPreparationDocumentsController.class)
 class ConsentPreparationDocumentsControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsentPreparationDocumentService consentDocumentService;
 
-  @MockBean
+  @MockitoBean
   private ConsentPreparationSupportingDocumentsFormValidator consentPreparationSupportingDocumentsFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceViewService applicationDocumentInstanceViewService;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
   @Captor

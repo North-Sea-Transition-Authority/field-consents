@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import org.jooq.Condition;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -45,13 +45,13 @@ class BulkIssueConsentsSearchControllerTest extends AbstractControllerTest {
   private static final String BULK_ISSUE_CONSENTS = "Bulk issue consents";
   private static final String FILTER_RESULTS = "Filter results";
 
-  @MockBean
+  @MockitoBean
   private BulkCaseActionService bulkCaseActionService;
 
-  @MockBean
+  @MockitoBean
   private BulkIssueConsentsSearchFilterService searchFilterService;
 
-  @MockBean
+  @MockitoBean
   private BulkIssueConsentsService bulkIssueConsentsTaskService;
 
   private MockHttpSession httpSession;

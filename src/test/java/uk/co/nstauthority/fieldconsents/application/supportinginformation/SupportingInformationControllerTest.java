@@ -29,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -47,16 +47,16 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
 
   private static final String VIEW_NAME = "fcs/application/supportingInformationForm";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private SupportingInformationService supportingInformationService;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private SupportingInformationFormValidator supportingInformationFormValidator;
 
   private ApplicationVersion applicationVersion;

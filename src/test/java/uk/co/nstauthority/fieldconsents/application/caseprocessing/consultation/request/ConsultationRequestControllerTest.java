@@ -27,7 +27,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -52,16 +52,16 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
   private static final String APPLICATION_REFERENCE = "12345";
   private static final Team TEAM = TeamTestUtil.newBuilder().withName("test").build();
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationRequestFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private Clock clock;
 
   private ApplicationVersion applicationVersion;

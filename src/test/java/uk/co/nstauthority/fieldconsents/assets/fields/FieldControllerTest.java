@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
@@ -48,10 +48,10 @@ public class FieldControllerTest extends AbstractControllerTest {
       Role.CONSENT_RECIPIENT
   );
 
-  @MockBean
+  @MockitoBean
   private ManageAssetService manageAssetService;
 
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
   @Captor

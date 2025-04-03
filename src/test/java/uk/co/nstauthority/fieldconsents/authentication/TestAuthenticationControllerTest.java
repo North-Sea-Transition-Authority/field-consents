@@ -24,7 +24,7 @@ class TestAuthenticationControllerTest extends AbstractControllerTest {
   @Autowired
   UserDetailService userDetailService;
 
-  // needs to be BeforeEach as otherwise MockBean in AbstractControllerTest is not initialised yet
+  // needs to be BeforeEach as otherwise MockitoBean in AbstractControllerTest is not initialised yet
   @BeforeEach
   void setUp() {
     doCallRealMethod().when(userDetailService).getUserDetail();

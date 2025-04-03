@@ -36,7 +36,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
@@ -58,16 +58,16 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
 
   static final String DUMMY_CAPTION_TITLE = "DUMMY_APP_REF";
 
-  @MockBean
+  @MockitoBean
   private CaseNotesService caseNotesService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private CaseNoteFormValidator caseNoteFormValidator;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
   @Captor

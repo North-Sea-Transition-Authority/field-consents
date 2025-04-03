@@ -33,7 +33,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
@@ -84,46 +84,46 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   private static final String OPEN_WITHDRAWAL_ATTRIBUTE = "openWithdrawal";
   private static final String CONSENT_EXCEEDED_ATTRIBUTE = "isConsentBreached";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationContextService applicationContextService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationWithdrawalService applicationWithdrawalService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingTabService caseProcessingTabService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateService applicationUpdateService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
 
-  @MockBean
+  @MockitoBean
   private PaymentsTabService paymentsTabService;
 
-  @MockBean
+  @MockitoBean
   private ConsentTabService consentTabService;
 
-  @MockBean
+  @MockitoBean
   private ConsentService consentService;
 
-  @MockBean
+  @MockitoBean
   private ConsentBreachService consentBreachService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationTaskListService applicationTaskListService;
 
-  @MockBean
+  @MockitoBean
   private LicenceExpiryService licenceExpiryService;
 
   private List<CaseProcessingActionView> caseProcessingActionViews;

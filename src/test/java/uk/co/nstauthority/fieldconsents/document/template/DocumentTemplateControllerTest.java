@@ -12,7 +12,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
@@ -28,13 +28,13 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
 
   private static final UUID DOCUMENT_TEMPLATE_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService;
 
-  @MockBean
+  @MockitoBean
   private FieldConsentsDocumentTemplateSectionViewService fieldConsentsDocumentTemplateSectionViewService;
 
-  @MockBean
+  @MockitoBean
   private DocumentTemplateService documentTemplateService;
 
   @SecurityTest

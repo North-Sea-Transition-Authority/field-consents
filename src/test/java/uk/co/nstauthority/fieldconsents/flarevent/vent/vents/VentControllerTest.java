@@ -21,7 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -32,16 +32,16 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = VentController.class)
 class VentControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private VentService ventService;
 
-  @MockBean
+  @MockitoBean
   private VentSummaryService ventSummaryService;
 
-  @MockBean
+  @MockitoBean
   private VentFormValidator ventFormValidator;
 
-  @MockBean
+  @MockitoBean
   private VentSetupFormValidator ventSetupFormValidator;
 
   private ApplicationVersion applicationVersion;

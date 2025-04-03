@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -57,13 +57,13 @@ class SearchControllerTest extends AbstractControllerTest {
   public static final String ACE_STATUSES = "aceStatuses";
   public static final String SEARCH_RESULTS_LIMITED = "searchResultsLimited";
 
-  @MockBean
+  @MockitoBean
   private SearchService searchService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDataFilterFormService applicationDataFilterFormService;
 
-  @MockBean
+  @MockitoBean
   private SearchFilterFormService searchFilterFormService;
 
   private SearchFilterForm form;

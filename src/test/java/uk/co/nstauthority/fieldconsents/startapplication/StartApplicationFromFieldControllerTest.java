@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.server.ResponseStatusException;
@@ -58,22 +58,22 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
   private static final Set<Role> INDUSTRY_ROLES = EnumSet.of(Role.CREATOR);
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private StartApplicationControllerHelperService startApplicationControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private StartApplicationFormValidator formValidator;
 
-  @MockBean
+  @MockitoBean
   private StartApplicationOperatorFormValidator operatorFormValidator;
 
-  @MockBean
+  @MockitoBean
   private StartApplicationOperatorFormService startApplicationOperatorFormService;
 
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
   private Map<String, String> applicationTypeMap;

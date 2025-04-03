@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
@@ -61,19 +61,19 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   private static final UUID PAYMENT_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSubmissionService applicationSubmissionService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationContextService applicationContextService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationPaymentService applicationPaymentService;
 
-  @MockBean
+  @MockitoBean
   private AbsoluteUrlService absoluteUrlService;
 
   @Autowired

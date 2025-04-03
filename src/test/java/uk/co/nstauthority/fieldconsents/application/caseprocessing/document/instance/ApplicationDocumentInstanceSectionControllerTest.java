@@ -23,7 +23,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionForm;
@@ -49,19 +49,19 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   private static final int APPLICATION_ID = 1;
   private static final UUID DOCUMENT_INSTANCE_SECTION_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private DocumentInstanceSectionService documentInstanceSectionService;
 
-  @MockBean
+  @MockitoBean
   private DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
 
-  @MockBean
+  @MockitoBean
   private DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
   private ApplicationVersion applicationVersion;

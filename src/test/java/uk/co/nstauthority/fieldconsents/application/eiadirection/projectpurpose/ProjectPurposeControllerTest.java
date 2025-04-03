@@ -27,7 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -47,10 +47,10 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/eia-screening/project-purpose-form";
 
-  @MockBean
+  @MockitoBean
   private ProjectPurposeFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private EiaDirectionService eiaDirectionService;
 
   private static final ApplicationVersion APPLICATION_VERSION = ApplicationTestUtil.getNewApplicationVersionWithType(

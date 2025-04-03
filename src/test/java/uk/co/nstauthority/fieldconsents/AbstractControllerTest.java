@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -95,16 +95,16 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected MockMvc mockMvc;
 
-  @MockBean
+  @MockitoBean
   protected TeamManagementService teamManagementService;
 
-  @MockBean
+  @MockitoBean
   protected TeamQueryService teamQueryService;
 
-  @MockBean
+  @MockitoBean
   protected TopNavigationService topNavigationService;
 
-  @MockBean
+  @MockitoBean
   protected FieldConsentsAccessService fieldConsentsAccessService;
 
   @Autowired
@@ -113,34 +113,34 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected ValidationErrorOrderingService validationErrorOrderingService;
 
-  @MockBean
+  @MockitoBean
   protected OrganisationUnitService organisationUnitService;
 
-  @MockBean
+  @MockitoBean
   protected OrganisationGroupQueryService organisationGroupQueryService;
 
-  @MockBean
+  @MockitoBean
   protected UserDetailService userDetailService;
 
-  @MockBean
+  @MockitoBean
   protected SamlResponseParser samlResponseParser;
 
-  @MockBean
+  @MockitoBean
   protected ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
 
-  @MockBean
+  @MockitoBean
   protected ApplicationVersionService applicationVersionService;
 
-  @MockBean
+  @MockitoBean
   protected CaseProcessingActionService caseProcessingActionService;
 
-  @MockBean
+  @MockitoBean
   protected FieldService fieldService;
 
-  @MockBean
+  @MockitoBean
   protected TerminalService terminalService;
 
-  @MockBean
+  @MockitoBean
   protected JooqStatisticsListener jooqStatisticsListener;
 
   protected ServiceUserDetail user;

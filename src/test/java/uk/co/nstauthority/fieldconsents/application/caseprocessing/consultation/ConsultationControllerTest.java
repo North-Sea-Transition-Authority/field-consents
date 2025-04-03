@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -39,10 +39,10 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
   private static final Class<ConsultationController> CONTROLLER_CLASS = ConsultationController.class;
   private static final String VIEW_NAME = "fcs/application/consultation/consultations";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationSummaryService consultationSummaryService;
 
   private ApplicationVersion applicationVersion;

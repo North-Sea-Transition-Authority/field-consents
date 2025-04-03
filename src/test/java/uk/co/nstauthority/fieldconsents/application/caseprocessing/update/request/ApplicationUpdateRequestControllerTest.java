@@ -35,7 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -63,25 +63,25 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
   private static final String VIEW_NAME = "fcs/application/update/applicationUpdateRequest";
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateService applicationUpdateService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
-  @MockBean
+  @MockitoBean
   private Clock clock;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private FurtherInformationService furtherInformationService;
 
   private Consultation consultation;

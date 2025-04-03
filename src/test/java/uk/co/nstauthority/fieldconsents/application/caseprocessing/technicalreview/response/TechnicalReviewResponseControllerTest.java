@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
@@ -62,19 +62,19 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   private static final String TECHNICAL_REVIEW_REQUEST_TEXT = "Request text";
   private static final String APPLICATION_REFERENCE = "application reference";
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewService technicalReviewService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewResponseFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
   @Captor

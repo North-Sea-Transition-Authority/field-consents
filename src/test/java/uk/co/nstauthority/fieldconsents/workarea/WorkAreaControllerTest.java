@@ -21,9 +21,9 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -50,22 +50,22 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   static final String WORK_AREA_VIEW_NAME = "fcs/workarea/workArea";
 
-  @MockBean
+  @MockitoBean
   private WorkAreaService workAreaService;
 
-  @MockBean
+  @MockitoBean
   private WorkAreaFilterFormService workAreaFormService;
 
-  @MockBean
+  @MockitoBean
   private WorkAreaFilterService workAreaFilterService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDataFilterFormService applicationDataFilterFormService;
 
-  @MockBean
+  @MockitoBean
   private CaseAssignmentService caseAssignmentService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
   private WorkAreaFilter filter;

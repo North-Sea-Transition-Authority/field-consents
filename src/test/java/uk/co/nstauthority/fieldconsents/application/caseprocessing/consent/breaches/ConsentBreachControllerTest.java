@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -50,19 +50,19 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = ConsentBreachController.class)
 class ConsentBreachControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ConsentService consentService;
 
-  @MockBean
+  @MockitoBean
   private ConsentBreachSummaryService consentBreachSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ConsentBreachFormValidator consentBreachFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ConsentBreachService consentBreachService;
 
   private ApplicationVersion applicationVersion;

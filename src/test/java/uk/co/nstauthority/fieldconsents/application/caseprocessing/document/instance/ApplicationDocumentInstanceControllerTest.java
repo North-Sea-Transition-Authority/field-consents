@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -50,19 +50,19 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   private static final int APPLICATION_ID = 1;
   private static final UUID DOCUMENT_INSTANCE_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService;
 
-  @MockBean
+  @MockitoBean
   private DocumentInstanceService documentInstanceService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
   private ApplicationVersion applicationVersion;

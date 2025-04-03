@@ -22,7 +22,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -37,13 +37,13 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = FlareReportPeriodController.class)
 class FlareReportPeriodControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private FlareReportPeriodService flareReportPeriodService;
 
-  @MockBean
+  @MockitoBean
   private FlareVentReportPeriodFormValidator reportPeriodFormValidator;
 
-  @MockBean
+  @MockitoBean
   private FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService;
 
   private FlareVentReportPeriodForm reportPeriodForm;

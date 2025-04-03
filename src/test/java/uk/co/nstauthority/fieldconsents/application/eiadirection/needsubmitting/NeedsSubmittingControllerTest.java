@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -46,10 +46,10 @@ class NeedsSubmittingControllerTest extends AbstractApplicationControllerTest {
   private static final int MONTH = 2;
   private static final int YEAR = 23;
 
-  @MockBean
+  @MockitoBean
   private NeedsSubmittingFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private EiaDirectionService eiaDirectionService;
 
   private ApplicationVersion applicationVersion;

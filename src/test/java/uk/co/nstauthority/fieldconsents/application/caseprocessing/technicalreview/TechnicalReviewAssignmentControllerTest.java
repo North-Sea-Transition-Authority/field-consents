@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -53,22 +53,22 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
   private static final String VIEW_NAME = "fcs/application/review/technicalReviewAssignment";
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
-  @MockBean
+  @MockitoBean
   private Clock clock;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewService technicalReviewService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewAssignmentFormValidator technicalReviewAssignmentFormValidator;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
 
   @SecurityTest

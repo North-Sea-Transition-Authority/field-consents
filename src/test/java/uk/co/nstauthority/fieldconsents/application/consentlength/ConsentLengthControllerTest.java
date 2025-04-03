@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -29,13 +29,13 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = ConsentLengthController.class)
 class ConsentLengthControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ConsentLengthService consentLengthService;
 
-  @MockBean
+  @MockitoBean
   private ConsentLengthFormValidator consentLengthFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ConsentLengthControllerHelperService consentLengthHelperService;
 
   private ApplicationVersion applicationVersion;

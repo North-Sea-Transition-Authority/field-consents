@@ -28,7 +28,7 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -56,16 +56,16 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
   private static final Class<BulkAssignCaseOfficerController> CONTROLLER_CLASS = BulkAssignCaseOfficerController.class;
   private static final String SESSION_ATTRIBUTE = "bulkCaseActions-assignCaseOfficer";
 
-  @MockBean
+  @MockitoBean
   private BulkAssignCaseOfficerFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private BulkAssignCaseOfficerService bulkAssignCaseOfficerService;
 
-  @MockBean
+  @MockitoBean
   private BulkCaseActionService bulkCaseActionService;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
 
   private MockHttpSession session;

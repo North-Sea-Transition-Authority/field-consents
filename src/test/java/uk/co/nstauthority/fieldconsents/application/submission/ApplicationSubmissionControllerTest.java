@@ -33,7 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -65,28 +65,28 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
   private static final String NO_APP_REF = "";
 
-  @MockBean
+  @MockitoBean
   private ApplicationSubmissionService applicationSubmissionService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateService applicationUpdateService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationPaymentService applicationPaymentService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
 
-  @MockBean
+  @MockitoBean
   private LicenceExpiryService licenceExpiryService;
 
   private ApplicationVersion applicationVersion;

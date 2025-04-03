@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
@@ -108,55 +108,55 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String OPEN_WITHDRAWAL_ATTRIBUTE = "openWithdrawal";
   private static final String CONSENT_EXCEEDED_ATTRIBUTE = "isConsentBreached";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationContextService applicationContextService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationWithdrawalService applicationWithdrawalService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingTabService caseProcessingTabService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingTaskListService caseProcessingTaskListService;
 
-  @MockBean
+  @MockitoBean
   private CaseHistoryTabContentService caseHistoryTabContentService;
 
-  @MockBean
+  @MockitoBean
   private TechnicalReviewService technicalReviewService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private FurtherInformationService furtherInformationService;
 
-  @MockBean
+  @MockitoBean
   private PaymentsTabService paymentsTabService;
 
-  @MockBean
+  @MockitoBean
   private ConsentTabService consentTabService;
 
-  @MockBean
+  @MockitoBean
   private ConsentIssuingApprovalService consentIssuingApprovalService;
 
-  @MockBean
+  @MockitoBean
   private ConsentService consentService;
 
-  @MockBean
+  @MockitoBean
   private ConsentBreachService consentBreachService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
-  @MockBean
+  @MockitoBean
   private LicenceExpiryService licenceExpiryService;
 
   private ApplicationVersion applicationVersion;

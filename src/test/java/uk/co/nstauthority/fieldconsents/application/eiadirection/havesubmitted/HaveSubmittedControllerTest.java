@@ -22,7 +22,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -48,13 +48,13 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
   private static final String PETS_URL = "/pets";
   private static final int SAT_ID = 123;
 
-  @MockBean
+  @MockitoBean
   private HaveSubmittedFormValidator validator;
 
-  @MockBean
+  @MockitoBean
   private EiaDirectionService eiaDirectionService;
 
-  @MockBean
+  @MockitoBean
   private PetsApplicationService petsApplicationService;
 
   private ApplicationVersion applicationVersion;

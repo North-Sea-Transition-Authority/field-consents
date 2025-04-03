@@ -1,5 +1,5 @@
 plugins {
-  id("org.springframework.boot") version "3.3.10"
+  id("org.springframework.boot") version "3.4.4"
   id("io.spring.dependency-management") version "1.1.7"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
@@ -38,7 +38,8 @@ repositories {
 }
 
 dependencies {
-  developmentOnly("org.springframework.boot:spring-boot-devtools")
+  developmentOnly 'org.springframework.boot:spring-boot-devtools'
+  developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
   implementation 'org.springframework.boot:spring-boot-starter-freemarker'
   implementation 'org.springframework.boot:spring-boot-starter-web'

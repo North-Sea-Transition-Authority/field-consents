@@ -16,7 +16,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -36,16 +36,16 @@ class LongTermProductionControllerTest extends AbstractApplicationControllerTest
 
   private static final Integer END_YEAR = 2026;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUnitService applicationUnitService;
 
-  @MockBean
+  @MockitoBean
   private LongTermProductionService longTermProductionService;
 
-  @MockBean
+  @MockitoBean
   private LongTermProductionFormValidator longTermProductionFormValidator;
 
-  @MockBean
+  @MockitoBean
   private BindingResult bindingResult;
 
   private LongTermProductionForm longTermProductionForm;

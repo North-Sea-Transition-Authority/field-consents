@@ -14,7 +14,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -52,25 +52,25 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 @ContextConfiguration(classes = ConsentPreparationController.class)
 class ConsentPreparationControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private ConsentDataService consentDataService;
 
-  @MockBean
+  @MockitoBean
   private ConsentFigureUnitService consentFigureUnitService;
 
-  @MockBean
+  @MockitoBean
   private ConsentLengthService consentLengthService;
 
-  @MockBean
+  @MockitoBean
   private ConsentPreparationDocumentService consentDocumentService;
 
-  @MockBean
+  @MockitoBean
   private FieldEquityPartnerService fieldEquityPartnerService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationAssetService applicationAssetService;
 
-  @MockBean
+  @MockitoBean
   private CaseStatusFlagService caseStatusFlagService;
 
   private Application application;

@@ -26,7 +26,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -43,25 +43,25 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = AdditionalAssetsController.class)
 class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
   
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
-  @MockBean
+  @MockitoBean
   private AssetSummaryService assetSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationAssetService applicationAssetService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationFlagService applicationFlagService;
 
-  @MockBean
+  @MockitoBean
   private AdditionalAssetsFormValidator additionalAssetsFormValidator;
 
-  @MockBean
+  @MockitoBean
   private AdditionalAssetsService additionalAssetsService;
 
-  @MockBean
+  @MockitoBean
   private AdditionalAssetSelectionFormValidator additionalAssetSelectionFormValidator;
 
   private ApplicationVersion applicationVersion;

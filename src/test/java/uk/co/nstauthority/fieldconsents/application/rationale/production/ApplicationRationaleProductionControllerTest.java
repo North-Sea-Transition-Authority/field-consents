@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -64,19 +64,19 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   private static final Class<ApplicationRationaleProductionController> CONTROLLER_CLASS = ApplicationRationaleProductionController.class;
   private static final String VIEW_NAME = "fcs/application/application-rationale/production-form";
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleProductionService applicationRationaleProductionService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationAssetService applicationAssetService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleProductionFormValidator applicationRationaleProductionFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ApplicationRationaleService applicationRationaleService;
 
-  @MockBean
+  @MockitoBean
   private AssetService assetService;
 
   private ApplicationVersion applicationVersion;

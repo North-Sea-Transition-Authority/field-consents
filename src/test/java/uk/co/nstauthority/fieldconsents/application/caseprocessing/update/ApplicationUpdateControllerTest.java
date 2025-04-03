@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -38,10 +38,10 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
   private static final Class<ApplicationUpdateController> CONTROLLER_CLASS = ApplicationUpdateController.class;
   private static final String VIEW_NAME = "fcs/application/update/applicationUpdates";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUpdateSummaryService applicationUpdateSummaryService;
 
   private Application application;

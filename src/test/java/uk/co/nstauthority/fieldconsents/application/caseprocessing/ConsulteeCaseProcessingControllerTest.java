@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
@@ -57,25 +57,25 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   private static final String PAGE_TITLE = "This is the page title";
   private static final String VIEW_NAME = "fcs/application/consultation/caseProcessing";
 
-  @MockBean
+  @MockitoBean
   private ApplicationService applicationService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationContextService applicationContextService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationService consultationService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingTabService caseProcessingTabService;
 
-  @MockBean
+  @MockitoBean
   private ConsultationSummaryService consultationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private CaseProcessingControllerHelperService caseProcessingControllerHelperService;
 
   private Application application;

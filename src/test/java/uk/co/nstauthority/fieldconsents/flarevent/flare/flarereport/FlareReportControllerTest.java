@@ -19,7 +19,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -34,16 +34,16 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = FlareReportController.class)
 class FlareReportControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private FlareReportService flareReportService;
 
-  @MockBean
+  @MockitoBean
   private FlareReportPeriodService flareReportPeriodService;
 
-  @MockBean
+  @MockitoBean
   private FlareReportFormService flareReportFormService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationUnitService applicationUnitService;
 
   private ApplicationVersion applicationVersion;

@@ -24,7 +24,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -50,19 +50,19 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/consent/data/consentDataForm";
 
-  @MockBean
+  @MockitoBean
   private ConsentDataService consentDataService;
 
-  @MockBean
+  @MockitoBean
   private ConsentDataFormValidator consentDataFormValidator;
 
-  @MockBean
+  @MockitoBean
   private ConsentFigureUnitService consentFigureUnitService;
 
-  @MockBean
+  @MockitoBean
   private ConsentLengthService consentLengthService;
 
-  @MockBean
+  @MockitoBean
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   @Captor

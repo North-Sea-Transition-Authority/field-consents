@@ -22,7 +22,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -38,13 +38,13 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = VentReportPeriodController.class)
 class VentReportPeriodControllerTest extends AbstractApplicationControllerTest {
 
-  @MockBean
+  @MockitoBean
   private VentReportPeriodService ventReportPeriodService;
 
-  @MockBean
+  @MockitoBean
   private FlareVentReportPeriodFormValidator reportPeriodFormValidator;
 
-  @MockBean
+  @MockitoBean
   private FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService;
 
   private FlareVentReportPeriodForm reportPeriodForm;
