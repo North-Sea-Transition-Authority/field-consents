@@ -14,7 +14,9 @@
   pageSize=stackTrace?has_content?then(PageSize.FULL_WIDTH, PageSize.TWO_THIRDS_COLUMN)>
   <p class="govuk-body">
     If you continue to experience this problem, contact the service desk using the
-    details below. Be sure to include the error reference below in any correspondence.
+    details below. Be sure to include the error reference below in any correspondence,
+    along with a description of what you were trying to do and, if relevant, the
+    reference number for the activity or information you were working on.
   </p>
   <@_errorReference reference=errorRef>
     <@serviceSupportMacro.contactDetails emailSubject="Error reference - ${errorRef}" includeHeading=false />
