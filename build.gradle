@@ -70,6 +70,8 @@ dependencies {
   implementation 'uk.co.fivium:ftss-client-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
   implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
+  // TODO Update this to the next tag version before merging PR
+  implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v0.3'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'

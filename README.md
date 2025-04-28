@@ -118,6 +118,17 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 | **UK Energy Portal**                        |                                                                                                                                                                                                                                                                                                                                 |  
 | `FCS_ENERGY_PORTAL_WORKBASKET_URL`          | The URL of the UK Energy Portal landing page (dev: https://itportal.dev.fivium.co.uk/engedudev1/fox) <br/>                                                                                                                                                                                                                      |   
 
+#### Energy Portal accounts service integration
+
+In order to integrate with the Energy Portal accounts service as the IDP you need to include the `use-epas` profile. If running Energy Portal accounts service
+locally add the `use-epas-development` profile as well.
+
+For deployed environments we require the following environment variables to be set
+- EPAS_SAML_ENTITY_ID
+- EPAS_SAML_LOGIN_URL
+- EPAS_LOGOUT_REQUEST_URL
+- EPAS_SAML_BASE_URL (e.g. https://nsta.itportal.dev.fivium.co.uk)
+
 ### 4. Initialise the Fivium Design System
 ```bash
 git submodule update --init --recursive
