@@ -176,6 +176,21 @@ steps:
       event:
         - tag
 
+  - name: scan-and-sync-public-repo
+    image: quay.io/fivium/drone-trufflehog-plugin:v1.1
+    settings:
+      scan_since_commit_hash: 28d9756d7d5920f5e834f5bcc18af75c279eb2ba
+      sync_to_mirror: true
+      mirror_remote_url: git@github.com:North-Sea-Transition-Authority/field-consents.git
+      mirror_branch_to_sync: develop
+      mirror_remote_ssh_key:
+        from_secret: sync_ssh_key
+    when:
+      event:
+        - push
+      branch: 
+        - develop
+
   - name: rebuild-cache
     image: drillster/drone-volume-cache
     volumes:
@@ -192,7 +207,8 @@ steps:
   - name: slack
     image: plugins/slack
     settings:
-      webhook: https://hooks.slack.com/services/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
+      webhook:
+        from_secret: slack_webhook
       channel: field-consents-builds
       template: "*{{build.status}}* <{{build.link}}|Commit {{truncate build.commit 7}} on {{build.branch}} by ${DRONE_COMMIT_AUTHOR_NAME}>\nReports published to: http://drone-assets.fivium.local:9090/field-consents/{{build.number}}/"
     when:
@@ -370,3 +386,16 @@ data: gO4ROb4/mV6mWCFbR5ohEqRmMJ9QWIH2eqvHOZHtJE9Ulgyr6D5Y43UI4fFFnm6l5bJ5gZPcG9
 kind: secret
 name: nexus_password
 data: e5ifDHA8wOKWVeOipAVvSy4/5/AT3h10d/K+n1gs1FfGk+biVw==
+
+---
+
+kind: secret
+name: sync_ssh_key
+data: vZIFnt6UX1r82AS79nMkTBjaOgE7QDDLskcvWAvZIUV0LH7g2YMM+O6xpWYrZPAH8XPLoOsKVjSaDkWSNpf4Jr3ePxPksNMB8A45dablmVgmSNr0LQBN5WpB9tMjVyF/+nvGxvcn2129INHqIHeF/GbxjGKnTH69w3BCkJuraC/v8hw6pwEffz1H+d+dPeFKCJEKUQgpt19/yGDdLbXiMg8OuDzMNVAk41d+0+8CuJt7GXsgeMdXnsLTpMTQU3qe6w4wGE0Ze33ehiF85upVpGlmc87UF02Lsff33hSKmTLuwVR/EeOwzDZistQwqFIhQm1CelBVzqlw7opLSd1Skjz029b+t8SYwLSdrwXS16BRQMXp2xtRoL3XPrqRLAFAsKI4DnC+uO+sKrCrCrKZlw9KVXRiXxqVaVb8ap2kRkwb50b9+gnGaKKD4sJSNVrRgrp+yPAAtwcClprGopTupncXIeDF56+6lD7dZqTmhLP0sOh+QTFIGIBtXGpCv3CXGQwo6R3rLkwJaOqEjlWcGPIHo+ufWqovfobBfVoJ9xLZid2qeYigDub+g8Ntd5k/ycOA1TtzoFZes6QigBHPHnwihf9dd8OMtR0OEZA=
+
+---
+
+kind: secret
+name: slack_webhook
+data: GDwD12pwlxaQdVq0zACHHh9U4zVgsUQfSvUM/o+BZYQ0oGOrFBJkAWPb+PRdpSVokHgBncueuWnKMzBd2aW4mb/zlP5a9wGcXnPp9faUuW/tOv2vnfd38LFWeLA2O6FTkaDIqNO3PQ+cgYE=
+
