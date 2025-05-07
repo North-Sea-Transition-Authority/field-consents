@@ -177,9 +177,9 @@ steps:
         - tag
 
   - name: scan-and-sync-public-repo
-    image: quay.io/fivium/drone-trufflehog-plugin:v1.1
+    image: quay.io/fivium/drone-trufflehog-plugin:v1.0
     settings:
-      scan_since_commit_hash: 28d9756d7d5920f5e834f5bcc18af75c279eb2ba
+      scan_since_commit_hash: ba65aa16ebe3a09303271faab6190146c0581ad3
       sync_to_mirror: true
       mirror_remote_url: git@github.com:North-Sea-Transition-Authority/field-consents.git
       mirror_branch_to_sync: develop
