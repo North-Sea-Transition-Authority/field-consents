@@ -15,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGr
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.HandlerInterceptorUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.Security;
 import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserIsRegulatorCaseProcessor;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
@@ -41,6 +42,11 @@ public class StaticRoleHandlerInterceptor implements HandlerInterceptor {
       @NonNull Object handler
   ) {
     if (handler instanceof HandlerMethod handlerMethod) {
+      if (HandlerInterceptorUtil.findAnnotation(handlerMethod, Security.class).isEmpty()) {
+        // Don't call getUserDetail() if the endpoint is unauthenticated to allow for unauthenticated access.
+        return true;
+      }
+
       var userDetail = userDetailService.getUserDetail();
 
       HandlerInterceptorUtil.findAnnotation(handlerMethod, HasRegulatorRole.class)
