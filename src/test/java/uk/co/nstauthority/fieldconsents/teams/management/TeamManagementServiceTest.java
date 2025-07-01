@@ -32,7 +32,6 @@ import uk.co.fivium.energyportal.accounts.starter.EnergyPortalServiceAccessServi
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.client.UsersProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -254,18 +253,6 @@ class TeamManagementServiceTest {
 
     assertThat(teamManagementService.getTeam(uuid))
         .isEqualTo(Optional.of(regTeam));
-  }
-
-  @Test
-  void getEnergyPortalUser() {
-    var expectedProjection = new UsersProjectionRoot()
-        .webUserAccountId()
-        .isAccountShared()
-        .canLogin();
-
-    teamManagementService.getEnergyPortalUser("foo");
-
-    verify(userApi).searchUsersByEmail(eq("foo"), refEq(expectedProjection), any(RequestPurpose.class));
   }
 
   @Test

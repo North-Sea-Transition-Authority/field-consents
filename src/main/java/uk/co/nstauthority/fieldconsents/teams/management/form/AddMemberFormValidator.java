@@ -4,17 +4,17 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
-import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementService;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 
 @Service
 public class AddMemberFormValidator {
 
   private static final String FIELD_NAME = "username";
 
-  private final TeamManagementService teamManagementService;
+  private final EnergyPortalUserService energyPortalUserService;
 
-  AddMemberFormValidator(TeamManagementService teamManagementService) {
-    this.teamManagementService = teamManagementService;
+  AddMemberFormValidator(EnergyPortalUserService energyPortalUserService) {
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   public boolean isValid(AddMemberForm form, Errors errors) {
@@ -27,7 +27,7 @@ public class AddMemberFormValidator {
       return false;
     }
 
-    var users = teamManagementService.getEnergyPortalUser(form.getUsername());
+    var users = energyPortalUserService.getEnergyPortalUsersThatCanLogin(form.getUsername());
     if (users.isEmpty()) {
       errors.rejectValue(
           FIELD_NAME,
@@ -43,6 +43,7 @@ public class AddMemberFormValidator {
           "tooMany",
           "More than one Energy Portal user exists with this email address. Enter the username of the user instead."
       );
+      return false;
     }
 
     var user = users.getFirst();

@@ -48,15 +48,14 @@ public class EnergyPortalUserService {
     this.userApi = userApi;
   }
 
-  public List<EnergyPortalUserDto> findUserByUsername(String username) {
+  public List<User> getEnergyPortalUsersThatCanLogin(String emailAddress) {
     return userApi.searchUsersByEmail(
-            username,
+            emailAddress,
             USERS_PROJECT_ROOT,
             new RequestPurpose("findUserByUsername")
         )
         .stream()
         .filter(User::getCanLogin)
-        .map(EnergyPortalUserDto::from)
         .toList();
   }
 

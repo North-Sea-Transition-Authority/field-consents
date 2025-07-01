@@ -18,10 +18,9 @@ import uk.co.fivium.energyportal.accounts.starter.EnergyPortalServiceAccessServi
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.client.UsersProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
@@ -44,6 +43,7 @@ public class TeamManagementService {
   private final UserDetailService userDetailService;
   private final EnergyPortalAccessService energyPortalAccessService;
   private final EnergyPortalServiceAccessService energyPortalServiceAccessService;
+  private final EnergyPortalUserService energyPortalUserService;
   private final Environment environment;
 
   TeamManagementService(
@@ -54,6 +54,7 @@ public class TeamManagementService {
       UserDetailService userDetailService,
       EnergyPortalAccessService energyPortalAccessService,
       EnergyPortalServiceAccessService energyPortalServiceAccessService,
+      EnergyPortalUserService energyPortalUserService,
       Environment environment
   ) {
     this.teamRepository = teamRepository;
@@ -63,6 +64,7 @@ public class TeamManagementService {
     this.userDetailService = userDetailService;
     this.energyPortalAccessService = energyPortalAccessService;
     this.energyPortalServiceAccessService = energyPortalServiceAccessService;
+    this.energyPortalUserService = energyPortalUserService;
     this.environment = environment;
   }
 
@@ -142,14 +144,6 @@ public class TeamManagementService {
 
   public Optional<Team> getTeam(UUID teamId) {
     return teamRepository.findById(teamId);
-  }
-
-  public List<User> getEnergyPortalUser(String username) {
-    var projection = new UsersProjectionRoot()
-        .webUserAccountId()
-        .isAccountShared()
-        .canLogin();
-    return userApi.searchUsersByEmail(username, projection, new RequestPurpose("Find user to add to team"));
   }
 
   public TeamMemberView getTeamMemberView(Team team, Long wuaId) {

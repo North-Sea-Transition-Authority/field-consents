@@ -25,13 +25,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -54,6 +55,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
   @MockitoBean
   private EnergyPortalConfiguration energyPortalConfiguration;
+
+  @MockitoBean
+  private EnergyPortalUserService energyPortalUserService;
 
   private static Team regTeam;
   private static Team organisationTeam;
@@ -480,7 +484,7 @@ class TeamManagementControllerTest extends AbstractControllerTest {
     when(addMemberFormValidator.isValid(any(), any()))
         .thenReturn(true);
 
-    when(teamManagementService.getEnergyPortalUser("foo"))
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo"))
         .thenReturn(List.of(epaUser));
 
     mockMvc.perform(post(ReverseRouter.route(on(TeamManagementController.class).handleAddMemberToTeam(regTeam.getId(), null, null)))
@@ -522,7 +526,7 @@ class TeamManagementControllerTest extends AbstractControllerTest {
     when(addMemberFormValidator.isValid(any(), any()))
         .thenReturn(true);
 
-    when(teamManagementService.getEnergyPortalUser("foo"))
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo"))
         .thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(TeamManagementController.class).handleAddMemberToTeam(regTeam.getId(), null, null)))

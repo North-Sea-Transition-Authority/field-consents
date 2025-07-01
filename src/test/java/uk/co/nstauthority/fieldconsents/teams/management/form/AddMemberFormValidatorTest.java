@@ -12,13 +12,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.fivium.energyportalapi.generated.types.User;
-import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementService;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 
 @ExtendWith(MockitoExtension.class)
 class AddMemberFormValidatorTest {
 
   @Mock
-  private TeamManagementService teamManagementService;
+  private EnergyPortalUserService energyPortalUserService;
 
   @InjectMocks
   private AddMemberFormValidator addMemberFormValidator;
@@ -40,7 +40,7 @@ class AddMemberFormValidatorTest {
     user.setIsAccountShared(false);
     user.setCanLogin(true);
 
-    when(teamManagementService.getEnergyPortalUser("foo")).thenReturn(List.of(user));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isTrue();
     assertThat(errors.hasErrors()).isFalse();
@@ -58,7 +58,7 @@ class AddMemberFormValidatorTest {
   void isValid_noEpaUser() {
     form.setUsername("foo");
 
-    when(teamManagementService.getEnergyPortalUser("foo")).thenReturn(List.of());
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of());
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();
   }
@@ -75,7 +75,7 @@ class AddMemberFormValidatorTest {
     user2.setIsAccountShared(false);
     user2.setCanLogin(true);
 
-    when(teamManagementService.getEnergyPortalUser("foo")).thenReturn(List.of(user1, user2));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user1, user2));
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();
   }
@@ -86,7 +86,7 @@ class AddMemberFormValidatorTest {
     user.setIsAccountShared(true);
     user.setCanLogin(true);
 
-    when(teamManagementService.getEnergyPortalUser("foo")).thenReturn(List.of(user));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();
@@ -98,7 +98,7 @@ class AddMemberFormValidatorTest {
     user.setIsAccountShared(false);
     user.setCanLogin(false);
 
-    when(teamManagementService.getEnergyPortalUser("foo")).thenReturn(List.of(user));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();

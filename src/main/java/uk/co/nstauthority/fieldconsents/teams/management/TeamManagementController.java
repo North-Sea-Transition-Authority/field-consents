@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -40,19 +41,22 @@ public class TeamManagementController {
   private final MemberRolesFormValidator memberRolesFormValidator;
   private final AddMemberFormValidator addMemberFormValidator;
   private final EnergyPortalConfiguration energyPortalConfiguration;
+  private final EnergyPortalUserService energyPortalUserService;
 
   TeamManagementController(
       TeamManagementService teamManagementService,
       TeamQueryService teamQueryService,
       MemberRolesFormValidator memberRolesFormValidator,
       AddMemberFormValidator addMemberFormValidator,
-      EnergyPortalConfiguration energyPortalConfiguration
+      EnergyPortalConfiguration energyPortalConfiguration,
+      EnergyPortalUserService energyPortalUserService
   ) {
     this.teamManagementService = teamManagementService;
     this.teamQueryService = teamQueryService;
     this.memberRolesFormValidator = memberRolesFormValidator;
     this.addMemberFormValidator = addMemberFormValidator;
     this.energyPortalConfiguration = energyPortalConfiguration;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   @GetMapping
@@ -177,7 +181,8 @@ public class TeamManagementController {
       return addMemberModelAndView(teamId);
     }
 
-    var wuaId = teamManagementService.getEnergyPortalUser(form.getUsername()).stream()
+    var wuaId = energyPortalUserService.getEnergyPortalUsersThatCanLogin(form.getUsername())
+        .stream()
         .filter(user -> !user.getIsAccountShared() && user.getCanLogin())
         .map(user -> user.getWebUserAccountId().longValue())
         .findFirst()

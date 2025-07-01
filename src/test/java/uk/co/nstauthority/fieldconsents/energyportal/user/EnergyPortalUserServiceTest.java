@@ -34,7 +34,7 @@ class EnergyPortalUserServiceTest {
   private EnergyPortalUserService energyPortalUserService;
 
   @Test
-  void findUserByUsername_whenNoResults_thenEmptyList() {
+  void getEnergyPortalUsersThatCanLogin_whenNoResults_thenEmptyList() {
     var username = "username";
     var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
 
@@ -44,11 +44,11 @@ class EnergyPortalUserServiceTest {
         any(RequestPurpose.class)
     )).thenReturn(Collections.emptyList());
 
-    assertTrue(energyPortalUserService.findUserByUsername(username).isEmpty());
+    assertTrue(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username).isEmpty());
   }
 
   @Test
-  void findUserByUsername_whenUserFoundAndCanLogIn_thenPopulatedListCorrectlyMapped() {
+  void getEnergyPortalUsersThatCanLogin_whenUserFoundAndCanLogIn_thenPopulatedListCorrectlyMapped() {
     var username = "username";
     var expectedUser = EpaUserTestUtil.Builder()
         .canLogin(true)
@@ -62,33 +62,11 @@ class EnergyPortalUserServiceTest {
         any(RequestPurpose.class)
     )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.findUserByUsername(username))
-        .extracting(
-            EnergyPortalUserDto::webUserAccountId,
-            EnergyPortalUserDto::title,
-            EnergyPortalUserDto::forename,
-            EnergyPortalUserDto::surname,
-            EnergyPortalUserDto::emailAddress,
-            EnergyPortalUserDto::telephoneNumber,
-            EnergyPortalUserDto::isSharedAccount,
-            EnergyPortalUserDto::canLogin
-        )
-        .containsExactly(
-            tuple(
-                Long.valueOf(expectedUser.getWebUserAccountId()),
-                expectedUser.getTitle(),
-                expectedUser.getForename(),
-                expectedUser.getSurname(),
-                expectedUser.getPrimaryEmailAddress(),
-                expectedUser.getTelephoneNumber(),
-                expectedUser.getIsAccountShared(),
-                expectedUser.getCanLogin()
-            )
-        );
+    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).containsExactly(expectedUser);
   }
 
   @Test
-  void findUserByUsername_whenUsersFound_thenOnlyThoseWithCanLoginTrueReturned() {
+  void getEnergyPortalUsersThatCanLogin_whenUsersFound_thenOnlyThoseWithCanLoginTrueReturned() {
     var username = "username";
 
     var canLoginUser = EpaUserTestUtil.Builder()
@@ -112,9 +90,7 @@ class EnergyPortalUserServiceTest {
         notLoginUser
     ));
 
-    assertThat(energyPortalUserService.findUserByUsername(username))
-        .extracting(EnergyPortalUserDto::webUserAccountId)
-        .containsExactly(Long.valueOf(canLoginUser.getWebUserAccountId()));
+    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).containsExactly(canLoginUser);
   }
 
   @Test
