@@ -12,10 +12,12 @@
         sectionNumber=currentSectionNumber
         sectionHeadingText=section.displayName()>
         <#list section.items() as item>
+          <#local cannotStart=false/>
           <#if item.label().name() = 'BLOCKED'>
+            <#local cannotStart=true/>
             <#local itemUrl=""/>
-            <#local tagText="Cannot start yet"/>
-            <#local tagClass="govuk-tag--grey"/>
+            <#local tagText=""/>
+            <#local tagClass=""/>
           <#elseif item.label().name() = 'NOT_STARTED'>
             <#local itemUrl=springUrl(item.actionUrl())/>
             <#local tagText="Not started"/>
@@ -36,6 +38,7 @@
             completed=item.label().name() = 'COMPLETED'
             tagText=tagText
             tagClass=tagClass
+            cannotStart=cannotStart
           />
         </#list>
       </@fdsTaskList.taskListSection>

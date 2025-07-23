@@ -9,10 +9,9 @@
   <@fdsResultList.resultList>
     <#list feePeriodSummaryViews as feePeriodSummaryView>
       <#assign tag>
-        <@fdsResultList.resultListTag
-          tagText="${feePeriodSummaryView.status().getTagText()}"
-          tagClass="${feePeriodSummaryView.status().getTagClass()}"
-        />
+        <@fdsTag.tag tagClass="${feePeriodSummaryView.status().getTagClass()}">
+          ${feePeriodSummaryView.status().getTagText()}
+        </@fdsTag.tag>
       </#assign>
       <@fdsResultList.resultListItem
         linkHeadingUrl=springUrl(feePeriodSummaryView.viewUrl())

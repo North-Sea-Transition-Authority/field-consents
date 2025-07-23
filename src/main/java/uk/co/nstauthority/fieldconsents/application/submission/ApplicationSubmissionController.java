@@ -30,10 +30,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.FieldConsentsAccessService
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanEditApplication;
 import uk.co.nstauthority.fieldconsents.authorisation.role.grouped.UserCanPayAndSubmitApplication;
-import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.feedback.FeedbackController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("/applications/{applicationId}")
@@ -53,7 +51,6 @@ public class ApplicationSubmissionController {
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
   private final ApplicationPaymentService applicationPaymentService;
   private final ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
-  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final LicenceExpiryService licenceExpiryService;
 
   ApplicationSubmissionController(
@@ -66,7 +63,6 @@ public class ApplicationSubmissionController {
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       ApplicationPaymentService applicationPaymentService,
       ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator,
-      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
       LicenceExpiryService licenceExpiryService
   ) {
     this.applicationService = applicationService;
@@ -78,7 +74,6 @@ public class ApplicationSubmissionController {
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
     this.applicationPaymentService = applicationPaymentService;
     this.applicationUpdateResponseFormValidator = applicationUpdateResponseFormValidator;
-    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.licenceExpiryService = licenceExpiryService;
   }
 
@@ -212,9 +207,7 @@ public class ApplicationSubmissionController {
     return new ModelAndView("fcs/application/submissionConfirmation")
         .addObject("pageTitle", pageTitle)
         .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
         .addObject("feedbackUrl", ReverseRouter.route(on(FeedbackController.class)
-            .getApplicationFeedback(applicationVersion.getApplication().getId(), null)))
-        .addObject("customerBranding", customerBrandingConfigurationProperties);
+            .getApplicationFeedback(applicationVersion.getApplication().getId(), null)));
   }
 }

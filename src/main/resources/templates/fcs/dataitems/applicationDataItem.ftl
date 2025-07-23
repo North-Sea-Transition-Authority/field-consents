@@ -3,35 +3,35 @@
 <#macro applicationResultListItem dataItem>
   <#assign tagContent>
     <#if dataItem.withdrawalOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Withdrawal requested"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Withdrawal requested</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.applicationUpdateOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Update due by ${dataItem.applicationUpdateDeadline()}</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.technicalReviewOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Technical review due by ${dataItem.technicalReviewDeadline()}"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Technical review due by ${dataItem.technicalReviewDeadline()}</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.consultationFurtherInformationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Further information requested"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Further information requested</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.consultationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Consultation due by ${dataItem.consultationDeadline()}</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.approvedForIssue()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="Ready to grant and issue"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">Ready to grant and issue</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.consentStatus()?has_content>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--blue" tagText="${dataItem.consentStatus().getDisplayName()}"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--blue">${dataItem.consentStatus().getDisplayName()}</@fdsTag.tag>
       <br/>
     </#if>
     <#if dataItem.consentBreachOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--multiple govuk-tag--red" tagText="Consent exceeded"/>
+      <@fdsTag.tag tagClass="govuk-tag--multiple govuk-tag--red">Consent exceeded</@fdsTag.tag>
       <br/>
     </#if>
   </#assign>
@@ -47,7 +47,7 @@
         ${dataItem.duration()}
         <br/>
         <#if dataItem.aceFlag()!false>
-          <@fdsResultList.resultListTag tagClass="govuk-tag--red" tagText="${dataItem.aceFlagText()}"/>
+          <@fdsTag.tag tagClass="govuk-tag--red">${dataItem.aceFlagText()}</@fdsTag.tag>
         <#else>
           ${dataItem.aceFlagText()}
         </#if>

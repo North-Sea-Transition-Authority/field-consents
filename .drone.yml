@@ -32,7 +32,7 @@ steps:
   - name: build-frontend
     image: node:18
     commands:
-      - cd fivium-design-system-core && npm install && npx gulp build && cd ..
+      - cd fivium-design-system-core && npm install && npx gulp buildAll && cd ..
       - npm install && npx gulp buildAll
 
   - name: build-backend
@@ -188,7 +188,7 @@ steps:
     when:
       event:
         - push
-      branch: 
+      branch:
         - develop
 
   - name: rebuild-cache

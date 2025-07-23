@@ -1,8 +1,10 @@
 <#include '../layout/layout.ftl'>
 
-<@defaultPage
-htmlTitle=pageTitle>
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
+<#-- @ftlvariable name="feedbackUrl" type="String" -->
+<#-- @ftlvariable name="workAreaUrl" type="String" -->
 
+<@defaultPage htmlTitle=pageTitle>
   <@fdsForm.htmlForm>
     <@fdsPanel.panel
       panelTitle=pageTitle
@@ -12,7 +14,7 @@ htmlTitle=pageTitle>
     <h2 class="govuk-heading-m">What happens next</h2>
 
     <p class="govuk-body">
-      We've sent your application to the ${customerBranding.name()} (${customerBranding.mnemonic()}).
+      We've sent your application to the ${customerBrandingConfigurationProperties.name()} (${customerBrandingConfigurationProperties.mnemonic()}).
     </p>
     <p class="govuk-body">
       They will contact you if further information is required prior to issuing the consent.
@@ -22,7 +24,8 @@ htmlTitle=pageTitle>
       <@fdsAction.link
         linkClass="govuk-link"
         linkText="What did you think of this service?"
-        linkUrl=springUrl(feedbackUrl)/>
+        linkUrl=springUrl(feedbackUrl)
+      />
       (takes 30 seconds)
     </p>
     <p class="govuk-body">

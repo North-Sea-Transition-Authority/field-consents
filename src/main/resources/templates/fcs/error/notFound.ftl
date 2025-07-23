@@ -6,7 +6,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  phaseBanner=false>
+>
   <div class="govuk-body">
     <ul class="govuk-list">
       <li>If you typed the web address, check it is correct.</li>

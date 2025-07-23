@@ -132,14 +132,14 @@ For deployed environments we require the following environment variables to be s
 ### 4. Initialise the Fivium Design System
 ```bash
 git submodule update --init --recursive
-cd fivium-design-system-core && npm install && npx gulp build && cd ..
+cd fivium-design-system-core && npm install && npx gulp buildAll && cd ..
 ```
 
 ### 4a. Upgrade FDS (the developer doing the upgrade)
 Update `.gitmodules` to reflect the new version of FDS, then
 ```bash
 git submodule update --remote
-cd fivium-design-system-core && npm install && npx gulp build && cd ..
+cd fivium-design-system-core && npm install && npx gulp buildAll && cd ..
 ```
 To test that the update has worked locally you will need to rebuild the frontend into field consents, i.e.
 ```bash
@@ -150,7 +150,7 @@ npx gulp buildAll
 ### 4b. If you're a developer working on a project where another developer has upgraded FDS, you need to:
 ```bash
 git submodule update
-cd fivium-design-system-core && npm install && npx gulp build && cd ..
+cd fivium-design-system-core && npm install && npx gulp buildAll && cd ..
 npx gulp buildAll
 ```
 

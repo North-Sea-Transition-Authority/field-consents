@@ -51,12 +51,12 @@ public class ControllerAdviceService {
     userOptional.ifPresent(user -> attributeConsumer.accept("loggedInUser", user));
     var topNavigationItems = topNavigationService.getTopNavigationItems(userOptional.orElse(null));
     attributeConsumer.accept("navigationItems", topNavigationItems);
+    attributeConsumer.accept("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
     attributeConsumer.accept("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributeConsumer.accept("accessibilityConfigurationProperties", accessibilityConfigurationProperties);
     attributeConsumer.accept("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties);
     attributeConsumer.accept("serviceConfigurationProperties", serviceConfigurationProperties);
     attributeConsumer.accept("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties);
-    attributeConsumer.accept("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
     attributeConsumer.accept("currentEndPoint", request.getRequestURI());
     attributeConsumer.accept("footerLinks", FooterLink.values());
     attributeConsumer.accept("cookiesStatementUrl", ReverseRouter.route(on(FooterLinkController.class).cookies()));

@@ -60,8 +60,7 @@ class TopNavigationServiceTest {
     assertThat(topNavigationItems).containsExactly(
         TopNavigationItem.WORK_AREA,
         TopNavigationItem.SEARCH,
-        TopNavigationItem.TEAM_MANAGEMENT,
-        TopNavigationItem.ENERGY_PORTAL
+        TopNavigationItem.TEAM_MANAGEMENT
     );
   }
 
@@ -169,8 +168,7 @@ class TopNavigationServiceTest {
         .containsExactly(
             TopNavigationItem.WORK_AREA,
             TopNavigationItem.SEARCH,
-            TopNavigationItem.TEAM_MANAGEMENT,
-            TopNavigationItem.ENERGY_PORTAL
+            TopNavigationItem.TEAM_MANAGEMENT
         );
   }
 }

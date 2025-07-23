@@ -33,8 +33,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -53,10 +53,10 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.feedback.FeedbackController;
 import uk.co.nstauthority.fieldconsents.licences.LicenceView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSubmissionController.class)
 class ApplicationSubmissionControllerTest extends AbstractApplicationControllerTest {
@@ -567,8 +567,8 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(view().name("fcs/application/submissionConfirmation"))
         .andExpect(model().attribute("pageTitle", ApplicationSubmissionController.SUBMITTED_PAGE_TITLE))
         .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null))));
+        .andExpect(model().attribute("feedbackUrl",
+            ReverseRouter.route(on(FeedbackController.class).getApplicationFeedback(APPLICATION_ID, null))));
   }
 
   @SecurityTest
@@ -615,9 +615,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/submissionConfirmation"))
         .andExpect(model().attribute("pageTitle", ApplicationSubmissionController.PAID_AND_SUBMITTED_PAGE_TITLE))
-        .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null))));
+        .andExpect(model().attribute("applicationReference", applicationReference));
   }
 
   @SecurityTest
@@ -664,9 +662,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/submissionConfirmation"))
         .andExpect(model().attribute("pageTitle", ApplicationSubmissionController.UPDATE_SUBMITTED_PAGE_TITLE))
-        .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null))));
+        .andExpect(model().attribute("applicationReference", applicationReference));
   }
 
   private static Stream<Arguments> getInProgressApplicationVersions() {

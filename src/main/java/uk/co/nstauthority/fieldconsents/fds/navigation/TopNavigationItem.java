@@ -26,7 +26,7 @@ public enum TopNavigationItem {
       ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)),
       null
   ),
-  MANAGE_ASSETS("Manage fields or facilities",
+  MANAGE_ASSETS("Fields or facilities",
       ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()),
       Map.of(
           TeamType.REGULATOR, RoleGroup.REGULATOR_VIEW_CASE_PROCESSING_ROLES,
@@ -37,17 +37,17 @@ public enum TopNavigationItem {
       ReverseRouter.route(on(SearchController.class).getSearch(null, null)),
       null
   ),
-  TEAM_MANAGEMENT("Team management",
+  TEAM_MANAGEMENT("Teams",
       ReverseRouter.route(on(TeamManagementController.class).renderTeamTypeList(null)),
       null
   ),
-  FEE_PERIODS("Fee periods",
+  FEE_PERIODS("Fees",
       ReverseRouter.route(on(FeePeriodController.class).getFeePeriods()),
       Map.of(
           TeamType.REGULATOR, EnumSet.of(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
       )
   ),
-  DOCUMENT_TEMPLATES("Document templates",
+  DOCUMENT_TEMPLATES("Templates",
       ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates()),
       Map.of(
           TeamType.REGULATOR, EnumSet.of(Role.DOCUMENT_TEMPLATE_MANAGER)
@@ -59,10 +59,7 @@ public enum TopNavigationItem {
           TeamType.REGULATOR, EnumSet.of(Role.CASE_MANAGER, Role.CONSENTS_AND_AUTHORISATIONS_MANAGER)
       )
   ),
-  ENERGY_PORTAL("UK Energy Portal",
-      ReverseRouter.route(on(EnergyPortalRedirectController.class).redirectToEnergyPortal()),
-      null
-  );
+  ;
 
   private final String displayName;
   private final String url;

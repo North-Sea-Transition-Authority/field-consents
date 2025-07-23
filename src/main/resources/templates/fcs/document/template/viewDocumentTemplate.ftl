@@ -35,7 +35,7 @@
       ${documentTemplateSectionSummaryView.titleWithSectionNumber()}
     </h2>
     <#if documentTemplateSectionSummaryView.hasPageBreakBefore()>
-      <strong class="govuk-tag govuk-tag--blue govuk-body govuk-secondary-text-colour govuk-!-font-weight-bold">NEW PAGE</strong>
+      <@fdsTag.tag tagClass="govuk-tag--blue govuk-!-margin-bottom-3">New page</@fdsTag.tag>
     </#if>
   </div>
 

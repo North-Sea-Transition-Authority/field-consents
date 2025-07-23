@@ -1,31 +1,25 @@
 <#include '../../fds/layout.ftl'>
 <#include '../../fds/objects/layouts/leftSubNavLayout.ftl'>
+<#include '../../fds/components/header/energyPortalHeader.ftl'>
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/taskList.ftl' as taskList>
-<#import '_header.ftl' as pageHeader>
 <#import '../macros/_multiLineText.ftl' as multiLineText>
 <#import '../macros/mailTo.ftl' as mailTo>
 
-<#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
-<#-- @ftlvariable name="serviceHomeUrl" type="String" -->
+<#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner" -->
 <#-- @ftlvariable name="footerLinks" type="java.util.List<uk.co.nstauthority.fieldconsents.fds.footer.FooterLink>" -->
 <#-- @ftlvariable name="feedbackUrl" type="String" -->
 <#-- @ftlvariable name="cookiesStatementUrl" type="String" -->
-
-<#assign SERVICE_NAME = serviceBrandingConfigurationProperties.name() />
-<#assign CUSTOMER_MNEMONIC = customerBrandingConfigurationProperties.mnemonic() />
-<#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
-<#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
+<#-- @ftlvariable name="workAreaUrl" type="String" -->
 
 <#macro defaultPage
   htmlTitle
   pageHeading=""
   caption=""
-  phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
   backLinkWithBrowserBack=false
@@ -37,10 +31,9 @@
 >
   <#local serviceName = serviceBrandingConfigurationProperties.name() />
   <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
-  <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
   <#assign customScriptContent>
-    <script src="<@spring.url'/assets/static/js/fcs-bundle.js'/>"></script>
+    <script type="module" src="<@spring.url'/assets/static/js/fcs-bundle.js'/>"></script>
   </#assign>
 
   <#assign fullPageWidth=false />
@@ -91,16 +84,14 @@
   </#if>
 
   <#assign serviceHeader>
-    <@_serviceHeader pageSize=pageSize />
+    <@_serviceHeader
+      wrapperWidth=fullPageWidth
+      loggedInUser=loggedInUser
+    />
   </#assign>
 
   <#assign footerContent>
     <@_footer isFullPageWidth=fullPageWidth/>
-  </#assign>
-
-  <!-- TODO FCS-841 / FDS-491 the below can be tidied once FDS is updated -->
-  <#assign phaseBannerContent>
-    <@fdsPhaseBanner.phaseBanner wrapperWidth=fullPageWidth defaultBannerLink=FEEDBACK_URL topNavigation=showNavigationItems tagText="beta"/>
   </#assign>
 
   <@fdsDefaultPageTemplate
@@ -110,12 +101,10 @@
     pageHeading=pageHeading
     caption=caption
     headerContent=serviceHeader
+    topNavigationServiceName=serviceBrandingConfigurationProperties.name()
+    topNavigationServiceUrl=springUrl(workAreaUrl)
     logoProductText=customerMnemonic
-    phaseBanner=phaseBanner
-    phaseBannerLink=FEEDBACK_URL
-    phaseBannerContent=phaseBannerContent
-    serviceUrl=serviceHomeUrl
-    homePageUrl=serviceHomeUrl
+    phaseBanner=false
     wrapperWidth=fullPageWidth
     fullWidthColumn=fullWidthColumn
     oneHalfColumn=oneHalfColumn
@@ -141,16 +130,14 @@
 
 <#macro defaultPageWithSubNavigation
   htmlTitle
-  phaseBanner=true
   showNavigationItems=true
   backLinkUrl=""
 >
   <#local serviceName = serviceBrandingConfigurationProperties.name() />
   <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
-  <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
   <#assign serviceHeader>
-    <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
+    <@_serviceHeader loggedInUser=loggedInUser/>
   </#assign>
 
   <#assign footerContent>
@@ -162,10 +149,10 @@
     serviceName=serviceName
     htmlAppTitle=serviceName
     headerContent=serviceHeader
+    topNavigationServiceName=serviceBrandingConfigurationProperties.name()
+    topNavigationServiceUrl=springUrl(workAreaUrl)
     logoProductText=customerMnemonic
-    phaseBanner=phaseBanner
-    serviceUrl=serviceHomeUrl
-    homePageUrl=serviceHomeUrl
+    phaseBanner=false
     topNavigation=showNavigationItems
     footerContent=footerContent
     cookieBannerMacro=_cookieBanner
@@ -197,14 +184,12 @@
   </@fdsLeftSubNavPageTemplateContent>
 </#macro>
 
-<#macro _serviceHeader pageSize>
-  <@pageHeader.header
-    serviceName=SERVICE_NAME
-    customerMnemonic=CUSTOMER_MNEMONIC
-    serviceHomeUrl=SERVICE_HOME_URL
-    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayNameIncludingAnyProxyUser(), "")
+<#macro _serviceHeader wrapperWidth=false loggedInUser="">
+  <@energyPortalHeader
+    userDisplayName=loggedInUser?has_content?then(loggedInUser.displayNameIncludingAnyProxyUser(), "")
+    wrapperWidth=wrapperWidth
+    headerLogo="NSTA"
     signOutUrl=springUrl("/logout")
-    pageSize=pageSize
   />
 </#macro>
 

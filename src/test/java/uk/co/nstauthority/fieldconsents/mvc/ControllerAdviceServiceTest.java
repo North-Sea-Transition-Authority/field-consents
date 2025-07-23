@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -22,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationPro
 import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ExtendWith(MockitoExtension.class)
 class ControllerAdviceServiceTest {
@@ -70,7 +68,6 @@ class ControllerAdviceServiceTest {
         .containsEntry("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties)
         .containsEntry("serviceConfigurationProperties", serviceConfigurationProperties)
         .containsEntry("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties)
-        .containsEntry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
         .containsEntry("currentEndPoint", currentEndpoint);
   }
 
@@ -94,7 +91,6 @@ class ControllerAdviceServiceTest {
         .containsEntry("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties)
         .containsEntry("serviceConfigurationProperties", serviceConfigurationProperties)
         .containsEntry("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties)
-        .containsEntry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
         .containsEntry("currentEndPoint", currentEndpoint);
   }
 
@@ -112,13 +108,7 @@ class ControllerAdviceServiceTest {
 
     controllerAdviceService.addDefaultModelAttributes(model, request);
 
-    assertThat(model.asMap())
-        .containsEntry("navigationItems", navigationItems)
-        .containsEntry("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties)
-        .containsEntry("serviceConfigurationProperties", serviceConfigurationProperties)
-        .containsEntry("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties)
-        .containsEntry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
-        .containsEntry("currentEndPoint", currentEndpoint);
+    assertThat(model.asMap()).doesNotContainKey("loggedInUser");
   }
 
   @Test
@@ -135,13 +125,7 @@ class ControllerAdviceServiceTest {
 
     controllerAdviceService.addDefaultModelAttributes(modelAndView, request);
 
-    assertThat(modelAndView.getModel())
-        .containsEntry("navigationItems", navigationItems)
-        .containsEntry("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties)
-        .containsEntry("serviceConfigurationProperties", serviceConfigurationProperties)
-        .containsEntry("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties)
-        .containsEntry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
-        .containsEntry("currentEndPoint", currentEndpoint);
+    assertThat(modelAndView.getModel()).doesNotContainKey("loggedInUser");
   }
 
 }

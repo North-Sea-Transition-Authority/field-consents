@@ -10,7 +10,6 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  phaseBanner=false
   pageSize=stackTrace?has_content?then(PageSize.FULL_WIDTH, PageSize.TWO_THIRDS_COLUMN)>
   <p class="govuk-body">
     If you continue to experience this problem, contact the service desk using the

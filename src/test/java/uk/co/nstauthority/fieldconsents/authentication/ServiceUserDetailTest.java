@@ -52,7 +52,7 @@ class ServiceUserDetailTest {
         .isEqualTo(UserDisplayNameUtil.getUserDisplayNameAndEmail(
             serviceUserDetail.forename(), serviceUserDetail.surname(), serviceUserDetail.emailAddress()));
     assertThat(serviceUserDetail.displayNameIncludingAnyProxyUser())
-        .isEqualTo(String.format("%s/%s",
+        .isEqualTo(String.format("%s as %s",
             serviceUserDetail.proxyUsername(),
             UserDisplayNameUtil.getUserDisplayName(serviceUserDetail.forename(), serviceUserDetail.surname())
         ));
