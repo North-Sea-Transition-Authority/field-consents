@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.HOST;
-import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.LOCATION;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.HAS_SECONDARY_ASSETS;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.WILL_GAS_BE_INJECTED;
 
@@ -10,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsController;
@@ -19,8 +18,12 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthC
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.emissions.ApplicationRationaleEmissionsFormValidator;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
 import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionController;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionForm;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionFormValidator;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
@@ -33,21 +36,24 @@ import uk.co.nstauthority.fieldconsents.tasklist.TaskListSectionService;
 public class ConsentDetailsTaskListSectionService implements TaskListSectionService<ApplicationVersion> {
 
   private final ConsentLengthService consentLengthService;
-
   private final ApplicationAssetService applicationAssetService;
-
   private final ApplicationFlagService applicationFlagService;
-
   private final ApplicationRationaleService applicationRationaleService;
+  private final ApplicationRationaleProductionFormValidator applicationRationaleProductionFormValidator;
+  private final ApplicationRationaleEmissionsFormValidator applicationRationaleEmissionsFormValidator;
 
   ConsentDetailsTaskListSectionService(ConsentLengthService consentLengthService,
                                        ApplicationAssetService applicationAssetService,
                                        ApplicationFlagService applicationFlagService,
-                                       ApplicationRationaleService applicationRationaleService) {
+                                       ApplicationRationaleService applicationRationaleService,
+                                       ApplicationRationaleProductionFormValidator applicationRationaleProductionFormValidator,
+                                       ApplicationRationaleEmissionsFormValidator applicationRationaleEmissionsFormValidator) {
     this.consentLengthService = consentLengthService;
     this.applicationAssetService = applicationAssetService;
     this.applicationFlagService = applicationFlagService;
     this.applicationRationaleService = applicationRationaleService;
+    this.applicationRationaleProductionFormValidator = applicationRationaleProductionFormValidator;
+    this.applicationRationaleEmissionsFormValidator = applicationRationaleEmissionsFormValidator;
   }
 
   @Override
@@ -79,20 +85,50 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
     return Optional.of(new TaskListItem("Application rationale", taskListLabel, url));
   }
 
-  private TaskListLabel getApplicationRationaleTaskListLabel(ApplicationVersion applicationVersion) {
-    var applicationRationaleExists = applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion);
-    var hasFlaringLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, LOCATION);
-    var hasHostLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, HOST);
+  TaskListLabel getApplicationRationaleTaskListLabel(ApplicationVersion applicationVersion) {
+    var applicationRationaleOptional = applicationRationaleService.findByApplicationVersion(applicationVersion);
+    var locationAssets = applicationRationaleService.getLocations(applicationVersion);
+    var hostLocationAssetOptional = applicationRationaleService.getHostLocation(applicationVersion);
 
-    if (!applicationRationaleExists && !hasFlaringLocation && !hasHostLocation) {
+    if (applicationRationaleOptional.isEmpty() && locationAssets.isEmpty() && hostLocationAssetOptional.isEmpty()) {
       return TaskListLabel.NOT_STARTED;
     }
 
-    if (applicationRationaleExists && hasFlaringLocation && hasHostLocation) {
-      return TaskListLabel.COMPLETED;
+    if (applicationRationaleOptional.isEmpty()) {
+      return TaskListLabel.IN_PROGRESS;
     }
 
-    return TaskListLabel.IN_PROGRESS;
+    var applicationRationale = applicationRationaleOptional.get();
+
+    switch (applicationVersion.getApplication().getType()) {
+      case PRODUCTION -> {
+        var form = ApplicationRationaleProductionForm.from(
+            applicationRationale,
+            locationAssets,
+            hostLocationAssetOptional.orElse(null)
+        );
+        var bindingResult = new BeanPropertyBindingResult(form, "form");
+        applicationRationaleProductionFormValidator.validate(form, bindingResult);
+        if (bindingResult.hasErrors()) {
+          return TaskListLabel.IN_PROGRESS;
+        }
+      }
+      case FLARE, VENT -> {
+        var form = ApplicationRationaleEmissionsForm.from(
+            applicationRationale,
+            locationAssets,
+            hostLocationAssetOptional.orElse(null)
+        );
+        var bindingResult = new BeanPropertyBindingResult(form, "form");
+        applicationRationaleEmissionsFormValidator.validate(form, bindingResult);
+        if (bindingResult.hasErrors()) {
+          return TaskListLabel.IN_PROGRESS;
+        }
+      }
+      default -> throw new IllegalStateException("Unexpected application type: " + applicationVersion.getApplication().getType());
+    }
+
+    return TaskListLabel.COMPLETED;
   }
 
   Optional<TaskListItem> getConsentDurationTaskListItem(ApplicationVersion applicationVersion) {

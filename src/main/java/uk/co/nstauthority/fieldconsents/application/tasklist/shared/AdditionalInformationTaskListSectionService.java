@@ -67,11 +67,7 @@ public class AdditionalInformationTaskListSectionService implements TaskListSect
 
   private TaskListItem getEiaDirectionTaskListItem(ApplicationVersion applicationVersion) {
     return new TaskListItem("EIA screening direction",
-        TaskListLabel.getTaskListLabelFor(
-            applicationVersion,
-            eiaDirectionService::isEiaDirectionCompleted,
-            eiaDirectionService::isEiaDirectionStarted
-        ),
+        eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion),
         ReverseRouter.route(on(ProjectPurposeController.class).getForm(applicationVersion.getApplication().getId()))
     );
   }

@@ -26,14 +26,13 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -264,8 +263,8 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         null,
         null,
         null,
-        Collections.emptyList(),
-        null
+        ventingLocations.stream().map(AssetJson::getAssetKey).map(AssetKey::toString).toList(),
+        hostLocation.getAssetKey().toString()
     );
     expectedForm.increaseComment().setInputValue(comment);
 

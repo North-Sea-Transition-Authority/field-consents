@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
@@ -124,22 +122,15 @@ class AdditionalInformationTaskListSectionServiceTest {
     );
   }
 
-  @ParameterizedTest
-  @CsvSource({
-      "false, false, NOT_STARTED",
-      "false, true, IN_PROGRESS",
-      "true, false, COMPLETED", // completed takes precedence over started
-      "true, true, COMPLETED"
-  })
-  void getSection_production_eia(boolean isCompleted, boolean isStarted, String expectedLabel) {
+  @Test
+  void getSection_production_eia() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getAssetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(FieldTestUtil.field1Json);
     when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
-    lenient().when(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).thenReturn(isStarted);
-    lenient().when(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).thenReturn(isCompleted);
+    when(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).thenReturn(TaskListLabel.COMPLETED);
 
     var taskListSection = additionalInformationTaskListSectionService.getSection(applicationVersion).orElseThrow();
     var taskListItems = taskListSection.items();
@@ -150,7 +141,7 @@ class AdditionalInformationTaskListSectionServiceTest {
     assertTaskListItem(
         eiaTaskListItem,
         EIA_DIRECTION_TASK_LIST_ITEM,
-        TaskListLabel.valueOf(expectedLabel),
+        TaskListLabel.COMPLETED,
         ReverseRouter.route(on(ProjectPurposeController.class).getForm(APPLICATION_ID))
     );
   }

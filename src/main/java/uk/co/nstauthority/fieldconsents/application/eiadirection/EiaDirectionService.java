@@ -10,15 +10,21 @@ import org.jooq.tools.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedForm;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedFormValidator;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingForm;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingFormValidator;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeForm;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeFormValidator;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationRestController;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
 
 @Service
 public class EiaDirectionService {
@@ -27,11 +33,23 @@ public class EiaDirectionService {
 
   private final EiaDirectionRepository eiaDirectionRepository;
   private final PetsApplicationService petsApplicationService;
+  private final ProjectPurposeFormValidator projectPurposeFormValidator;
+  private final HaveSubmittedFormValidator haveSubmittedFormValidator;
+  private final NeedsSubmittingFormValidator needsSubmittingFormValidator;
 
   @Autowired
-  EiaDirectionService(EiaDirectionRepository eiaDirectionRepository, PetsApplicationService petsApplicationService) {
+  EiaDirectionService(
+      EiaDirectionRepository eiaDirectionRepository,
+      PetsApplicationService petsApplicationService,
+      ProjectPurposeFormValidator projectPurposeFormValidator,
+      HaveSubmittedFormValidator haveSubmittedFormValidator,
+      NeedsSubmittingFormValidator needsSubmittingFormValidator
+  ) {
     this.eiaDirectionRepository = eiaDirectionRepository;
     this.petsApplicationService = petsApplicationService;
+    this.projectPurposeFormValidator = projectPurposeFormValidator;
+    this.haveSubmittedFormValidator = haveSubmittedFormValidator;
+    this.needsSubmittingFormValidator = needsSubmittingFormValidator;
   }
 
   public String getEiaDirectionRestUrl() {
@@ -39,29 +57,44 @@ public class EiaDirectionService {
         .replace("?term", "");
   }
 
-  public boolean isEiaDirectionStarted(ApplicationVersion applicationVersion) {
-    return findEiaDirection(applicationVersion).isPresent();
-  }
-
-  public boolean isEiaDirectionCompleted(ApplicationVersion applicationVersion) {
+  public TaskListLabel getEiaDirectionTaskListLabel(ApplicationVersion applicationVersion) {
     var eiaDirectionOptional = findEiaDirection(applicationVersion);
-
     if (eiaDirectionOptional.isEmpty()) {
-      return false;
+      return TaskListLabel.NOT_STARTED;
     }
 
     var eiaDirection = eiaDirectionOptional.get();
 
+    var projectPurposeForm = ProjectPurposeForm.from(eiaDirection);
+    var projectPurposeBindingResult = new BeanPropertyBindingResult(projectPurposeForm, "form");
+    projectPurposeFormValidator.validate(projectPurposeForm, projectPurposeBindingResult);
+    if (projectPurposeBindingResult.hasErrors()) {
+      return TaskListLabel.IN_PROGRESS;
+    }
+
     if (Boolean.FALSE.equals(eiaDirection.getForPurposeOfEiaRegs())) {
-      return true;
+      return TaskListLabel.COMPLETED;
     }
 
-    var satId = eiaDirection.getSatId();
-    if (satId != null) {
-      return petsApplicationService.findEiaDirectionById(satId, EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE).isPresent();
+    var haveSubmittedForm = HaveSubmittedForm.from(eiaDirection);
+    var haveSubmittedBindingResult = new BeanPropertyBindingResult(haveSubmittedForm, "form");
+    haveSubmittedFormValidator.validate(haveSubmittedForm, haveSubmittedBindingResult);
+    if (haveSubmittedBindingResult.hasErrors()) {
+      return TaskListLabel.IN_PROGRESS;
     }
 
-    return Objects.nonNull(eiaDirection.getHaveEiaDirectionToSubmit());
+    if (Boolean.TRUE.equals(eiaDirection.getHaveSubmittedEiaDirection())) {
+      return TaskListLabel.COMPLETED;
+    }
+
+    var needsSubmittingForm = NeedsSubmittingForm.from(eiaDirection);
+    var needsSubmittingBindingResult = new BeanPropertyBindingResult(needsSubmittingForm, "form");
+    needsSubmittingFormValidator.validate(needsSubmittingForm, needsSubmittingBindingResult);
+    if (needsSubmittingBindingResult.hasErrors()) {
+      return TaskListLabel.IN_PROGRESS;
+    }
+
+    return TaskListLabel.COMPLETED;
   }
 
   public Optional<EiaDirection> findEiaDirection(ApplicationVersion applicationVersion) {

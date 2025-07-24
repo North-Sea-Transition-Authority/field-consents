@@ -5,6 +5,8 @@ import java.util.List;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
+import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 public record ApplicationRationaleProductionForm(
     ApplicationRationaleType rationaleType,
@@ -37,7 +39,11 @@ public record ApplicationRationaleProductionForm(
     );
   }
 
-  public static ApplicationRationaleProductionForm from(ApplicationRationale applicationRationale) {
+  public static ApplicationRationaleProductionForm from(
+      ApplicationRationale applicationRationale,
+      List<AssetJson> locationAssets,
+      AssetJson hostLocationAsset
+  ) {
     var form = new ApplicationRationaleProductionForm(
         applicationRationale.getRationaleType(),
         null,
@@ -45,8 +51,8 @@ public record ApplicationRationaleProductionForm(
         null,
         null,
         null,
-        null,
-        null
+        locationAssets.stream().map(AssetJson::getAssetKey).map(AssetKey::toString).toList(),
+        hostLocationAsset != null ? hostLocationAsset.getAssetKey().toString() : null
     );
 
     var rationaleType = applicationRationale.getRationaleType();

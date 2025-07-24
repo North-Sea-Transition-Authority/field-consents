@@ -65,15 +65,20 @@ public class ApplicationRationaleVentController {
   @GetMapping
   public ModelAndView getForm(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    var locationAssets = applicationRationaleService.getLocations(applicationVersion);
+    var hostLocationAssetOptional = applicationRationaleService.getHostLocation(applicationVersion);
+
     var form = applicationRationaleService
         .findByApplicationVersion(applicationVersion)
-        .map(ApplicationRationaleEmissionsForm::from)
+        .map(applicationRationale ->
+            ApplicationRationaleEmissionsForm.from(applicationRationale, locationAssets, hostLocationAssetOptional.orElse(null)))
         .orElseGet(ApplicationRationaleEmissionsForm::empty);
 
     return getModelAndView(
         applicationVersion,
-        applicationRationaleService.getLocations(applicationVersion).stream().map(ApplicationAssetView::from).toList(),
-        applicationRationaleService.getHostLocation(applicationVersion).map(RestSearchItem::from).orElse(EMPTY_REST_SEARCH_ITEM),
+        locationAssets.stream().map(ApplicationAssetView::from).toList(),
+        hostLocationAssetOptional.map(RestSearchItem::from).orElse(EMPTY_REST_SEARCH_ITEM),
         form
     );
   }

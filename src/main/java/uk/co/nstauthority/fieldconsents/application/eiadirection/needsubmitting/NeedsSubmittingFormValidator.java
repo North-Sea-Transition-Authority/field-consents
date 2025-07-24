@@ -10,7 +10,7 @@ import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 
 @Component
-class NeedsSubmittingFormValidator implements Validator {
+public class NeedsSubmittingFormValidator implements Validator {
 
   private final Clock clock;
 

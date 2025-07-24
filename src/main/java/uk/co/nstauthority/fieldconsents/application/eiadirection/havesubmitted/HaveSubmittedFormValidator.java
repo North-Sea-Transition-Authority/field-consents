@@ -7,7 +7,7 @@ import org.springframework.validation.Validator;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 
 @Component
-class HaveSubmittedFormValidator implements Validator {
+public class HaveSubmittedFormValidator implements Validator {
 
   private final PetsApplicationService petsApplicationService;
 

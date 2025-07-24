@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.eiadirection;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,15 +23,21 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedFormValidator;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingForm;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingFormValidator;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeForm;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeFormValidator;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
 
 @ExtendWith(MockitoExtension.class)
 class EiaDirectionServiceTest {
@@ -46,6 +53,15 @@ class EiaDirectionServiceTest {
 
   @Mock
   private PetsApplicationService petsApplicationService;
+
+  @Mock
+  private ProjectPurposeFormValidator projectPurposeFormValidator;
+
+  @Mock
+  private HaveSubmittedFormValidator haveSubmittedFormValidator;
+
+  @Mock
+  private NeedsSubmittingFormValidator needsSubmittingFormValidator;
 
   @InjectMocks
   private EiaDirectionService eiaDirectionService;
@@ -85,62 +101,95 @@ class EiaDirectionServiceTest {
   }
 
   @Test
-  void isEiaDirectionStarted() {
-    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
-        .thenReturn(Optional.of(EiaDirectionBuilder.newBuilder().build()));
-    assertThat(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).isTrue();
-  }
-
-  @Test
-  void isEiaDirectionStarted_notStarted() {
-    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
-    assertThat(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).isFalse();
-  }
-
-  @ParameterizedTest
-  @MethodSource("isEiaDirectionCompletedParams")
-  void isEiaDirectionCompleted(boolean isCompleted, EiaDirection eiaDirection) {
-    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
-    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isEqualTo(isCompleted);
-  }
-
-  @Test
-  void isEiaDirectionCompleted_withPurposeOfEiaRegsAndSatIdNonNullAndSatIdValid() {
-    var eiaDirection = EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withSatId(123).build();
-
-    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
-    when(petsApplicationService.findEiaDirectionById(123, EiaDirectionService.EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE))
-        .thenReturn(Optional.of(new PetsApplicationJson(null, null, null, null, null)));
-
-    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isTrue();
-  }
-
-  @Test
-  void isEiaDirectionCompleted_withPurposeOfEiaRegsAndSatIdNonNullAndSatIdInvalid() {
-    var eiaDirection = EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withSatId(123).build();
-
-    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
-    when(petsApplicationService.findEiaDirectionById(123, EiaDirectionService.EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE))
-        .thenReturn(Optional.empty());
-
-    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isFalse();
-  }
-
-  private static Stream<Arguments> isEiaDirectionCompletedParams() {
-    return Stream.of(
-        Arguments.of(false, null),
-        Arguments.of(false, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).build()),
-        Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(false).build()),
-        Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withHaveEiaDirectionToSubmit(false).build()),
-        Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withHaveEiaDirectionToSubmit(true).build())
-    );
-  }
-
-  @Test
-  void isEiaDirectionCompleted_noEiaDirection() {
+  void getEiaDirectionTaskListLabel_eiaDirectionNotFound() {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
-    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isFalse();
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.NOT_STARTED);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_projectPurposeFormInvalid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder().build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new ObjectError("error", "error"));
+      return invocation;
+    }).when(projectPurposeFormValidator).validate(any(), any());
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.IN_PROGRESS);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_notForPurposeOfEiaRegs() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withForPurposeOfEiaRegs(false)
+        .build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.COMPLETED);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_haveSubmittedFormInvalid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withForPurposeOfEiaRegs(true)
+        .build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new ObjectError("error", "error"));
+      return invocation;
+    }).when(haveSubmittedFormValidator).validate(any(), any());
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.IN_PROGRESS);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_hasSubmittedEiaDirection() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withForPurposeOfEiaRegs(true)
+        .withHaveSubmittedEiaDirection(true)
+        .build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.COMPLETED);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_needsSubmittingFormInvalid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withForPurposeOfEiaRegs(true)
+        .withHaveSubmittedEiaDirection(false)
+        .build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new ObjectError("error", "error"));
+      return invocation;
+    }).when(needsSubmittingFormValidator).validate(any(), any());
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.IN_PROGRESS);
+  }
+
+  @Test
+  void getEiaDirectionTaskListLabel_allFormsValid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withForPurposeOfEiaRegs(true)
+        .withHaveSubmittedEiaDirection(false)
+        .build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(eiaDirection));
+
+    assertThat(eiaDirectionService.getEiaDirectionTaskListLabel(applicationVersion)).isEqualTo(TaskListLabel.COMPLETED);
   }
 
   @ParameterizedTest

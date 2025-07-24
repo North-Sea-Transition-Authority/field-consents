@@ -6,7 +6,7 @@ import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 
 @Component
-class ProjectPurposeFormValidator {
+public class ProjectPurposeFormValidator {
 
   public void validate(ProjectPurposeForm form, Errors errors) {
     ValidationUtils.rejectIfEmpty(

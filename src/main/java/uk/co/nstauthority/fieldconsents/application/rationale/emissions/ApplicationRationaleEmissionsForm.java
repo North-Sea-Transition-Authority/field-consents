@@ -5,6 +5,8 @@ import java.util.List;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
+import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 public record ApplicationRationaleEmissionsForm(
     ApplicationRationaleType rationaleType,
@@ -31,14 +33,18 @@ public record ApplicationRationaleEmissionsForm(
     );
   }
 
-  public static ApplicationRationaleEmissionsForm from(ApplicationRationale applicationRationale) {
+  public static ApplicationRationaleEmissionsForm from(
+      ApplicationRationale applicationRationale,
+      List<AssetJson> locationAssets,
+      AssetJson hostLocationAsset
+  ) {
     var form = new ApplicationRationaleEmissionsForm(
         applicationRationale.getRationaleType(),
         null,
         null,
         null,
-        Collections.emptyList(),
-        null
+        locationAssets.stream().map(AssetJson::getAssetKey).map(AssetKey::toString).toList(),
+        hostLocationAsset != null ? hostLocationAsset.getAssetKey().toString() : null
     );
 
     if (ApplicationRationaleType.INCREASE.equals(applicationRationale.getRationaleType())) {

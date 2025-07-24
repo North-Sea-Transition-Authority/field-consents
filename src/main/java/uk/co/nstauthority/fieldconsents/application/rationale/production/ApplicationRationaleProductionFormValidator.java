@@ -9,7 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @Component
-class ApplicationRationaleProductionFormValidator {
+public class ApplicationRationaleProductionFormValidator {
 
   private static final String RATIONALE_TYPE_FIELD = "rationaleType";
 
