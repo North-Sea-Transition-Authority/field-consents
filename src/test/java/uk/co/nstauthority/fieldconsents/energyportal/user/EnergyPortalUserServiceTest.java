@@ -62,7 +62,7 @@ class EnergyPortalUserServiceTest {
         any(RequestPurpose.class)
     )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).containsExactly(expectedUser);
+    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).contains(expectedUser);
   }
 
   @Test
@@ -90,7 +90,37 @@ class EnergyPortalUserServiceTest {
         notLoginUser
     ));
 
-    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).containsExactly(canLoginUser);
+    assertThat(energyPortalUserService.getEnergyPortalUsersThatCanLogin(username)).contains(canLoginUser);
+  }
+
+  @Test
+  void getEnergyPortalUsersThatCanLogin_whenMultipleUsersFound_thenThrow() {
+    var emailAddress = "emailAddress";
+
+    var canLoginUser = EpaUserTestUtil.Builder()
+        .canLogin(true)
+        .withWebUserAccountId(100)
+        .build();
+
+    var notLoginUser = EpaUserTestUtil.Builder()
+        .canLogin(true)
+        .withWebUserAccountId(200)
+        .build();
+
+    var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
+
+    when(userApi.searchUsersByEmail(
+        eq(emailAddress),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class)
+    )).thenReturn(List.of(
+        canLoginUser,
+        notLoginUser
+    ));
+
+    assertThatThrownBy(() -> energyPortalUserService.getEnergyPortalUsersThatCanLogin(emailAddress))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("More than one UK Energy Portal user exists with the email address %s".formatted(emailAddress));
   }
 
   @Test

@@ -11,9 +11,8 @@
 >
     <@fdsForm.htmlForm>
         <@fdsTextInput.textInput
-           path="form.username"
-           labelText="What is the UK Energy Portal username of the user?"
-           hintText="A UK Energy Portal username is usually the user's email address"
+           path="form.emailAddress"
+           labelText="What is the UK Energy Portal email address of the user?"
            pageHeading=true
         />
 

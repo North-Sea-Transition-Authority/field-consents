@@ -9,7 +9,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 @Service
 public class AddMemberFormValidator {
 
-  private static final String FIELD_NAME = "username";
+  private static final String FIELD_NAME = "emailAddress";
 
   private final EnergyPortalUserService energyPortalUserService;
 
@@ -18,47 +18,26 @@ public class AddMemberFormValidator {
   }
 
   public boolean isValid(AddMemberForm form, Errors errors) {
-    if (StringUtils.isBlank(form.getUsername())) {
+    if (StringUtils.isBlank(form.getEmailAddress())) {
       errors.rejectValue(
           FIELD_NAME,
           "required",
-          "Enter an Energy Portal username"
+          "Enter a UK Energy Portal email address"
       );
       return false;
     }
 
-    var users = energyPortalUserService.getEnergyPortalUsersThatCanLogin(form.getUsername());
+    var users = energyPortalUserService.getEnergyPortalUsersThatCanLogin(form.getEmailAddress());
     if (users.isEmpty()) {
       errors.rejectValue(
           FIELD_NAME,
           "notFound",
-          "No Energy Portal user exists with this username"
+          "No UK Energy Portal account exists with this email address"
       );
       return false;
     }
 
-    if (users.size() > 1) {
-      errors.rejectValue(
-          FIELD_NAME,
-          "tooMany",
-          "More than one Energy Portal user exists with this email address. Enter the username of the user instead."
-      );
-      return false;
-    }
-
-    var user = users.getFirst();
-    var isAccountShared = Optional.ofNullable(user.getIsAccountShared())
-        .orElseThrow(() -> new IllegalStateException(
-            "Unable to determine if user [%s] is shared".formatted(user.getWebUserAccountId())
-        ));
-
-    if (Boolean.TRUE.equals(isAccountShared)) {
-      errors.rejectValue(
-          FIELD_NAME,
-          "sharedAccount",
-          "You cannot add shared accounts to this service"
-      );
-    }
+    var user = users.get();
 
     var canLogin = Optional.ofNullable(user.getCanLogin())
         .orElseThrow(() -> new IllegalStateException(
@@ -69,7 +48,7 @@ public class AddMemberFormValidator {
       errors.rejectValue(
           FIELD_NAME,
           "inactiveAccount",
-          "This user does not have login access to the Energy Portal and can't be added to this service"
+          "This user does not have login access to the UK Energy Portal and can't be added to this service"
       );
     }
 

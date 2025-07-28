@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.teams.management.form;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,11 +36,11 @@ class AddMemberFormValidatorTest {
 
   @Test
   void isValid() {
-    form.setUsername("foo");
+    form.setEmailAddress("foo");
     user.setIsAccountShared(false);
     user.setCanLogin(true);
 
-    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(Optional.of(user));
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isTrue();
     assertThat(errors.hasErrors()).isFalse();
@@ -48,7 +48,7 @@ class AddMemberFormValidatorTest {
 
   @Test
   void isValid_noUsername() {
-    form.setUsername(null);
+    form.setEmailAddress(null);
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();
@@ -56,49 +56,21 @@ class AddMemberFormValidatorTest {
 
   @Test
   void isValid_noEpaUser() {
-    form.setUsername("foo");
+    form.setEmailAddress("foo");
 
-    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of());
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(Optional.empty());
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();
   }
 
-  @Test
-  void isValid_tooManyEpaUsers() {
-    form.setUsername("foo");
-
-    var user1 = new User();
-    user1.setIsAccountShared(false);
-    user1.setCanLogin(true);
-
-    var user2 = new User();
-    user2.setIsAccountShared(false);
-    user2.setCanLogin(true);
-
-    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user1, user2));
-    assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
-    assertThat(errors.hasErrors()).isTrue();
-  }
-
-  @Test
-  void isValid_sharedAccount() {
-    form.setUsername("foo");
-    user.setIsAccountShared(true);
-    user.setCanLogin(true);
-
-    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
-
-    assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
-    assertThat(errors.hasErrors()).isTrue();
-  }
 
   @Test
   void isValid_canNotLogin() {
-    form.setUsername("foo");
+    form.setEmailAddress("foo");
     user.setIsAccountShared(false);
     user.setCanLogin(false);
 
-    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(List.of(user));
+    when(energyPortalUserService.getEnergyPortalUsersThatCanLogin("foo")).thenReturn(Optional.of(user));
 
     assertThat(addMemberFormValidator.isValid(form, errors)).isFalse();
     assertThat(errors.hasErrors()).isTrue();

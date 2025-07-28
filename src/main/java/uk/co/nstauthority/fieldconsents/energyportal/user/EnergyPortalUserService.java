@@ -48,8 +48,8 @@ public class EnergyPortalUserService {
     this.userApi = userApi;
   }
 
-  public List<User> getEnergyPortalUsersThatCanLogin(String emailAddress) {
-    return userApi.searchUsersByEmail(
+  public Optional<User> getEnergyPortalUsersThatCanLogin(String emailAddress) {
+    var users = userApi.searchUsersByEmail(
             emailAddress,
             USERS_PROJECT_ROOT,
             new RequestPurpose("findUserByUsername")
@@ -57,6 +57,14 @@ public class EnergyPortalUserService {
         .stream()
         .filter(User::getCanLogin)
         .toList();
+    if (users.size() > 1) {
+      throw new IllegalStateException(
+          "More than one UK Energy Portal user exists with the email address %s".formatted(emailAddress)
+      );
+    }
+    return users
+        .stream()
+        .findFirst();
   }
 
   public List<EnergyPortalUserDto> findByWuaIds(Collection<WebUserAccountId> webUserAccountIds) {
