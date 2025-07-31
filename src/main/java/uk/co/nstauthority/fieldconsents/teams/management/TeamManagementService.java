@@ -8,19 +8,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAccessService;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.fivium.energyportal.accounts.starter.EnergyPortalServiceAccessService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamQueryService;
@@ -34,38 +27,24 @@ import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 @Service
 public class TeamManagementService {
 
-  private static final String RESOURCE_TYPE_NAME = "FCS_ACCESS_TEAM";
-
   private final TeamRepository teamRepository;
   private final TeamRoleRepository teamRoleRepository;
   private final TeamQueryService teamQueryService;
   private final UserApi userApi;
-  private final UserDetailService userDetailService;
-  private final EnergyPortalAccessService energyPortalAccessService;
   private final EnergyPortalServiceAccessService energyPortalServiceAccessService;
-  private final EnergyPortalUserService energyPortalUserService;
-  private final Environment environment;
 
   TeamManagementService(
       TeamRepository teamRepository,
       TeamRoleRepository teamRoleRepository,
       UserApi userApi,
       TeamQueryService teamQueryService,
-      UserDetailService userDetailService,
-      EnergyPortalAccessService energyPortalAccessService,
-      EnergyPortalServiceAccessService energyPortalServiceAccessService,
-      EnergyPortalUserService energyPortalUserService,
-      Environment environment
+      EnergyPortalServiceAccessService energyPortalServiceAccessService
   ) {
     this.teamRepository = teamRepository;
     this.teamRoleRepository = teamRoleRepository;
     this.userApi = userApi;
     this.teamQueryService = teamQueryService;
-    this.userDetailService = userDetailService;
-    this.energyPortalAccessService = energyPortalAccessService;
     this.energyPortalServiceAccessService = energyPortalServiceAccessService;
-    this.energyPortalUserService = energyPortalUserService;
-    this.environment = environment;
   }
 
   public Team createScopedTeam(String name, TeamType teamType, TeamScopeReference scopeRef) {
@@ -213,16 +192,7 @@ public class TeamManagementService {
     }
 
     if (isNewUser) {
-
-      if (environment.matchesProfiles("use-epas")) {
-        energyPortalServiceAccessService.addUser(wuaId);
-      } else {
-        energyPortalAccessService.addUserToAccessTeam(
-            new ResourceType(RESOURCE_TYPE_NAME),
-            new TargetWebUserAccountId(wuaId),
-            new InstigatingWebUserAccountId(userDetailService.getUserDetail().wuaId())
-        );
-      }
+      energyPortalServiceAccessService.addUser(wuaId);
     }
   }
 
@@ -235,16 +205,7 @@ public class TeamManagementService {
     teamRoleRepository.deleteByWuaIdAndTeam(wuaId, team);
 
     if (teamRoleRepository.findAllByWuaId(wuaId).isEmpty()) {
-
-      if (environment.matchesProfiles("use-epas")) {
-        energyPortalServiceAccessService.removeUser(wuaId);
-      } else {
-        energyPortalAccessService.removeUserFromAccessTeam(
-            new ResourceType(RESOURCE_TYPE_NAME),
-            new TargetWebUserAccountId(wuaId),
-            new InstigatingWebUserAccountId(userDetailService.getUserDetail().wuaId())
-        );
-      }
+      energyPortalServiceAccessService.removeUser(wuaId);
     }
   }
 

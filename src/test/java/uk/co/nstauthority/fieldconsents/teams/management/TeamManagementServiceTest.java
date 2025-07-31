@@ -1,3 +1,4 @@
+
 package uk.co.nstauthority.fieldconsents.teams.management;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -5,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.never;
@@ -23,11 +25,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAccessService;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
-import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.fivium.energyportal.accounts.starter.EnergyPortalServiceAccessService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
@@ -35,7 +32,6 @@ import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
@@ -91,16 +87,7 @@ class TeamManagementServiceTest {
   private UserApi userApi;
 
   @Mock
-  private UserDetailService userDetailService;
-
-  @Mock
-  private EnergyPortalAccessService energyPortalAccessService;
-
-  @Mock
   private EnergyPortalServiceAccessService energyPortalServiceAccessService;
-
-  @Mock
-  private Environment environment;
 
   @InjectMocks
   private TeamManagementService teamManagementService;
@@ -311,8 +298,6 @@ class TeamManagementServiceTest {
         .thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage)); // Make doesTeamHaveTeamManager() check return true
-    when(userDetailService.getUserDetail())
-        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
@@ -328,34 +313,7 @@ class TeamManagementServiceTest {
   }
 
   @Test
-  void setUserTeamRoles_isNewUser_andFoxIdp() {
-
-    when(environment.matchesProfiles("use-epas"))
-        .thenReturn(false);
-
-    when(userApi.findUserById(anyInt(), any(), any())).thenReturn(Optional.of(USER_1));
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
-    when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of());
-
-    var instigatingUser = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
-
-    teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
-
-    verify(energyPortalAccessService).addUserToAccessTeam(
-        eq(new ResourceType("FCS_ACCESS_TEAM")),
-        refEq(new TargetWebUserAccountId(USER_1_WUA_ID)),
-        refEq(new InstigatingWebUserAccountId(instigatingUser.wuaId()))
-    );
-    verifyNoInteractions(energyPortalServiceAccessService);
-  }
-
-  @Test
   void setUserTeamRoles_isNewUser_andNonFoxIdp() {
-
-    when(environment.matchesProfiles("use-epas"))
-        .thenReturn(true);
-
     when(userApi.findUserById(anyInt(), any(), any())).thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of());
@@ -363,7 +321,6 @@ class TeamManagementServiceTest {
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
     verify(energyPortalServiceAccessService).addUser(USER_1_WUA_ID);
-    verifyNoInteractions(energyPortalAccessService);
   }
 
   @Test
@@ -374,7 +331,6 @@ class TeamManagementServiceTest {
 
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
-    verifyNoInteractions(energyPortalAccessService);
     verifyNoInteractions(energyPortalServiceAccessService);
   }
 
@@ -454,43 +410,14 @@ class TeamManagementServiceTest {
   void removeUserFromTeam() {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));
-    when(userDetailService.getUserDetail())
-        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
     teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-  }
-
-  @Test
-  void removeUserFromTeam_removedFromLastTeam_andFoxIdp() {
-
-    when(environment.matchesProfiles("use-epas"))
-        .thenReturn(false);
-
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
-    when(teamRoleRepository.findAllByWuaId(USER_2_WUA_ID)).thenReturn(List.of());
-
-    var instigatingUser = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
-
-    teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
-
-    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-    verify(energyPortalAccessService).removeUserFromAccessTeam(
-        eq(new ResourceType("FCS_ACCESS_TEAM")),
-        refEq(new TargetWebUserAccountId(USER_2_WUA_ID)),
-        refEq(new InstigatingWebUserAccountId(instigatingUser.wuaId()))
-    );
-    verifyNoInteractions(energyPortalServiceAccessService);
   }
 
   @Test
   void removeUserFromTeam_removedFromLastTeam_andNonFoxIdp() {
-
-    when(environment.matchesProfiles("use-epas"))
-        .thenReturn(true);
-
     when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_2_WUA_ID)).thenReturn(List.of());
 
@@ -498,7 +425,6 @@ class TeamManagementServiceTest {
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
     verify(energyPortalServiceAccessService).removeUser(USER_2_WUA_ID);
-    verifyNoInteractions(energyPortalAccessService);
   }
 
   @Test
@@ -509,7 +435,7 @@ class TeamManagementServiceTest {
     teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-    verify(energyPortalAccessService, never()).removeUserFromAccessTeam(any(), any(), any());
+    verify(energyPortalServiceAccessService, never()).removeUser(anyLong());
   }
 
   @Test
