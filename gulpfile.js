@@ -10,8 +10,6 @@ const babel = require("@rollup/plugin-babel");
 const resolve = require("@rollup/plugin-node-resolve");
 const commonjs = require("@rollup/plugin-commonjs");
 const terser = require("@rollup/plugin-terser");
-const vue = require("@vitejs/plugin-vue");
-const replace = require("@rollup/plugin-replace");
 
 function compileSassSync(sassOptions, sassGlobPattern, dest) {
   return gulp.src(sassGlobPattern, {base: "."})
@@ -50,11 +48,7 @@ const babelOptions =
 gulp.task("rollup-babel", () => rollup.rollup({
     input: "./src/main/resources/js/all.js",
     plugins: [
-      replace({
-        "process.env.NODE_ENV": JSON.stringify("production"),
-      }),
       resolve(),
-      vue(),
       commonjs(),
       babel(babelOptions),
       terser(),

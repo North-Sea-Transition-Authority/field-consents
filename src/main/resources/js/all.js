@@ -1,6 +1,5 @@
 import SelectableResultsAndActionsContainer from "./selectableResultsAndActionsContainer";
 import TableWithPastableContent from "./tableWithPastableContent";
-import RichTextEditor from "./richTextEditor";
 import StackedBarChart from "./highcharts/stackedBarChart";
 import FloatingBarChart from "./highcharts/floatingBarChart";
 
@@ -11,10 +10,6 @@ if (selectableResultsAndActionsContainer) {
 
 for (const table of document.querySelectorAll("[data-module='fcs-table-with-pastable-content']")) {
   new TableWithPastableContent(table)
-}
-
-for (const element of document.querySelectorAll("[data-module='rich-text-editor']")) {
-  new RichTextEditor(element);
 }
 
 for (const element of document.querySelectorAll("[data-module='fcs-stacked-bar-chart']")) {

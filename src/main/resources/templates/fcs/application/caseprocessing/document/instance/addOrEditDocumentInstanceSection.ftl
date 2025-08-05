@@ -1,5 +1,5 @@
 <#include '../../../../layout/layout.ftl'>
-<#include '../../../../document/richTextEditor.ftl'>
+<#include '../../../../../fds/components/richTextEditor/richTextEditor.ftl'>
 
 <#import '../../../../document/_mailMergeFieldSummaryDetails.ftl' as _mailMergeFieldSummaryDetails>
 
