@@ -20,8 +20,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamService;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -42,6 +43,9 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
 
   @MockitoBean
   private NewOrganisationTeamFormValidator newOrganisationTeamFormValidator;
+
+  @MockitoBean
+  private EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService;
 
   private static ServiceUserDetail invokingUser;
 
@@ -97,7 +101,10 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .with(user(invokingUser))
         .param("orgGroupId", "50"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(TeamManagementController.class).renderTeamMemberList(newTeam.getId(), null))));
+        .andExpect(
+            redirectedUrl(ReverseRouter.route(on(TeamManagementController.class).renderTeamMemberList(newTeam.getId(), null))));
+
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @Test
@@ -115,6 +122,7 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk()); // No redirect to next page
 
     verify(teamManagementService, never()).createScopedTeam(any(), any(), any());
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @Test
@@ -129,6 +137,7 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden()); // No redirect to next page
 
     verify(teamManagementService, never()).createScopedTeam(any(), any(), any());
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @Test
