@@ -36,7 +36,7 @@ import uk.co.nstauthority.fieldconsents.teams.management.form.NewOrganisationTea
 
 @ActiveProfiles("use-service-access-request")
 @ContextConfiguration(classes = ScopedTeamManagementController.class)
-public class ScopedTeamManagementControllerServiceAccessRequestsEnabledTest extends AbstractControllerTest {
+class ScopedTeamManagementControllerServiceAccessRequestsEnabledTest extends AbstractControllerTest {
 
   @MockitoBean
   private OrganisationApi organisationApi;
@@ -51,7 +51,7 @@ public class ScopedTeamManagementControllerServiceAccessRequestsEnabledTest exte
   private static ServiceUserDetail invokingUser;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     invokingUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(1L)
         .build();

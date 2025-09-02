@@ -8,8 +8,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportal.starter.accounts.EnergyPortalServiceAccessService;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderUserRolesService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
@@ -32,19 +34,25 @@ public class TeamManagementService {
   private final TeamQueryService teamQueryService;
   private final UserApi userApi;
   private final EnergyPortalServiceAccessService energyPortalServiceAccessService;
+  private final EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService;
+  private final Environment environment;
 
   TeamManagementService(
       TeamRepository teamRepository,
       TeamRoleRepository teamRoleRepository,
       UserApi userApi,
       TeamQueryService teamQueryService,
-      EnergyPortalServiceAccessService energyPortalServiceAccessService
+      EnergyPortalServiceAccessService energyPortalServiceAccessService,
+      EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService,
+      Environment environment
   ) {
     this.teamRepository = teamRepository;
     this.teamRoleRepository = teamRoleRepository;
     this.userApi = userApi;
     this.teamQueryService = teamQueryService;
     this.energyPortalServiceAccessService = energyPortalServiceAccessService;
+    this.energyPortalServiceProviderUserRolesService = energyPortalServiceProviderUserRolesService;
+    this.environment = environment;
   }
 
   public Team createScopedTeam(String name, TeamType teamType, TeamScopeReference scopeRef) {
@@ -191,6 +199,15 @@ public class TeamManagementService {
       throw new TeamManagementException("At least 1 team manager must exist in team %s".formatted(team.getId()));
     }
 
+    if (environment.matchesProfiles("use-service-access-request")) {
+      energyPortalServiceProviderUserRolesService.publishUsersRolesForTeam(
+          wuaId,
+          team.getId().toString(),
+          team.getTeamType().name(),
+          roles.stream().map(Role::name).collect(Collectors.toSet())
+      );
+    }
+
     if (isNewUser) {
       energyPortalServiceAccessService.addUser(wuaId);
     }
@@ -206,6 +223,13 @@ public class TeamManagementService {
 
     if (teamRoleRepository.findAllByWuaId(wuaId).isEmpty()) {
       energyPortalServiceAccessService.removeUser(wuaId);
+    }
+
+    if (environment.matchesProfiles("use-service-access-request")) {
+      energyPortalServiceProviderUserRolesService.publishRemoveUserFromTeam(
+          wuaId,
+          team.getId().toString()
+      );
     }
   }
 
