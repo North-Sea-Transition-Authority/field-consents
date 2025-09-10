@@ -56,10 +56,9 @@ class EnergyPortalTeamTypeRoleServiceTest {
 
     energyPortalTeamTypeRoleService.publishRolesForTeamTypeMessage();
 
-    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(regulatorServiceRoleDtos, TeamType.REGULATOR.name(), true);
-    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(consulteeServiceRoleDtos, TeamType.CONSULTEE.name(), true);
-    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(organisationServiceRoleDtos, TeamType.INDUSTRY.name(),
-        false);
+    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(regulatorServiceRoleDtos, TeamType.REGULATOR.name());
+    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(consulteeServiceRoleDtos, TeamType.CONSULTEE.name());
+    verify(serviceProviderTeamTypeRoleService).publishRolesForTeamType(organisationServiceRoleDtos, TeamType.INDUSTRY.name());
   }
 
   private ServiceProviderTeamTypeRoleDto createServiceRoleDto(Role role, boolean isAssessManager) {

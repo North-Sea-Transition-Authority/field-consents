@@ -34,12 +34,14 @@ class EnergyPortalTeamServiceTest {
     var expectedDto1 = new ServiceProviderTeamDto(
         team1.getId().toString(),
         team1.getScopeId(),
-        ScopeType.ORGANISATION_GROUP
+        ScopeType.ORGANISATION_GROUP,
+        team1.getTeamType().name()
     );
     var expectedDto2 = new ServiceProviderTeamDto(
         team2.getId().toString(),
         team2.getScopeId(),
-        ScopeType.ORGANISATION_GROUP
+        ScopeType.ORGANISATION_GROUP,
+        team2.getTeamType().name()
     );
 
     when(teamRepository.findByTeamType(TeamType.INDUSTRY)).thenReturn(List.of(team1, team2));

@@ -33,8 +33,7 @@ public class EnergyPortalTeamTypeRoleService {
               )
           ).collect(Collectors.toSet());
 
-      var isRegulatorTeamType = teamType.equals(TeamType.REGULATOR) || teamType.equals(TeamType.CONSULTEE);
-      serviceProviderTeamTypeRoleService.publishRolesForTeamType(serviceRoleDtos, teamType.name(), isRegulatorTeamType);
+      serviceProviderTeamTypeRoleService.publishRolesForTeamType(serviceRoleDtos, teamType.name());
     }
   }
 }

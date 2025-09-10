@@ -13,7 +13,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,8 +28,8 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
-import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamScopeReference;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.management.form.NewOrganisationTeamFormValidator;
 
@@ -63,7 +62,7 @@ class ScopedTeamManagementControllerServiceAccessRequestsEnabledTest extends Abs
     orgGroup.setOrganisationGroupId(50);
     orgGroup.setName("Some Org");
 
-    var newTeam = new Team(UUID.randomUUID());
+    var newTeam = TeamTestUtil.newBuilder().build();
 
     when(teamQueryService.userHasStaticRole(invokingUser, TeamType.REGULATOR, Role.INDUSTRY_ACCESS_MANAGER))
         .thenReturn(true);
@@ -89,7 +88,8 @@ class ScopedTeamManagementControllerServiceAccessRequestsEnabledTest extends Abs
     var expectedServiceProviderTeamDto = new ServiceProviderTeamDto(
         newTeam.getId().toString(),
         newTeam.getScopeId(),
-        ScopeType.ORGANISATION_GROUP
+        ScopeType.ORGANISATION_GROUP,
+        newTeam.getTeamType().name()
     );
 
     verify(energyPortalServiceProviderTeamService)

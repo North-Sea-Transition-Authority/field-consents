@@ -31,7 +31,8 @@ public class EnergyPortalTeamService {
         .map(team -> new ServiceProviderTeamDto(
             team.getId().toString(),
             team.getScopeId(),
-            ScopeType.ORGANISATION_GROUP
+            ScopeType.ORGANISATION_GROUP,
+            team.getTeamType().name()
         ))
         .collect(Collectors.toSet());
 
