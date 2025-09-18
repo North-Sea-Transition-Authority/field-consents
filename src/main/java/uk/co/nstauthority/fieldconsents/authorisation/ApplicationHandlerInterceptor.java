@@ -45,51 +45,58 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
       return true;
     }
 
-    var handlerMethod = (HandlerMethod) handler;
-    var annotation = findMethodOrClassAnnotation(Security.class, handlerMethod);
+    if (handler instanceof HandlerMethod handlerMethod) {
+      var annotation = findMethodOrClassAnnotation(Security.class, handlerMethod);
 
-    if (annotation == null) {
-      throw new IllegalStateException("Controllers must be annotated with @Security");
-    }
+      if (annotation == null) {
+        throw new IllegalStateException("Controllers must be annotated with @Security");
+      }
 
-    if (annotation.disable()) {
+      if (annotation.disable()) {
+        return true;
+      }
+
+      var applicationId = findPathVariableInt(request, "applicationId");
+      var applicationVersionId = findPathVariableInt(request, "applicationVersionId");
+
+      ApplicationVersion applicationVersion;
+
+      if (applicationId != null) {
+        applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+      } else if (applicationVersionId != null) {
+        applicationVersion = applicationVersionService.getApplicationVersionById(applicationVersionId);
+      } else {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find application version");
+      }
+
+      for (var securityRule : securityRules) {
+        var annotationObject = findMethodOrClassAnnotation(securityRule.supports(), handlerMethod);
+
+        if (annotationObject == null) {
+          continue;
+        }
+
+        var result = securityRule.check(
+            annotationObject,
+            request,
+            response,
+            userDetailService.getUserDetail(),
+            applicationVersion
+        );
+
+        var hasRulePassed = processRedirectsAndReturnResult(result, response);
+        if (!hasRulePassed) {
+          return false;
+        }
+      }
+
       return true;
     }
 
-    var applicationId = findPathVariableInt(request, "applicationId");
-    var applicationVersionId = findPathVariableInt(request, "applicationVersionId");
-
-    ApplicationVersion applicationVersion;
-
-    if (applicationId != null) {
-      applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    } else if (applicationVersionId != null) {
-      applicationVersion = applicationVersionService.getApplicationVersionById(applicationVersionId);
-    } else {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find application version");
-    }
-
-    for (var securityRule : securityRules) {
-      var annotationObject = findMethodOrClassAnnotation(securityRule.supports(), handlerMethod);
-
-      if (annotationObject == null) {
-        continue;
-      }
-
-      var result = securityRule.check(
-          annotationObject,
-          request,
-          response,
-          userDetailService.getUserDetail(),
-          applicationVersion
-      );
-
-      var hasRulePassed = processRedirectsAndReturnResult(result, response);
-      if (!hasRulePassed) {
-        return false;
-      }
-    }
-    return true;
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST,
+        "Unexpected handler class %s".formatted(handler.getClass())
+    );
   }
 
   @SuppressWarnings("unchecked")

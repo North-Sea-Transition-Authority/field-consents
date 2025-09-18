@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
@@ -41,6 +42,10 @@ public class StaticRoleHandlerInterceptor implements HandlerInterceptor {
       @NonNull HttpServletResponse response,
       @NonNull Object handler
   ) {
+    if (handler instanceof ResourceHttpRequestHandler) {
+      return true;
+    }
+
     if (handler instanceof HandlerMethod handlerMethod) {
       if (HandlerInterceptorUtil.findAnnotation(handlerMethod, Security.class).isEmpty()) {
         // Don't call getUserDetail() if the endpoint is unauthenticated to allow for unauthenticated access.

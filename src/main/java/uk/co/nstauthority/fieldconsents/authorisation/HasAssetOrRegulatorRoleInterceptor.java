@@ -13,6 +13,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
@@ -48,6 +49,10 @@ public class HasAssetOrRegulatorRoleInterceptor implements HandlerInterceptor {
       @NonNull HttpServletResponse response,
       @NonNull Object handler
   ) {
+    if (handler instanceof ResourceHttpRequestHandler) {
+      return true;
+    }
+
     if (handler instanceof HandlerMethod handlerMethod) {
       var hasAnyAssetScopedOrRegulatorRole =
           HandlerInterceptorUtil.findAnnotation(handlerMethod, HasAssetOrRegulatorRole.class).orElse(null);
