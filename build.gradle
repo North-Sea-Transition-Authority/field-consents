@@ -124,6 +124,7 @@ tasks {
 }
 
 dockerCompose {
+  projectName = 'field-consents-jooq'
   useComposeFiles = ['devtools/jooq-compose.yml']
 }
 
@@ -153,7 +154,7 @@ idea.project.settings {
 //Set the url before the build to dynamically set the port
 //This must be done here, not above, as the serviceInfos object won't exist at configuration time
 flywayMigrate.doFirst {
-  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['local-db'].host + ':' + dockerCompose.servicesInfos['local-db'].ports[5432] + '/fcs'
+  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['postgres'].host + ':' + dockerCompose.servicesInfos['postgres'].ports[5432] + '/fcs'
   System.setProperty('DB_URL', url)
 }
 

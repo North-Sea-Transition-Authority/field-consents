@@ -1,7 +1,0 @@
-set -e
-
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    CREATE USER fcs_app WITH PASSWORD 'dev1';
-    GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO fcs_app;
-    ALTER USER fcs_app WITH CREATEROLE;
-EOSQL

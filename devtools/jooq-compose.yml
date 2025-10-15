@@ -1,12 +1,10 @@
-version: '3.9'
+name: field-consents
 services:
-  local-db:
+  postgres:
     image: postgres:14.3-alpine
     ports:
-      - "5433:5432"
+      - ":5432"
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: dev1
       POSTGRES_DB: fcs
-    volumes:
-      - ./create_db_user.sh:/docker-entrypoint-initdb.d/create_db_user.sh
+      POSTGRES_USER: fcs_app
+      POSTGRES_PASSWORD: dev1
