@@ -2,3 +2,5 @@
 CVE-2024-7254
 # commons-io:commons-io
 CVE-2024-47554
+# ch.qos.logback:logback-core
+CVE-2025-11226

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamRolesEpasMessage;
 import uk.co.fivium.energyportal.starter.configuration.EnergyPortalAccountsConfigurationProperties;
-import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalTeamRolesUpdateHandler;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamRolesUpdateHandler;
 import uk.co.nstauthority.fieldconsents.audit.AuditRevisionUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -16,7 +16,7 @@ import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementService;
 
 @Profile("use-service-access-request")
 @Component
-public class TeamRolesUpdateHandler implements EnergyPortalTeamRolesUpdateHandler {
+public class TeamRolesUpdateHandler implements EnergyPortalServiceProviderTeamRolesUpdateHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TeamRolesUpdateHandler.class);
 

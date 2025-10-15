@@ -1,0 +1,176 @@
+package uk.co.nstauthority.fieldconsents.teams;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamTypeRoleDto;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderUserTeamRolesDto;
+
+@ExtendWith(MockitoExtension.class)
+class EnergyPortalDataServiceTest {
+
+  @Mock
+  private TeamRepository teamRepository;
+
+  @Mock
+  private TeamRoleRepository teamRoleRepository;
+
+  @InjectMocks
+  private EnergyPortalDataService energyPortalDataService;
+
+  private static final List<Role> ORDERED_ROLES = Arrays.stream(Role.values()).toList();
+
+  @Test
+  void getServiceProviderTeamDtos() {
+    var team1 = TeamTestUtil.newBuilder().build();
+    var team2 = TeamTestUtil.newBuilder().build();
+
+    var expectedDto1 = new ServiceProviderTeamDto(
+        team1.getId().toString(),
+        team1.getScopeId(),
+        ScopeType.ORGANISATION_GROUP,
+        team1.getTeamType().name()
+    );
+    var expectedDto2 = new ServiceProviderTeamDto(
+        team2.getId().toString(),
+        team2.getScopeId(),
+        ScopeType.ORGANISATION_GROUP,
+        team2.getTeamType().name()
+    );
+
+    when(teamRepository.findAll()).thenReturn(List.of(team1, team2));
+
+    assertThat(energyPortalDataService.getServiceProviderTeamDtos())
+        .containsExactlyInAnyOrder(expectedDto1, expectedDto2);
+  }
+
+  @Test
+  void getTeamTypeToServiceProviderTeamTypeRoleDtos() {
+    var regulatorServiceRoleDtos = Set.of(
+        createServiceRoleDto(Role.ACCESS_MANAGER, true),
+        createServiceRoleDto(Role.INDUSTRY_ACCESS_MANAGER, false),
+        createServiceRoleDto(Role.DOCUMENT_TEMPLATE_MANAGER, false),
+        createServiceRoleDto(Role.CASE_OFFICER, false),
+        createServiceRoleDto(Role.CASE_MANAGER, false),
+        createServiceRoleDto(Role.CONSENTS_AND_AUTHORISATIONS_MANAGER, false),
+        createServiceRoleDto(Role.TECHNICAL_REVIEWER, false),
+        createServiceRoleDto(Role.VIEWER, false)
+    );
+
+    var consulteeServiceRoleDtos = Set.of(
+        createServiceRoleDto(Role.ACCESS_MANAGER, true),
+        createServiceRoleDto(Role.ALLOCATOR, false),
+        createServiceRoleDto(Role.RESPONDER, false),
+        createServiceRoleDto(Role.VIEWER, false)
+    );
+
+    var organisationServiceRoleDtos = Set.of(
+        createServiceRoleDto(Role.ACCESS_MANAGER, true),
+        createServiceRoleDto(Role.VIEWER, false),
+        createServiceRoleDto(Role.EDITOR, false),
+        createServiceRoleDto(Role.SUBMITTER, false),
+        createServiceRoleDto(Role.CREATOR, false),
+        createServiceRoleDto(Role.FINANCE_ADMINISTRATOR, false),
+        createServiceRoleDto(Role.CONSENT_RECIPIENT, false)
+    );
+
+    assertThat(energyPortalDataService.getTeamTypeToServiceProviderTeamTypeRoleDtos())
+        .isEqualTo(
+            Map.of(
+                TeamType.REGULATOR.name(), regulatorServiceRoleDtos,
+                TeamType.CONSULTEE.name(), consulteeServiceRoleDtos,
+                TeamType.INDUSTRY.name(), organisationServiceRoleDtos
+            )
+        );
+  }
+
+  @Test
+  void getTeamTypes() {
+    assertThat(energyPortalDataService.getTeamTypes()).isEqualTo(Set.of(
+        TeamType.REGULATOR.name(),
+        TeamType.CONSULTEE.name(),
+        TeamType.INDUSTRY.name()
+    ));
+  }
+
+
+  @Test
+  void getServiceProviderUserTeamRolesDtos() {
+    var team1 = TeamTestUtil.newBuilder().build();
+    var team2 = TeamTestUtil.newBuilder().build();
+
+    var wuaId1Team1TeamRole = TeamRoleTestUtil.newBuilder()
+        .withWuaId(1L)
+        .withTeam(team1)
+        .withRole(Role.ACCESS_MANAGER)
+        .build();
+
+    var wuaId1Team2TeamRole = TeamRoleTestUtil.newBuilder()
+        .withWuaId(1L)
+        .withTeam(team2)
+        .withRole(Role.VIEWER)
+        .build();
+
+    var wuaId2Team2TeamRole1 = TeamRoleTestUtil.newBuilder()
+        .withWuaId(2L)
+        .withTeam(team2)
+        .withRole(Role.ACCESS_MANAGER)
+        .build();
+
+    var wuaId2Team2TeamRole2 = TeamRoleTestUtil.newBuilder()
+        .withWuaId(2L)
+        .withTeam(team2)
+        .withRole(Role.VIEWER)
+        .build();
+
+    when(teamRoleRepository.findAll()).thenReturn(List.of(
+        wuaId1Team1TeamRole,
+        wuaId1Team2TeamRole,
+        wuaId2Team2TeamRole1,
+        wuaId2Team2TeamRole2
+    ));
+
+    assertThat(energyPortalDataService.getServiceProviderUserTeamRolesDtos())
+        .containsExactlyInAnyOrder(
+            new ServiceProviderUserTeamRolesDto(
+                1L,
+                team1.getId().toString(),
+                team1.getTeamType().name(),
+                Set.of(Role.ACCESS_MANAGER.name())
+            ),
+            new ServiceProviderUserTeamRolesDto(
+                1L,
+                team2.getId().toString(),
+                team2.getTeamType().name(),
+                Set.of(Role.VIEWER.name())
+            ),
+            new ServiceProviderUserTeamRolesDto(
+                2L,
+                team2.getId().toString(),
+                team2.getTeamType().name(),
+                Set.of(Role.VIEWER.name(), Role.ACCESS_MANAGER.name())
+            )
+        );
+  }
+
+  private ServiceProviderTeamTypeRoleDto createServiceRoleDto(Role role, boolean isAssessManager) {
+    return new ServiceProviderTeamTypeRoleDto(
+        role.name(),
+        role.getDisplayName(),
+        role.getDescription(),
+        isAssessManager,
+        ORDERED_ROLES.indexOf(role)
+    );
+  }
+}
