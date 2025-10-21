@@ -31,6 +31,7 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.fivium.energyportalapi.generated.types.TerminalClassificationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -67,7 +68,8 @@ class TerminalSearchServiceTest {
 
   @Test
   void searchTerminals_allTestTerminals() {
-    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+    when(terminalApi.searchTerminals(eq("T"), isNull(), any(TerminalsProjectionRoot.class),
+        eq(requestPurpose)))
         .thenReturn(terminalList);
 
     assertThat(terminalSearchService.searchTerminals("T", REQUEST_PURPOSE))
@@ -78,9 +80,24 @@ class TerminalSearchServiceTest {
   @Test
   void searchTerminals_includeInUseFieldIds() {
     var terminalList = List.of(
-        Terminal.newBuilder().terminalId(1).terminalName("T1").terminalActive(true).build(),
-        Terminal.newBuilder().terminalId(2).terminalName("T2").terminalActive(true).build(),
-        Terminal.newBuilder().terminalId(3).terminalName("T3").terminalActive(false).build()
+        Terminal.newBuilder()
+            .terminalId(1)
+            .terminalName("T1")
+            .terminalActive(true)
+            .terminalClassificationType(TerminalClassificationType.EDU)
+            .build(),
+        Terminal.newBuilder()
+            .terminalId(2)
+            .terminalName("T2")
+            .terminalActive(true)
+            .terminalClassificationType(TerminalClassificationType.EDU)
+            .build(),
+        Terminal.newBuilder()
+            .terminalId(3)
+            .terminalName("T3")
+            .terminalActive(false)
+            .terminalClassificationType(TerminalClassificationType.EDU)
+            .build()
     );
     var terminalJsonList = terminalList.stream().map(TerminalJson::from).toList();
 

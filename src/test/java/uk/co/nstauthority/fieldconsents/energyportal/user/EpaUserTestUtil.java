@@ -17,8 +17,8 @@ class EpaUserTestUtil {
 
   static class Builder {
 
-    private int webUserAccountId = 1;
-    private int personId = 2;
+    private Long webUserAccountId = 1L;
+    private Long personId = 2L;
     private String loginId = UUID.randomUUID().toString();
     private String title = "title";
     private String forename = "forename";
@@ -31,12 +31,12 @@ class EpaUserTestUtil {
     private AccountStatus accountStatus = AccountStatus.NEW;
     private Builder() {}
 
-    Builder withWebUserAccountId(int webUserAccountId) {
+    Builder withWebUserAccountId(Long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
       return this;
     }
 
-    Builder withPersonId(int personId) {
+    Builder withPersonId(Long personId) {
       this.personId = personId;
       return this;
     }

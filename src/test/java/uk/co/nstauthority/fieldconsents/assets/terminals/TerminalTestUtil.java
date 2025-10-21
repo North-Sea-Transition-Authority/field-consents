@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import java.util.List;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.fivium.energyportalapi.generated.types.TerminalClassificationType;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
@@ -23,6 +24,14 @@ public class TerminalTestUtil {
       .terminalId(TERMINAL_ID_1)
       .terminalName(TERMINAL_NAME_1)
       .terminalActive(Boolean.TRUE)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
+
+  public static Terminal terminal1WithNotEduClassification = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_1)
+      .terminalName(TERMINAL_NAME_1)
+      .terminalActive(Boolean.TRUE)
+      .terminalClassificationType(TerminalClassificationType.EEMS_REPORTING_UNIT)
       .build();
 
   public static Terminal terminal1WithOperator = Terminal.newBuilder()
@@ -30,6 +39,15 @@ public class TerminalTestUtil {
       .terminalName(TERMINAL_NAME_1)
       .terminalActive(Boolean.TRUE)
       .terminalOperator(OrganisationUnitTestUtil.orgUnit1)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
+
+  public static Terminal terminal1WithOperatorAndNotEduClassification = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_1)
+      .terminalName(TERMINAL_NAME_1)
+      .terminalActive(Boolean.TRUE)
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit1)
+      .terminalClassificationType(TerminalClassificationType.EEMS_REPORTING_UNIT)
       .build();
 
   public static Terminal terminal1WithNoOperator = Terminal.newBuilder()
@@ -37,6 +55,7 @@ public class TerminalTestUtil {
       .terminalName(TERMINAL_NAME_1)
       .terminalActive(Boolean.TRUE)
       .terminalOperator(null)
+      .terminalClassificationType(TerminalClassificationType.EDU)
       .build();
 
   public static TerminalJson terminal1Json = new TerminalJson(
@@ -56,13 +75,35 @@ public class TerminalTestUtil {
       TerminalStatus.ACTIVE,
       null);
 
-  public static Terminal terminal2 = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2)
+  public static Terminal terminal2 = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_2)
+      .terminalName(TERMINAL_NAME_2)
       .terminalActive(Boolean.FALSE)
+      .terminalClassificationType(TerminalClassificationType.EDU)
       .build();
 
-  public static Terminal terminal2WithOperator = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2)
+  public static Terminal terminal2WithNotEduClassification = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_2)
+      .terminalName(TERMINAL_NAME_2)
+      .terminalActive(Boolean.FALSE)
+      .terminalClassificationType(TerminalClassificationType.EEMS_REPORTING_UNIT)
+      .build();
+
+  public static Terminal terminal2WithOperator = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_2)
+      .terminalName(TERMINAL_NAME_2)
       .terminalActive(Boolean.TRUE)
-      .terminalOperator(OrganisationUnitTestUtil.orgUnit2).build();
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit2)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
+
+  public static Terminal terminal2WithOperatorAndNotEduClassification = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_2)
+      .terminalName(TERMINAL_NAME_2)
+      .terminalActive(Boolean.TRUE)
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit2)
+      .terminalClassificationType(TerminalClassificationType.EEMS_REPORTING_UNIT)
+      .build();
 
   public static TerminalJson terminal2Json = new TerminalJson(
       terminal2.getTerminalId(),
@@ -76,13 +117,20 @@ public class TerminalTestUtil {
       OrganisationUnitJson.from(terminal2WithOperator.getTerminalOperator()));
 
 
-  public static Terminal terminal3 = Terminal.newBuilder().terminalId(TERMINAL_ID_3).terminalName(TERMINAL_NAME_3)
+  public static Terminal terminal3 = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_3)
+      .terminalName(TERMINAL_NAME_3)
       .terminalActive(Boolean.TRUE)
+      .terminalClassificationType(TerminalClassificationType.EDU)
       .build();
 
-  public static Terminal terminal3WithOperator = Terminal.newBuilder().terminalId(TERMINAL_ID_3).terminalName(TERMINAL_NAME_3)
+  public static Terminal terminal3WithOperator = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_3)
+      .terminalName(TERMINAL_NAME_3)
       .terminalActive(Boolean.TRUE)
-      .terminalOperator(OrganisationUnitTestUtil.orgUnit3).build();
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit3)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
 
   public static TerminalJson terminal3Json = new TerminalJson(
       terminal3.getTerminalId(),
@@ -95,13 +143,20 @@ public class TerminalTestUtil {
       TerminalStatus.ACTIVE,
       OrganisationUnitJson.from(terminal3WithOperator.getTerminalOperator()));
 
-  public static Terminal terminal4 = Terminal.newBuilder().terminalId(TERMINAL_ID_4).terminalName(TERMINAL_NAME_4)
+  public static Terminal terminal4 = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_4)
+      .terminalName(TERMINAL_NAME_4)
       .terminalActive(Boolean.FALSE)
+      .terminalClassificationType(TerminalClassificationType.EDU)
       .build();
 
-  public static Terminal terminal4WithOperator = Terminal.newBuilder().terminalId(TERMINAL_ID_4).terminalName(TERMINAL_NAME_4)
+  public static Terminal terminal4WithOperator = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_4)
+      .terminalName(TERMINAL_NAME_4)
       .terminalActive(Boolean.FALSE)
-      .terminalOperator(OrganisationUnitTestUtil.orgUnit4).build();
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit4)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
 
   public static TerminalJson terminal4Json = new TerminalJson(
       terminal4.getTerminalId(),
@@ -114,13 +169,20 @@ public class TerminalTestUtil {
       TerminalStatus.INACTIVE,
       OrganisationUnitJson.from(terminal4WithOperator.getTerminalOperator()));
 
-  public static Terminal terminal5 = Terminal.newBuilder().terminalId(TERMINAL_ID_5).terminalName(TERMINAL_NAME_5)
+  public static Terminal terminal5 = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_5)
+      .terminalName(TERMINAL_NAME_5)
       .terminalActive(Boolean.FALSE)
+      .terminalClassificationType(TerminalClassificationType.EDU)
       .build();
 
-  public static Terminal terminal5WithOperator = Terminal.newBuilder().terminalId(TERMINAL_ID_5).terminalName(TERMINAL_NAME_5)
+  public static Terminal terminal5WithOperator = Terminal.newBuilder()
+      .terminalId(TERMINAL_ID_5)
+      .terminalName(TERMINAL_NAME_5)
       .terminalActive(Boolean.FALSE)
-      .terminalOperator(OrganisationUnitTestUtil.orgUnit4).build();
+      .terminalOperator(OrganisationUnitTestUtil.orgUnit4)
+      .terminalClassificationType(TerminalClassificationType.EDU)
+      .build();
 
   public static TerminalJson terminal5Json = new TerminalJson(
       terminal5.getTerminalId(),
@@ -133,7 +195,11 @@ public class TerminalTestUtil {
       TerminalStatus.INACTIVE,
       OrganisationUnitJson.from(terminal5WithOperator.getTerminalOperator()));
 
-  public static List<Terminal> terminalList = List.of(terminal1, terminal2, terminal3);
+  public static List<Terminal> terminalList = List.of(
+      terminal1,
+      terminal1WithNotEduClassification,
+      terminal2,
+      terminal3);
 
   public static List<Terminal> terminalsWithOperatorList =
       List.of(terminal1WithOperator, terminal2WithOperator, terminal3WithOperator);

@@ -15,10 +15,14 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithNotEduClassification;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperatorAndNotEduClassification;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2WithNotEduClassification;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2WithOperatorAndNotEduClassification;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3WithOperator;
 
@@ -48,7 +52,7 @@ class TerminalServiceTest {
   private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
 
   @Test
-  void findTerminal_terminalExists() {
+  void findTerminal_terminalExists_correctTerminalType() {
     when(terminalApi.findTerminalById(eq(terminal1.getTerminalId()),
         any(TerminalProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(terminal1));
@@ -60,7 +64,20 @@ class TerminalServiceTest {
   }
 
   @Test
-  void findTerminalWithOperator_terminalExists() {
+  void findTerminal_terminalExists_wrongTerminalType() {
+    when(terminalApi.findTerminalById(
+        eq(terminal1WithNotEduClassification.getTerminalId()),
+        any(TerminalProjectionRoot.class),
+        eq(requestPurpose)
+    )).thenReturn(Optional.of(terminal1WithNotEduClassification));
+
+    var terminalJsonOptional = terminalService
+        .findTerminal(terminal1WithNotEduClassification.getTerminalId(), REQUEST_PURPOSE);
+    assertThat(terminalJsonOptional).isEmpty();
+  }
+
+  @Test
+  void findTerminalWithOperator_terminalExists_correctTerminalType() {
     when(terminalApi.findTerminalById(eq(terminal1WithOperator.getTerminalId()),
         any(TerminalProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(terminal1WithOperator));
@@ -70,6 +87,17 @@ class TerminalServiceTest {
     assertThat(terminalJsonOptional).isPresent();
     assertThat(terminalJsonOptional.get()).usingRecursiveComparison()
         .isEqualTo(terminal1JsonWithOperator);
+  }
+
+  @Test
+  void findTerminalWithOperator_terminalExists_wrongTerminalType() {
+    when(terminalApi.findTerminalById(eq(terminal1WithOperatorAndNotEduClassification.getTerminalId()),
+        any(TerminalProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(Optional.of(terminal1WithOperatorAndNotEduClassification));
+
+    var terminalJsonOptional = terminalService
+            .findTerminalWithOperator(terminal1WithOperatorAndNotEduClassification.getTerminalId(), REQUEST_PURPOSE);
+    assertThat(terminalJsonOptional).isEmpty();
   }
 
   @Test
@@ -143,7 +171,7 @@ class TerminalServiceTest {
   }
 
   @Test
-  void findTerminalsWithOperator() {
+  void findTerminalsWithOperator_correctTerminalType() {
     var ids = List.of(1, 2, 3, 4);
 
     when(terminalApi.getTerminalsByIds(ids, terminalsWithOperatorProjectionRoot, requestPurpose))
@@ -152,6 +180,23 @@ class TerminalServiceTest {
     assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
         .usingRecursiveFieldByFieldElementComparator()
         .containsExactly(terminal1JsonWithOperator, terminal2JsonWithOperator, terminal3JsonWithOperator);
+
+    //No n+1
+    verify(terminalApi, never())
+        .findTerminalById(anyInt(), any(TerminalProjectionRoot.class), any(RequestPurpose.class));
+  }
+
+  @Test
+  void findTerminalsWithOperator_wrongTerminalType() {
+    var ids = List.of(1, 2, 3, 4);
+
+    when(terminalApi.getTerminalsByIds(ids, terminalsWithOperatorProjectionRoot, requestPurpose))
+        .thenReturn(List.of(terminal1WithOperatorAndNotEduClassification, terminal2WithOperatorAndNotEduClassification,
+            terminal3WithOperator));
+
+    assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(terminal3JsonWithOperator);
 
     //No n+1
     verify(terminalApi, never())
@@ -175,7 +220,7 @@ class TerminalServiceTest {
   }
 
   @Test
-  void getTerminals() {
+  void getTerminals_correctTerminalType() {
     var terminalIds = List.of(1, 2, 3);
 
     when(terminalApi.getTerminalsByIds(terminalIds, terminalsWithOperatorProjectionRoot, requestPurpose))
@@ -190,6 +235,20 @@ class TerminalServiceTest {
             tuple(terminal1.getTerminalId(), terminal1.getTerminalName()),
             tuple(terminal2.getTerminalId(), terminal2.getTerminalName())
         );
+
+    //No n+1
+    verify(terminalApi, never())
+        .findTerminalById(anyInt(), any(TerminalProjectionRoot.class), any(RequestPurpose.class));
+  }
+
+  @Test
+  void getTerminals_wrongTerminalType() {
+    var terminalIds = List.of(1, 2, 3);
+
+    when(terminalApi.getTerminalsByIds(terminalIds, terminalsWithOperatorProjectionRoot, requestPurpose))
+        .thenReturn(List.of(terminal1WithNotEduClassification, terminal2WithNotEduClassification));
+
+    assertThat(terminalService.getTerminals(terminalIds, requestPurpose.purpose())).isEqualTo(List.of());
 
     //No n+1
     verify(terminalApi, never())

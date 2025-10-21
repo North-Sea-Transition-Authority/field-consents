@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.refEq;
@@ -52,7 +51,7 @@ class TeamManagementServiceTest {
   private static final long USER_2_WUA_ID = 2;
 
   private static final User USER_1 = User.newBuilder()
-      .webUserAccountId(Math.toIntExact(USER_1_WUA_ID))
+      .webUserAccountId(USER_1_WUA_ID)
       .title("Ms")
       .forename("User")
       .surname("One")
@@ -108,7 +107,7 @@ class TeamManagementServiceTest {
   private ArgumentCaptor<List<TeamRole>> teamRoleListCaptor;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
 
     regTeam = new Team(UUID.randomUUID());
     regTeam.setTeamType(TeamType.REGULATOR);
@@ -303,7 +302,7 @@ class TeamManagementServiceTest {
         .isAccountShared()
         .canLogin();
 
-    when(userApi.findUserById(eq(1), refEq(expectedProjection), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), refEq(expectedProjection), any(RequestPurpose.class)))
         .thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage)); // Make doesTeamHaveTeamManager() check return true
@@ -331,7 +330,7 @@ class TeamManagementServiceTest {
         .isAccountShared()
         .canLogin();
 
-    when(userApi.findUserById(eq(1), refEq(expectedProjection), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), refEq(expectedProjection), any(RequestPurpose.class)))
         .thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage)); // Make doesTeamHaveTeamManager() check return true
@@ -358,7 +357,7 @@ class TeamManagementServiceTest {
 
   @Test
   void setUserTeamRoles_isNewUser_andNonFoxIdp() {
-    when(userApi.findUserById(anyInt(), any(), any())).thenReturn(Optional.of(USER_1));
+    when(userApi.findUserById(anyLong(), any(), any())).thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of());
 
@@ -369,7 +368,7 @@ class TeamManagementServiceTest {
 
   @Test
   void setUserTeamRoles_isNotNewUser() {
-    when(userApi.findUserById(anyInt(), any(), any())).thenReturn(Optional.of(USER_1));
+    when(userApi.findUserById(anyLong(), any(), any())).thenReturn(Optional.of(USER_1));
     when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of(regTeamUser1RoleManage));
 
@@ -380,7 +379,7 @@ class TeamManagementServiceTest {
 
   @Test
   void setUserTeamRoles_noTeamManagerLeft() {
-    when(userApi.findUserById(eq(1), any(), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
         .thenReturn(Optional.of(USER_1));
 
     when(teamRoleRepository.findByTeam(regTeam))
@@ -404,7 +403,7 @@ class TeamManagementServiceTest {
 
   @Test
   void setUserTeamRoles_noEpaUser() {
-    when(userApi.findUserById(eq(1), any(), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
         .thenReturn(Optional.empty());
 
     var roles =  List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
@@ -421,7 +420,7 @@ class TeamManagementServiceTest {
     var epaUser = new User();
     epaUser.setIsAccountShared(true);
 
-    when(userApi.findUserById(eq(1), any(), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
         .thenReturn(Optional.empty());
 
     var roles = List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
@@ -438,7 +437,7 @@ class TeamManagementServiceTest {
     var epaUser = new User();
     epaUser.setCanLogin(false);
 
-    when(userApi.findUserById(eq(1), any(), any(RequestPurpose.class)))
+    when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
         .thenReturn(Optional.empty());
 
     var roles = List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);

@@ -9,18 +9,20 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.TerminalClassificationType;
 
 @Service
 public class TerminalService {
 
-  public static final String TERMINAL_INACTIVE_VALIDATION_MESSAGE
-      = "is an inactive facility";
+  public static final String TERMINAL_INACTIVE_VALIDATION_MESSAGE = "is an inactive facility";
 
   static final TerminalsProjectionRoot terminalsProjectionRoot =
       new TerminalsProjectionRoot()
           .terminalId()
           .terminalName()
-          .terminalActive();
+          .terminalActive()
+          .terminalClassificationType()
+          .root();
   static final TerminalsProjectionRoot terminalsWithOperatorProjectionRoot =
       terminalsProjectionRoot
           .terminalOperator().organisationUnitId().name().root();
@@ -29,7 +31,9 @@ public class TerminalService {
       new TerminalProjectionRoot()
           .terminalId()
           .terminalName()
-          .terminalActive();
+          .terminalActive()
+          .terminalClassificationType()
+          .root();
 
   static final TerminalProjectionRoot terminalWithOperatorProjectionRoot =
       terminalProjectionRoot
@@ -45,11 +49,13 @@ public class TerminalService {
     return terminalApi.findTerminalById(terminalId,
             terminalProjectionRoot,
             new RequestPurpose(requestPurpose))
+        .filter(terminal -> TerminalClassificationType.EDU.equals(terminal.getTerminalClassificationType()))
         .map(TerminalJson::from);
   }
 
   public Optional<TerminalWithOperatorJson> findTerminalWithOperator(Integer terminalId, String requestPurpose) {
     return terminalApi.findTerminalById(terminalId, terminalWithOperatorProjectionRoot, new RequestPurpose(requestPurpose))
+        .filter(terminal -> TerminalClassificationType.EDU.equals(terminal.getTerminalClassificationType()))
         .map(TerminalWithOperatorJson::from);
   }
 
@@ -65,6 +71,7 @@ public class TerminalService {
 
     return terminalApi.getTerminalsByIds(terminalIds, terminalsProjectionRoot, new RequestPurpose(requestPurpose))
         .stream()
+        .filter(terminal -> TerminalClassificationType.EDU.equals(terminal.getTerminalClassificationType()))
         .map(TerminalJson::from)
         .toList();
   }
@@ -81,6 +88,7 @@ public class TerminalService {
 
     return terminalApi.getTerminalsByIds(terminalIds, terminalsProjectionRoot, new RequestPurpose(epaRequestPurpose))
         .stream()
+        .filter(terminal -> TerminalClassificationType.EDU.equals(terminal.getTerminalClassificationType()))
         .map(TerminalWithOperatorJson::from)
         .toList();
   }

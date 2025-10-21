@@ -72,9 +72,9 @@ public class EnergyPortalUserService {
       return List.of();
     }
 
-    List<Integer> webUserAccountIdApiInputs = webUserAccountIds
+    List<Long> webUserAccountIdApiInputs = webUserAccountIds
         .stream()
-        .map(WebUserAccountId::toInt)
+        .map(WebUserAccountId::id)
         .toList();
 
     return userApi.searchUsersByIds(

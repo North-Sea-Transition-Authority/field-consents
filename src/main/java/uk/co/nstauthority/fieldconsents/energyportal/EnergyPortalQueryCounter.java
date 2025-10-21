@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.energyportal;
 
-import com.netflix.graphql.dgs.client.codegen.GraphQLQueryRequest;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.energyportalapi.client.QueryListener;
+import uk.co.fivium.energyportalapi.client.RequestProperties;
 import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @Component
@@ -15,7 +15,7 @@ public class EnergyPortalQueryCounter implements QueryListener {
   }
 
   @Override
-  public void onRequest(GraphQLQueryRequest request) {
+  public void onRequest(RequestProperties requestProperties) {
     queryCounter.incrementEpa();
   }
 }

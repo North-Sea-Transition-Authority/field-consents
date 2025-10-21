@@ -65,7 +65,7 @@ class TeamManagementControllerTest extends AbstractControllerTest {
   private static ServiceUserDetail invokingUser;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     regTeam = new Team(UUID.randomUUID());
     regTeam.setTeamType(TeamType.REGULATOR);
     regTeam.setName("reg team one");
@@ -470,7 +470,7 @@ class TeamManagementControllerTest extends AbstractControllerTest {
   @Test
   void handleAddMemberToTeam() throws Exception {
     var epaUser = new User.Builder()
-        .webUserAccountId(999)
+        .webUserAccountId(999L)
         .isAccountShared(false)
         .canLogin(true)
         .build();

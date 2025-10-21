@@ -10,6 +10,7 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.fivium.energyportalapi.generated.types.TerminalClassificationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -92,8 +93,9 @@ public class TerminalSearchService {
     return terminalApi.searchTerminals(terminalName, null, query, requestPurpose)
         .stream()
         .filter(terminal ->
-            inUseTerminalIds.contains(terminal.getTerminalId()) || Boolean.TRUE.equals(terminal.getTerminalActive())
-        )
+            inUseTerminalIds.contains(terminal.getTerminalId()) || Boolean.TRUE.equals(terminal.getTerminalActive()))
+        .filter(terminal ->
+            TerminalClassificationType.EDU.equals(terminal.getTerminalClassificationType()))
         .map(mappingFunction)
         .toList();
   }
