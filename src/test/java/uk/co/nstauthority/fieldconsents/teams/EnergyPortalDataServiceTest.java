@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.teams;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,8 +27,6 @@ class EnergyPortalDataServiceTest {
 
   @InjectMocks
   private EnergyPortalDataService energyPortalDataService;
-
-  private static final List<Role> ORDERED_ROLES = Arrays.stream(Role.values()).toList();
 
   @Test
   void getServiceProviderTeamDtos() {
@@ -170,7 +167,7 @@ class EnergyPortalDataServiceTest {
         role.getDisplayName(),
         role.getDescription(),
         isAssessManager,
-        ORDERED_ROLES.indexOf(role)
+        role.ordinal()
     );
   }
 }

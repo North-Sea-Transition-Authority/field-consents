@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
 import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
 import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamTypeRoleDto;
 import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderUserTeamRolesDto;
 import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderDataService;
 
-@Component
+@Service
 class EnergyPortalDataService implements EnergyPortalServiceProviderDataService {
 
   private final TeamRepository teamRepository;
@@ -55,7 +55,7 @@ class EnergyPortalDataService implements EnergyPortalServiceProviderDataService 
                   role.getDisplayName(),
                   role.getDescription(),
                   role == Role.ACCESS_MANAGER,
-                  Arrays.stream(Role.values()).toList().indexOf(role)
+                  role.ordinal()
               )
           ).collect(Collectors.toSet());
 

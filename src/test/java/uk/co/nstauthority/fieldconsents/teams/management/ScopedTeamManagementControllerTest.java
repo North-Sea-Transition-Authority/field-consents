@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
 import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamService;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
@@ -83,6 +85,8 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
     orgGroup.setName("Some Org");
 
     var newTeam = new Team(UUID.randomUUID());
+    newTeam.setName("New Team");
+    newTeam.setTeamType(TeamType.INDUSTRY);
 
     when(teamQueryService.userHasStaticRole(invokingUser, TeamType.REGULATOR, Role.INDUSTRY_ACCESS_MANAGER))
         .thenReturn(true);
@@ -104,7 +108,15 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(
             redirectedUrl(ReverseRouter.route(on(TeamManagementController.class).renderTeamMemberList(newTeam.getId(), null))));
 
-    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
+    var expectedServiceProviderTeamDto = new ServiceProviderTeamDto(
+        newTeam.getId().toString(),
+        newTeam.getScopeId(),
+        ScopeType.ORGANISATION_GROUP,
+        newTeam.getTeamType().name()
+    );
+
+    verify(energyPortalServiceProviderTeamService)
+        .publishTeam(expectedServiceProviderTeamDto);
   }
 
   @Test

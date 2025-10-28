@@ -25,7 +25,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
 import uk.co.fivium.energyportal.starter.accounts.EnergyPortalServiceAccessService;
 import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderUserRolesService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -93,9 +92,6 @@ class TeamManagementServiceTest {
 
   @Mock
   private EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService;
-
-  @Mock
-  private Environment environment;
 
   @InjectMocks
   private TeamManagementService teamManagementService;
@@ -319,34 +315,6 @@ class TeamManagementServiceTest {
     assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getRole)
         .contains(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
 
-    verify(energyPortalServiceProviderUserRolesService, never()).publishUsersRolesForTeam(anyLong(), any(), any(), any());
-  }
-
-  @Test
-  void setUserTeamRoles_serviceAccessRequestsEnabled() {
-    when(environment.matchesProfiles("use-service-access-request")).thenReturn(true);
-
-    var expectedProjection = new UserProjectionRoot()
-        .isAccountShared()
-        .canLogin();
-
-    when(userApi.findUserById(eq(1L), refEq(expectedProjection), any(RequestPurpose.class)))
-        .thenReturn(Optional.of(USER_1));
-    when(teamRoleRepository.findByTeam(regTeam))
-        .thenReturn(List.of(regTeamUser1RoleManage)); // Make doesTeamHaveTeamManager() check return true
-
-    teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
-
-    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_1_WUA_ID, regTeam);
-    verify(teamRoleRepository).saveAll(teamRoleListCaptor.capture());
-
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getTeam)
-        .contains(regTeam, regTeam);
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getWuaId)
-        .contains(USER_1_WUA_ID, USER_1_WUA_ID);
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getRole)
-        .contains(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
-
     verify(energyPortalServiceProviderUserRolesService).publishUsersRolesForTeam(
         USER_1_WUA_ID,
         regTeam.getId().toString(),
@@ -406,7 +374,7 @@ class TeamManagementServiceTest {
     when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
         .thenReturn(Optional.empty());
 
-    var roles =  List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
+    var roles = List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
 
     assertThatExceptionOfType(TeamManagementException.class)
         .isThrownBy(() -> teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, roles));
@@ -457,19 +425,6 @@ class TeamManagementServiceTest {
     teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-    verify(energyPortalServiceProviderUserRolesService, never()).publishRemoveUserFromTeam(anyLong(), any());
-  }
-
-  @Test
-  void removeUserFromTeam_whenServiceAccessRequestEnabled() {
-    when(environment.matchesProfiles("use-service-access-request")).thenReturn(true);
-
-    when(teamRoleRepository.findByTeam(regTeam))
-        .thenReturn(List.of(regTeamUser1RoleManage));
-
-    teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
-
-    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
     verify(energyPortalServiceProviderUserRolesService).publishRemoveUserFromTeam(
         USER_2_WUA_ID,
         regTeam.getId().toString()
@@ -485,37 +440,11 @@ class TeamManagementServiceTest {
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
     verify(energyPortalServiceAccessService).removeUser(USER_2_WUA_ID);
-    verify(energyPortalServiceProviderUserRolesService, never()).publishRemoveUserFromTeam(anyLong(), any());
-  }
-
-  @Test
-  void removeUserFromTeam_removedFromLastTeam_whenServiceAccessRequestEnabled() {
-    when(environment.matchesProfiles("use-service-access-request")).thenReturn(true);
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
-    when(teamRoleRepository.findAllByWuaId(USER_2_WUA_ID)).thenReturn(List.of());
-
-    teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
-
-    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-    verify(energyPortalServiceAccessService).removeUser(USER_2_WUA_ID);
     verify(energyPortalServiceProviderUserRolesService).publishRemoveUserFromTeam(USER_2_WUA_ID, regTeam.getId().toString());
   }
 
   @Test
   void removeUserFromTeam_removedFromTeamNotLast() {
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
-    when(teamRoleRepository.findAllByWuaId(USER_2_WUA_ID)).thenReturn(List.of(regTeamUser1RoleManage));
-
-    teamManagementService.removeUserFromTeam(USER_2_WUA_ID, regTeam);
-
-    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_2_WUA_ID, regTeam);
-    verify(energyPortalServiceAccessService, never()).removeUser(anyLong());
-    verify(energyPortalServiceProviderUserRolesService, never()).publishRemoveUserFromTeam(anyLong(), any());
-  }
-
-  @Test
-  void removeUserFromTeam_removedFromTeamNotLast_whenServiceAccessRequestEnabled() {
-    when(environment.matchesProfiles("use-service-access-request")).thenReturn(true);
     when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_2_WUA_ID)).thenReturn(List.of(regTeamUser1RoleManage));
 
@@ -543,7 +472,8 @@ class TeamManagementServiceTest {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));
 
-    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, USER_2_WUA_ID, List.of(Role.INDUSTRY_ACCESS_MANAGER)))
+    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, USER_2_WUA_ID,
+        List.of(Role.INDUSTRY_ACCESS_MANAGER)))
         .isTrue();
   }
 
@@ -559,7 +489,8 @@ class TeamManagementServiceTest {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));
 
-    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, USER_1_WUA_ID, List.of(Role.INDUSTRY_ACCESS_MANAGER)))
+    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, USER_1_WUA_ID,
+        List.of(Role.INDUSTRY_ACCESS_MANAGER)))
         .isFalse();
   }
 
