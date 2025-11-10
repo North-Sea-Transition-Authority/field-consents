@@ -57,8 +57,7 @@ class CaseNoteEventServiceTest {
 
   @Test
   void getCaseEvents() {
-    var uploadedFile = new UploadedFile();
-    uploadedFile.setId(UUID.randomUUID());
+    var uploadedFile = new UploadedFile(UUID.randomUUID());
     uploadedFile.setName("my-document.pdf");
     uploadedFile.setDescription("my document description");
 

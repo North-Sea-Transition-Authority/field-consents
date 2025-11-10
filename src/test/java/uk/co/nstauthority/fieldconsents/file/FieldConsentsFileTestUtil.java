@@ -8,8 +8,7 @@ public class FieldConsentsFileTestUtil {
   static final String GENERIC_FILE_DESCRIPTION = "file description";
 
   public static UploadedFile createUploadedFile() {
-    var uploadedFile = new UploadedFile();
-    uploadedFile.setId(UUID.randomUUID());
+    var uploadedFile = new UploadedFile(UUID.randomUUID());
     uploadedFile.setDescription(GENERIC_FILE_DESCRIPTION);
     return uploadedFile;
   }

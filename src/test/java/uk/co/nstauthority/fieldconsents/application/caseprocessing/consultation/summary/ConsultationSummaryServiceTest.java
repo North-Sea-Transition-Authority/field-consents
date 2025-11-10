@@ -143,8 +143,7 @@ class ConsultationSummaryServiceTest {
     furtherInformation2.setConsultation(consultation2);
     furtherInformation2.setRequestedAtDatetime(Instant.now());
 
-    uploadedFile = new UploadedFile();
-    uploadedFile.setId(FILE_ID);
+    uploadedFile = new UploadedFile(FILE_ID);
     uploadedFile.setName("example.pdf");
     uploadedFile.setDescription("description");
 

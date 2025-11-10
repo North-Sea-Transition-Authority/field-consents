@@ -1,5 +1,5 @@
 plugins {
-  id("org.springframework.boot") version "3.4.10"
+  id("org.springframework.boot") version "3.4.11"
   id("io.spring.dependency-management") version "1.1.7"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
@@ -23,7 +23,7 @@ java {
   }
 }
 
-def fileUploadLibraryVersion = 'v2.8.0'
+def fileUploadLibraryVersion = 'v3.0.0'
 
 sourceSets {
   epmqMessagesJarIntegrationTest {}
