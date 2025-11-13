@@ -1,13 +1,15 @@
 package uk.co.nstauthority.fieldconsents.mvc.error;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.configuration.ErrorConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ControllerAdviceService;
@@ -36,7 +38,7 @@ class ErrorService {
       return modelAndView;
     }
 
-    addErrorReference(modelAndView, throwable);
+    addErrorReference(modelAndView, throwable, request);
     addStackTraceToModel(modelAndView, throwable);
     return modelAndView;
   }
@@ -53,17 +55,18 @@ class ErrorService {
     modelAndView.addObject("stackTrace", ExceptionUtils.getStackTrace(throwable));
   }
 
-  private void addErrorReference(ModelAndView modelAndView, Throwable throwable) {
+  private void addErrorReference(ModelAndView modelAndView, Throwable throwable, HttpServletRequest request) {
     if (throwable == null) {
       return;
     }
 
-    if (throwable instanceof ResponseStatusException responseStatusException) {
-      var statusCode = responseStatusException.getStatusCode();
+    var is4xx = Optional.ofNullable(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
+        .map(httpStatusCode -> HttpStatus.resolve((int) httpStatusCode))
+        .map(HttpStatus::is4xxClientError)
+        .orElse(false);
 
-      if (statusCode.is4xxClientError()) {
-        return; // don't print an error log message
-      }
+    if (is4xx) {
+      return; // don't print an error log message
     }
 
     var errorReference = generateErrorReference();
