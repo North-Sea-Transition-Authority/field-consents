@@ -468,6 +468,16 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void updateTeamName(){
+    var newName = "New Team Name";
+
+    teamManagementService.updateTeamName(orgTeam1, newName);
+    verify(teamRepository).save(teamArgumentCaptor.capture());
+
+    assertThat(teamArgumentCaptor.getValue().getName()).isEqualTo(newName);
+  }
+
+  @Test
   void willManageTeamRoleBePresentAfterMemberRoleUpdate() {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));

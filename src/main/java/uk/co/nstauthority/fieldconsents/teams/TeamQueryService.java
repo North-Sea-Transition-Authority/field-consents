@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -126,6 +127,14 @@ public class TeamQueryService {
     }
 
     return teams.getFirst();
+  }
+
+  public Optional<Team> getIndustryTypeTeamByScopeId(String scopeId) {
+    return teamRepository.findByTeamTypeAndScopeTypeAndScopeId(
+        TeamType.INDUSTRY,
+        TeamScopeReference.ORGANISATION_GROUP_ID,
+        scopeId
+    );
   }
 
   private boolean userHasAtLeastOneRole(Long wuaId, Team team, Collection<Role> roles) {

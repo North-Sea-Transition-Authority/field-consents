@@ -237,6 +237,17 @@ class TeamQueryServiceTest {
         .isEqualTo(team);
   }
 
+  @Test
+  void getIndustryTypeTeamByScopeId(){
+    var team = mock(Team.class);
+
+    when(teamRepository.findByTeamTypeAndScopeTypeAndScopeId(TeamType.INDUSTRY, TeamScopeReference.ORGANISATION_GROUP_ID, "1"))
+        .thenReturn(Optional.of(team));
+
+    assertThat(teamQueryService.getIndustryTypeTeamByScopeId("1"))
+        .contains(team);
+  }
+
   private void setupStaticTeamAndRoles(ServiceUserDetail userDetail, TeamType teamType, List<Role> roles) {
     var team = new Team(UUID.randomUUID());
     team.setTeamType(teamType);

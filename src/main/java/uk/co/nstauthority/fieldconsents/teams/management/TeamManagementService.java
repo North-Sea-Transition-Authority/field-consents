@@ -226,6 +226,13 @@ public class TeamManagementService {
 
   }
 
+  @Transactional
+  public void updateTeamName(Team team, String teamName) {
+    team.setName(teamName);
+
+    teamRepository.save(team);
+  }
+
   public boolean willManageTeamRoleBePresentAfterMemberRoleUpdate(Team team, Long wuaId, Collection<Role> membersNewRoles) {
     if (membersNewRoles.contains(Role.ACCESS_MANAGER)) {
       return true;
