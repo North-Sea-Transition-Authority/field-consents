@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -52,6 +53,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationPaymentServiceTest {
@@ -82,6 +84,9 @@ class ApplicationPaymentServiceTest {
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
+
+  @Mock
+  private OrganisationUnitService organisationUnitService;
 
   @InjectMocks
   @Spy
@@ -263,6 +268,7 @@ class ApplicationPaymentServiceTest {
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
+    var registeredNumber = "12345678";
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
@@ -273,10 +279,15 @@ class ApplicationPaymentServiceTest {
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
         .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.of(registeredNumber));
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", registeredNumber),
         entry("Primary field", primaryAssetFieldName)
     );
   }
@@ -287,6 +298,7 @@ class ApplicationPaymentServiceTest {
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
+    var registeredNumber = "12345678";
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
@@ -300,10 +312,15 @@ class ApplicationPaymentServiceTest {
         .withPrimaryOperator(primaryOperatorName)
         .withAdditionalFields(Collections.singleton(secondaryAssetFieldName))
         .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.of(registeredNumber));
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", registeredNumber),
         entry("Primary field", primaryAssetFieldName),
         entry("Additional field", secondaryAssetFieldName)
     );
@@ -315,6 +332,7 @@ class ApplicationPaymentServiceTest {
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
+    var registeredNumber = "12345678";
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
@@ -329,10 +347,15 @@ class ApplicationPaymentServiceTest {
         .withPrimaryOperator(primaryOperatorName)
         .withAdditionalFields(Set.of(secondaryAsset1FieldName, secondaryAsset2FieldName))
         .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.of(registeredNumber));
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", registeredNumber),
         entry("Primary field", primaryAssetFieldName),
         entry("Additional fields", secondaryAsset1FieldName + ", " + secondaryAsset2FieldName)
     );
@@ -340,6 +363,66 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_secondaryTerminalAssetNotIncluded() {
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
+
+    var primaryOperatorName = "testPrimaryOperatorName";
+    var registeredNumber = "12345678";
+
+    var primaryAssetFieldId = 1;
+    var primaryAssetFieldName = "testPrimaryAssetFieldName";
+    var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
+
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetFieldJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.of(registeredNumber));
+
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
+        entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", registeredNumber),
+        entry("Primary field", primaryAssetFieldName)
+    );
+  }
+
+  @Test
+  void getPaymentMetadata_primaryAssetIsTerminal() {
+    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "testApplicationPaymentReference";
+
+    var primaryOperatorName = "testPrimaryOperatorName";
+    var registeredNumber = "12345678";
+
+    var primaryAssetTerminalId = 1;
+    var primaryAssetTerminalName = "testPrimaryAssetTerminalName";
+    var primaryAssetTerminalJson = new TerminalJson(primaryAssetTerminalId, primaryAssetTerminalName, null);
+
+    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetTerminalJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.of(registeredNumber));
+
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+        entry("Application reference", applicationReference),
+        entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", registeredNumber),
+        entry("Facility", primaryAssetTerminalName)
+    );
+  }
+
+  @Test
+  void getPaymentMetadata_registeredNumberNotFound() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
     var applicationReference = "testApplicationPaymentReference";
 
@@ -354,35 +437,16 @@ class ApplicationPaymentServiceTest {
         .withPrimaryAsset(primaryAssetFieldJson)
         .withPrimaryOperator(primaryOperatorName)
         .build());
+    when(organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    )).thenReturn(Optional.empty());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
+        entry("Primary operator reg number", ""),
         entry("Primary field", primaryAssetFieldName)
-    );
-  }
-
-  @Test
-  void getPaymentMetadata_primaryAssetIsTerminal() {
-    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var applicationReference = "testApplicationPaymentReference";
-
-    var primaryOperatorName = "testPrimaryOperatorName";
-
-    var primaryAssetTerminalId = 1;
-    var primaryAssetTerminalName = "testPrimaryAssetTerminalName";
-    var primaryAssetTerminalJson = new TerminalJson(primaryAssetTerminalId, primaryAssetTerminalName, null);
-
-    when(applicationService.generateApplicationShortReference(applicationVersion)).thenReturn(applicationReference);
-    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
-        .withPrimaryAsset(primaryAssetTerminalJson)
-        .withPrimaryOperator(primaryOperatorName)
-        .build());
-
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
-        entry("Application reference", applicationReference),
-        entry("Primary operator", primaryOperatorName),
-        entry("Facility", primaryAssetTerminalName)
     );
   }
 

@@ -29,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Service
 public class ApplicationPaymentService {
@@ -49,6 +50,7 @@ public class ApplicationPaymentService {
   private final FeePeriodService feePeriodService;
   private final EnergyPortalUserService energyPortalUserService;
   private final ApplicationSubmissionService applicationSubmissionService;
+  private final OrganisationUnitService organisationUnitService;
 
   @Autowired
   ApplicationPaymentService(
@@ -60,7 +62,8 @@ public class ApplicationPaymentService {
       PaymentService paymentService,
       FeePeriodService feePeriodService,
       EnergyPortalUserService energyPortalUserService,
-      ApplicationSubmissionService applicationSubmissionService
+      ApplicationSubmissionService applicationSubmissionService,
+      OrganisationUnitService organisationUnitService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -71,6 +74,7 @@ public class ApplicationPaymentService {
     this.feePeriodService = feePeriodService;
     this.energyPortalUserService = energyPortalUserService;
     this.applicationSubmissionService = applicationSubmissionService;
+    this.organisationUnitService = organisationUnitService;
   }
 
   public int getPaymentAmountPence(ApplicationVersion applicationVersion) {
@@ -134,7 +138,13 @@ public class ApplicationPaymentService {
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
 
     metadata.put("Application reference", applicationService.generateApplicationShortReference(applicationVersion));
-    metadata.put(applicationContext.getPrimaryOperatorPrompt(), applicationContext.primaryOperator());
+    metadata.put("Primary operator", applicationContext.primaryOperator());
+
+    var registeredNumber = organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit registered number lookup for payment metadata"
+    );
+    metadata.put("Primary operator reg number", registeredNumber.orElse(""));
 
     var primaryAsset = applicationContext.primaryAsset();
 

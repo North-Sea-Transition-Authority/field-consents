@@ -68,4 +68,19 @@ public class OrganisationUnitService {
         .map(OrganisationUnitJson::from)
         .toList();
   }
+
+  public Optional<String> getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(
+      Integer organisationUnitId,
+      String purpose
+  ) {
+    var requestPurpose = new RequestPurpose(purpose);
+    var requestedFields = new OrganisationUnitProjectionRoot()
+        .registeredNumber()
+        .foreignRegisteredNumber();
+
+    return organisationApi.findOrganisationUnit(organisationUnitId, requestedFields, requestPurpose)
+        .map(orgUnit -> orgUnit.getRegisteredNumber() != null
+            ? orgUnit.getRegisteredNumber()
+            : orgUnit.getForeignRegisteredNumber());
+  }
 }

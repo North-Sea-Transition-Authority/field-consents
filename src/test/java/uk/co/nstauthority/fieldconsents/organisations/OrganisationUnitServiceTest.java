@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 
 @ExtendWith(MockitoExtension.class)
 class OrganisationUnitServiceTest {
@@ -181,5 +182,64 @@ class OrganisationUnitServiceTest {
         List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
         ALL_ORG_UNITS_DATA_ITEM_PURPOSE)
     ).isEqualTo(List.of(orgUnit1Json, orgUnit2Json));
+  }
+
+  @Test
+  void getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber_organisationUnitNotFound() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), eq(new RequestPurpose(ORG_UNITS_SERVICE_PURPOSE))))
+        .thenReturn(Optional.empty());
+
+    var result = organisationUnitService.getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber_registeredNumberNotNull() {
+    var registeredNumber = "12345678";
+    var orgUnitWithRegisteredNumber = OrganisationUnit.newBuilder()
+        .registeredNumber(registeredNumber)
+        .build();
+
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), eq(new RequestPurpose(ORG_UNITS_SERVICE_PURPOSE))))
+        .thenReturn(Optional.of(orgUnitWithRegisteredNumber));
+
+    var result = organisationUnitService
+        .getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+
+    assertThat(result).contains(registeredNumber);
+  }
+
+  @Test
+  void getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber_registeredNumberNull_foreignRegisteredNumberNotNull() {
+    var foreignRegisteredNumber = "87654321";
+    var orgUnitWithForeignRegisteredNumber = OrganisationUnit.newBuilder()
+        .registeredNumber(null)
+        .foreignRegisteredNumber(foreignRegisteredNumber)
+        .build();
+
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), eq(new RequestPurpose(ORG_UNITS_SERVICE_PURPOSE))))
+        .thenReturn(Optional.of(orgUnitWithForeignRegisteredNumber));
+
+    var result = organisationUnitService
+        .getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+
+    assertThat(result).contains(foreignRegisteredNumber);
+  }
+
+  @Test
+  void getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber_registeredNumberNull_foreignRegisteredNumberNull() {
+    var orgUnitWithoutRegisteredNumber = OrganisationUnit.newBuilder()
+        .registeredNumber(null)
+        .foreignRegisteredNumber(null)
+        .build();
+
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), eq(new RequestPurpose(ORG_UNITS_SERVICE_PURPOSE))))
+        .thenReturn(Optional.of(orgUnitWithoutRegisteredNumber));
+
+    var result = organisationUnitService
+        .getOrganisationUnitRegisteredNumberOrForeignRegisteredNumber(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+
+    assertThat(result).isEmpty();
   }
 }
