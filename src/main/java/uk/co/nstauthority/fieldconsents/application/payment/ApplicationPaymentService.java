@@ -78,18 +78,24 @@ public class ApplicationPaymentService {
   }
 
   public int getPaymentAmountPence(ApplicationVersion applicationVersion) {
+    return getPaymentAmountPence(getPaymentFeeLineMnemonic(applicationVersion));
+  }
+
+  int getPaymentAmountPence(FeeLineMnemonic feeLineMnemonic) {
+    return feePeriodService.getCurrentCost(feeLineMnemonic.mnemonic());
+  }
+
+  FeeLineMnemonic getPaymentFeeLineMnemonic(ApplicationVersion applicationVersion) {
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     var application = applicationVersion.getApplication();
     var consentLength = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
 
-    var mnemonic = FeeLineMnemonic.from(
+    return FeeLineMnemonic.from(
         primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
         ApplicationRevisionType.from(application)
     );
-
-    return feePeriodService.getCurrentCost(mnemonic.mnemonic());
   }
 
   CreateCardPaymentResult createPayment(
@@ -97,12 +103,16 @@ public class ApplicationPaymentService {
       ServiceUserDetail user,
       Function<UUID, String> returnUrlFunction
   ) {
+    var feeLineMnemonic = getPaymentFeeLineMnemonic(applicationVersion);
+    var paymentAmountPence = getPaymentAmountPence(feeLineMnemonic);
+    var paymentDescription = getPaymentDescription(applicationVersion);
+
     return paymentService.createCardPayment(
         getPaymentItemReference(applicationVersion),
         APPLICATION_VERSION_PAYMENT_ITEM_TYPE,
-        getPaymentAmountPence(applicationVersion),
-        getPaymentDescription(applicationVersion),
-        getPaymentMetadata(applicationVersion),
+        paymentAmountPence,
+        paymentDescription,
+        getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence),
         returnUrlFunction,
         user.wuaId().toString()
     );
@@ -133,7 +143,12 @@ public class ApplicationPaymentService {
     };
   }
 
-  Map<String, String> getPaymentMetadata(ApplicationVersion applicationVersion) {
+  Map<String, String> getPaymentMetadata(
+      ApplicationVersion applicationVersion,
+      FeeLineMnemonic feeLineMnemonic,
+      String paymentDescription,
+      int paymentAmountPence
+  ) {
     var metadata = new LinkedHashMap<String, String>();
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
 
@@ -158,6 +173,10 @@ public class ApplicationPaymentService {
       }
       default -> throw new IllegalStateException("Primary asset %d is not a field or terminal".formatted(primaryAsset.getId()));
     }
+
+    metadata.put("Fee line 1 category", feeLineMnemonic.mnemonic());
+    metadata.put("Fee line 1 description", paymentDescription);
+    metadata.put("Fee line 1 amount pence", String.valueOf(paymentAmountPence));
 
     return metadata;
   }

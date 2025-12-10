@@ -53,6 +53,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
+import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonicTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,7 +94,29 @@ class ApplicationPaymentServiceTest {
   private ApplicationPaymentService applicationPaymentService;
 
   @Test
-  void getPaymentAmountPence() {
+  void getPaymentAmountPence_withApplicationVersion() {
+    var applicationVersion = new ApplicationVersion();
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var currentCostPence = 93000;
+
+    doReturn(feeLineMnemonic).when(applicationPaymentService).getPaymentFeeLineMnemonic(applicationVersion);
+    doReturn(currentCostPence).when(applicationPaymentService).getPaymentAmountPence(feeLineMnemonic);
+
+    assertThat(applicationPaymentService.getPaymentAmountPence(applicationVersion)).isEqualTo(currentCostPence);
+  }
+
+  @Test
+  void getPaymentAmountPence_withFeeLineMnemonic() {
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var currentCostPence = 93000;
+
+    when(feePeriodService.getCurrentCost(feeLineMnemonic.mnemonic())).thenReturn(currentCostPence);
+
+    assertThat(applicationPaymentService.getPaymentAmountPence(feeLineMnemonic)).isEqualTo(currentCostPence);
+  }
+
+  @Test
+  void getPaymentFeeLineMnemonic() {
     var applicationVersion
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
     var application = applicationVersion.getApplication();
@@ -105,40 +128,40 @@ class ApplicationPaymentServiceTest {
     var consentLength = ConsentLengthType.SHORT_TERM;
     consentLengthDetails.setConsentLength(consentLength);
 
-    var mnemonic = FeeLineMnemonic.from(
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
+    var expectedFeeLineMnemonic = FeeLineMnemonic.from(
         primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
         ApplicationRevisionType.from(application)
     );
 
-    var currentCostPence = 93000;
-
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
-    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(feePeriodService.getCurrentCost(mnemonic.mnemonic())).thenReturn(currentCostPence);
-
-    assertThat(applicationPaymentService.getPaymentAmountPence(applicationVersion)).isEqualTo(currentCostPence);
+    assertThat(applicationPaymentService.getPaymentFeeLineMnemonic(applicationVersion)).isEqualTo(expectedFeeLineMnemonic);
   }
 
   @Test
   void createPayment() {
     var applicationVersion = new ApplicationVersion();
     var user = ServiceUserDetailTestUtil.Builder().build();
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
 
     var paymentItemReference = "testPaymentItemReference";
-    var paymentAmountPence = 93000;
     var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var paymentMetadata = Map.of("testPaymentMetadataKey", "testPaymentMetadataValue");
     Function<UUID, String> returnUrlFunction = paymentId -> "testReturnUrl";
 
     var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
+    doReturn(feeLineMnemonic).when(applicationPaymentService).getPaymentFeeLineMnemonic(applicationVersion);
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
-    doReturn(paymentAmountPence).when(applicationPaymentService).getPaymentAmountPence(applicationVersion);
+    doReturn(paymentAmountPence).when(applicationPaymentService).getPaymentAmountPence(feeLineMnemonic);
     doReturn(paymentDescription).when(applicationPaymentService).getPaymentDescription(applicationVersion);
-    doReturn(paymentMetadata).when(applicationPaymentService).getPaymentMetadata(applicationVersion);
-
+    doReturn(paymentMetadata)
+        .when(applicationPaymentService)
+        .getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence);
     when(paymentService.createCardPayment(
         paymentItemReference,
         ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE,
@@ -265,6 +288,9 @@ class ApplicationPaymentServiceTest {
   @Test
   void getPaymentMetadata_primaryAssetIsField_noSecondaryAssets() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -284,17 +310,23 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.of(registeredNumber));
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", registeredNumber),
-        entry("Primary field", primaryAssetFieldName)
+        entry("Primary field", primaryAssetFieldName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_singleSecondaryFieldAsset() {
-    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -317,18 +349,24 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.of(registeredNumber));
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", registeredNumber),
         entry("Primary field", primaryAssetFieldName),
-        entry("Additional field", secondaryAssetFieldName)
+        entry("Additional field", secondaryAssetFieldName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_multipleSecondaryFieldAssets() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -352,18 +390,24 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.of(registeredNumber));
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", registeredNumber),
         entry("Primary field", primaryAssetFieldName),
-        entry("Additional fields", secondaryAsset1FieldName + ", " + secondaryAsset2FieldName)
+        entry("Additional fields", secondaryAsset1FieldName + ", " + secondaryAsset2FieldName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_secondaryTerminalAssetNotIncluded() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -383,17 +427,25 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.of(registeredNumber));
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", registeredNumber),
-        entry("Primary field", primaryAssetFieldName)
+        entry("Primary field", primaryAssetFieldName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
   @Test
   void getPaymentMetadata_primaryAssetIsTerminal() {
-    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder()
+        .withAssetType(AssetType.TERMINAL)
+        .build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -413,17 +465,23 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.of(registeredNumber));
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", registeredNumber),
-        entry("Facility", primaryAssetTerminalName)
+        entry("Facility", primaryAssetTerminalName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
   @Test
   void getPaymentMetadata_registeredNumberNotFound() {
     var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var feeLineMnemonic = FeeLineMnemonicTestUtil.newBuilder().build();
+    var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var applicationReference = "testApplicationPaymentReference";
 
     var primaryOperatorName = "testPrimaryOperatorName";
@@ -442,11 +500,14 @@ class ApplicationPaymentServiceTest {
         "Organisation unit registered number lookup for payment metadata"
     )).thenReturn(Optional.empty());
 
-    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
+    assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion, feeLineMnemonic, paymentDescription, paymentAmountPence)).containsExactly(
         entry("Application reference", applicationReference),
         entry("Primary operator", primaryOperatorName),
         entry("Primary operator reg number", ""),
-        entry("Primary field", primaryAssetFieldName)
+        entry("Primary field", primaryAssetFieldName),
+        entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
+        entry("Fee line 1 description", paymentDescription),
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
     );
   }
 
