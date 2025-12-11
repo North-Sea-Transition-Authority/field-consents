@@ -12,7 +12,7 @@
     <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
 
-  <@fdsForm.htmlForm actionUrl=springUrl(deleteUrl)>
+  <@fdsForm.htmlForm>
     <@fdsAction.submitButtons
       primaryButtonText="Delete draft application"
       secondaryLinkText="Back to application"

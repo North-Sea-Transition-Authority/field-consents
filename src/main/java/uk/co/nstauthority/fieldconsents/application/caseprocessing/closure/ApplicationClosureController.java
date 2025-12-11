@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -44,29 +43,17 @@ public class ApplicationClosureController {
   @GetMapping
   @ActionEndPoint(CLOSE_APPLICATION)
   public ModelAndView getConfirmation(@PathVariable Integer applicationId, ServiceUserDetail user) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    return getConfirmationModelAndView(applicationVersion, user);
-  }
-
-  private ModelAndView getConfirmationModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
-        applicationVersion,
-        "fcs/application/closureForm",
-        PAGE_TITLE,
-        user
-    );
-
-    var applicationId = applicationVersion.getApplication().getId();
-
-    return modelAndView
-        .addObject(
-            "closureUrl",
-            ReverseRouter.route(on(ApplicationClosureController.class).closeApplication(applicationId, null))
-        )
+    var modelAndView = new ModelAndView("fcs/application/closureForm")
+        .addObject("pageTitle", PAGE_TITLE)
         .addObject(
             "backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null, null))
         );
+
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
+
+    return modelAndView;
   }
 
   @PostMapping

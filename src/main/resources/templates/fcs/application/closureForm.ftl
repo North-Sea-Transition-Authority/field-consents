@@ -16,7 +16,7 @@
       <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
 
-  <@fdsForm.htmlForm actionUrl=springUrl(closureUrl)>
+  <@fdsForm.htmlForm>
     <@fdsAction.submitButtons
       primaryButtonText="Close application"
       secondaryLinkText="Cancel"

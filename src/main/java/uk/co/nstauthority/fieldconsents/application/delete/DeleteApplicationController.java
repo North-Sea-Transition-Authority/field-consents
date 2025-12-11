@@ -43,22 +43,14 @@ public class DeleteApplicationController {
 
   @GetMapping
   public ModelAndView getDeleteApplication(@PathVariable Integer applicationId, ServiceUserDetail user) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
-        applicationVersion,
-        "fcs/application/deleteApplication",
-        PAGE_TITLE,
-        user
-    );
+    var modelAndView = new ModelAndView("fcs/application/deleteApplication")
+        .addObject("pageTitle", PAGE_TITLE)
+        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)));
 
-    return modelAndView
-        .addObject(
-            "deleteUrl",
-            ReverseRouter.route(on(DeleteApplicationController.class).deleteApplication(applicationId, null)))
-        .addObject(
-            "backLinkUrl",
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null))
-        );
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView, user);
+
+    return modelAndView;
   }
 
   @PostMapping

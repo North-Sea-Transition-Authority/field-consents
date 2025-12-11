@@ -45,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
+import uk.co.nstauthority.fieldconsents.application.summary.ApplicationVersionView;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -154,7 +155,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .andExpect(model().attribute("summarySections", summarySections))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -174,7 +175,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .andExpect(model().attribute("accordionId", applicationVersion.getId()))
         .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -198,7 +199,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .andExpect(model().attribute("summarySections", summarySections))
         .andExpect(model().attribute("accordionId", requestedApplicationVersionId));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion), any(), eq(user));
   }
 
   @Test
@@ -213,7 +214,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .andExpect(model().attribute("summarySections", summarySections))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
   }
 
   @Test
@@ -285,10 +286,12 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
       invocation.getArgument(1, ModelAndView.class)
           .addObject("summarySections", summarySections)
           .addObject("accordionId", applicationVersion.getId())
-          .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType));
+          .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
+          .addObject("selectedApplicationVersionView", ApplicationVersionView.from(applicationVersion))
+          .addObject("applicationVersionViews", List.of(ApplicationVersionView.from(applicationVersion)));
       return null;
     })
-        .when(applicationSummaryService)
+        .when(caseProcessingControllerHelperService)
         .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 }

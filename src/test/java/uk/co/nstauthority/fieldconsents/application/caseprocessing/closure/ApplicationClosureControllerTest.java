@@ -1,6 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.closure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -93,32 +96,24 @@ class ApplicationClosureControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void getConfirmation_withPermission_success() throws Exception {
-    var viewName = "fcs/application/closureForm";
-    var pageTitle = "Are you sure you want to close this application?";
-
-    var modelAndView = new ModelAndView(viewName)
-        .addObject("pageTitle", pageTitle)
-        .addObject("summarySections", List.of())
-        .addObject("accordionId", 123)
-        .addObject("wideSummaryDisplay", false)
-        .addObject("selectedApplicationVersionView", null)
-        .addObject("applicationVersionViews", List.of());
-
     var applicationVersion = new ApplicationVersion();
     applicationVersion.setApplication(new Application(APPLICATION_ID));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, viewName, pageTitle, user)).thenReturn(modelAndView);
+
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", List.of())
+        .addObject("accordionId", 123)
+        .addObject("wideSummaryDisplay", false)
+    )
+        .when(applicationSummaryService)
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationClosureController.class)
             .getConfirmation(APPLICATION_ID, user)))
             .with(user(user)))
-        .andExpect(view().name(viewName))
+        .andExpect(view().name("fcs/application/closureForm"))
         .andExpect(status().isOk())
-        .andExpect(model().attribute(
-            "closureUrl",
-            ReverseRouter.route(on(ApplicationClosureController.class).closeApplication(APPLICATION_ID, null)))
-        )
         .andExpect(model().attribute(
             "backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null, null)))

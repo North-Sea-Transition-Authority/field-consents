@@ -1,6 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application.delete;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -17,8 +20,8 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -44,30 +47,25 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
   @SecurityTest
   void getDeleteApplication_inProgress() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    var viewName = "fcs/application/deleteApplication";
-    var modelAndView = new ModelAndView(viewName)
-        .addObject("pageTitle", PAGE_TITLE)
-        .addObject("summarySections", List.of())
-        .addObject("accordionId", 123)
-        .addObject("wideSummaryDisplay", false)
-        .addObject("selectedApplicationVersionView", null)
-        .addObject("applicationVersionViews", List.of());
 
     when(fieldConsentsAccessService.userHasAnyIndustryRole(user, applicationVersion, Set.of(Role.CREATOR))).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
-    when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, viewName, PAGE_TITLE, user)).thenReturn(modelAndView);
+
+    doAnswer(invocation -> invocation.getArgument(1, ModelAndView.class)
+        .addObject("summarySections", List.of())
+        .addObject("accordionId", 123)
+        .addObject("wideSummaryDisplay", false)
+    )
+        .when(applicationSummaryService)
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(APPLICATION_ID, user)))
             .with(user(user)))
         .andExpectAll(
             status().isOk(),
-            view().name(viewName),
-            model().attribute("pageTitle", PAGE_TITLE),
-            model().attribute("summarySections", List.of()),
-            model().attribute("accordionId", 123),
-            model().attribute("wideSummaryDisplay", false),
+            view().name("fcs/application/deleteApplication"),
             model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
         );
   }

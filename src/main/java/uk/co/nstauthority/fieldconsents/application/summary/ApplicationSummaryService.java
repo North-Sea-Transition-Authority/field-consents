@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -18,13 +17,10 @@ import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 public class ApplicationSummaryService {
 
   private final List<SummarySectionService<ApplicationVersion>> summarySectionServices;
-  private final ApplicationVersionService applicationVersionService;
 
   @Autowired
-  ApplicationSummaryService(List<SummarySectionService<ApplicationVersion>> summarySectionServices,
-                            ApplicationVersionService applicationVersionService) {
+  ApplicationSummaryService(List<SummarySectionService<ApplicationVersion>> summarySectionServices) {
     this.summarySectionServices = summarySectionServices;
-    this.applicationVersionService = applicationVersionService;
   }
 
   public List<SummarySection> getSummarySections(ApplicationVersion applicationVersion, ServiceUserDetail user) {
@@ -35,18 +31,6 @@ public class ApplicationSummaryService {
         .toList();
   }
 
-  public ModelAndView getApplicationSummaryModelAndView(
-      ApplicationVersion applicationVersion,
-      String viewName,
-      String pageTitle,
-      ServiceUserDetail user
-  ) {
-    var modelAndView = new ModelAndView(viewName);
-    addSummarySectionsAndVersionOptionsToModelAndView(applicationVersion, modelAndView, user);
-
-    return modelAndView.addObject("pageTitle", pageTitle);
-  }
-
   public ModelAndView addSummarySectionsToModelAndView(
       ApplicationVersion applicationVersion,
       ModelAndView modelAndView,
@@ -55,30 +39,9 @@ public class ApplicationSummaryService {
     var summarySections = getSummarySections(applicationVersion, user);
     var wideSummaryDisplay = WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
 
-    modelAndView
+    return modelAndView
         .addObject("summarySections", summarySections)
         .addObject("accordionId", applicationVersion.getId())
         .addObject("wideSummaryDisplay", wideSummaryDisplay);
-
-    return modelAndView;
-  }
-
-  public void addSummarySectionsAndVersionOptionsToModelAndView(
-      ApplicationVersion selectedApplicationVersion,
-      ModelAndView modelAndView,
-      ServiceUserDetail user
-  ) {
-    addSummarySectionsToModelAndView(selectedApplicationVersion, modelAndView, user);
-
-    var applicationVersionViews = applicationVersionService
-        .getAllNonDeletedApplicationVersionsByApplicationId(selectedApplicationVersion.getApplication().getId())
-        .stream()
-        .sorted(Comparator.comparing(ApplicationVersion::getId).reversed())
-        .map(ApplicationVersionView::from)
-        .toList();
-
-    modelAndView
-        .addObject("selectedApplicationVersionView", ApplicationVersionView.from(selectedApplicationVersion))
-        .addObject("applicationVersionViews", applicationVersionViews);
   }
 }

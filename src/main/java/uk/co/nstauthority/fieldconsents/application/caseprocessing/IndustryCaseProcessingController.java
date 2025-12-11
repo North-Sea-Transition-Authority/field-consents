@@ -25,7 +25,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.Applic
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
@@ -58,7 +57,6 @@ public class IndustryCaseProcessingController {
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationSummaryService applicationSummaryService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final CaseProcessingTabService caseProcessingTabService;
   private final ApplicationUpdateService applicationUpdateService;
@@ -76,7 +74,6 @@ public class IndustryCaseProcessingController {
       ApplicationService applicationService,
       ApplicationContextService applicationContextService,
       ApplicationVersionService applicationVersionService,
-      ApplicationSummaryService applicationSummaryService,
       CaseProcessingActionService caseProcessingActionService,
       CaseProcessingTabService caseProcessingTabService,
       ApplicationUpdateService applicationUpdateService,
@@ -92,7 +89,6 @@ public class IndustryCaseProcessingController {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
     this.applicationVersionService = applicationVersionService;
-    this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.caseProcessingTabService = caseProcessingTabService;
     this.applicationUpdateService = applicationUpdateService;
@@ -146,7 +142,7 @@ public class IndustryCaseProcessingController {
       switch (tab) {
         case CONSENT -> consentTabService.addConsentTabContentToModelAndView(latestApplicationVersion, modelAndView);
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+        case VIEW_APPLICATION -> caseProcessingControllerHelperService.addSummarySectionsAndVersionOptionsToModelAndView(
             selectedApplicationVersion,
             modelAndView,
             user

@@ -282,7 +282,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -298,7 +298,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -326,7 +326,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(model().attributeDoesNotExist("paymentsTabPaymentSummaryViews"))
         .andExpect(model().attribute("summarySections", summarySections));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion), any(), eq(user));
   }
 
   @ParameterizedTest
@@ -346,7 +346,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
   }
@@ -427,7 +427,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, true));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -449,7 +449,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(OPEN_WITHDRAWAL_ATTRIBUTE, false));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -471,7 +471,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(CONSENT_EXCEEDED_ATTRIBUTE, true));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -493,7 +493,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute(CONSENT_EXCEEDED_ATTRIBUTE, false));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(), eq(user));
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -603,10 +603,10 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
           .addObject("accordionId", applicationVersion.getId())
           .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
           .addObject("selectedApplicationVersionView", ApplicationVersionView.from(applicationVersion))
-          .addObject("selectedApplicationVersionView", List.of());
+          .addObject("applicationVersionViews", List.of(ApplicationVersionView.from(applicationVersion)));
       return null;
     })
-        .when(applicationSummaryService)
+        .when(caseProcessingControllerHelperService)
         .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 

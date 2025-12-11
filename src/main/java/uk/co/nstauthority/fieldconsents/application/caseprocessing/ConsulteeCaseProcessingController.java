@@ -19,7 +19,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationOrRegulatorRole;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
@@ -43,7 +42,6 @@ public class ConsulteeCaseProcessingController {
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationSummaryService applicationSummaryService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsultationService consultationService;
   private final CaseProcessingTabService caseProcessingTabService;
@@ -54,7 +52,6 @@ public class ConsulteeCaseProcessingController {
       ApplicationService applicationService,
       ApplicationContextService applicationContextService,
       ApplicationVersionService applicationVersionService,
-      ApplicationSummaryService applicationSummaryService,
       CaseProcessingActionService caseProcessingActionService,
       ConsultationService consultationService,
       CaseProcessingTabService caseProcessingTabService,
@@ -64,7 +61,6 @@ public class ConsulteeCaseProcessingController {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
     this.applicationVersionService = applicationVersionService;
-    this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.consultationService = consultationService;
     this.caseProcessingTabService = caseProcessingTabService;
@@ -104,7 +100,7 @@ public class ConsulteeCaseProcessingController {
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
         case CONSULTATIONS -> addConsultationSummaryItems(modelAndView, latestApplicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+        case VIEW_APPLICATION -> caseProcessingControllerHelperService.addSummarySectionsAndVersionOptionsToModelAndView(
             selectedApplicationVersion,
             modelAndView,
             user

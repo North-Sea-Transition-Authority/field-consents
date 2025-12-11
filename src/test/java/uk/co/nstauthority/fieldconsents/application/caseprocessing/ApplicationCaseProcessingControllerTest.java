@@ -658,7 +658,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion),
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(requestedApplicationVersion),
         any(), eq(user));
   }
 
@@ -676,7 +676,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
 
-    verify(applicationSummaryService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(),
+    verify(caseProcessingControllerHelperService).addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(),
         eq(user));
   }
 
@@ -762,7 +762,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
           .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType));
       return null;
     })
-        .when(applicationSummaryService)
+        .when(caseProcessingControllerHelperService)
         .addSummarySectionsAndVersionOptionsToModelAndView(eq(applicationVersion), any(ModelAndView.class), eq(user));
   }
 

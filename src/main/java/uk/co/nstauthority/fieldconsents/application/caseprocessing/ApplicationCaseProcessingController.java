@@ -31,7 +31,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.licenceexpiry.LicenceExpiryService;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.authorisation.role.HasAnyRegulatorRole;
@@ -63,7 +62,6 @@ public class ApplicationCaseProcessingController {
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationSummaryService applicationSummaryService;
   private final ApplicationWithdrawalService applicationWithdrawalService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final CaseProcessingTaskListService caseProcessingTaskListService;
@@ -86,7 +84,6 @@ public class ApplicationCaseProcessingController {
       ApplicationService applicationService,
       ApplicationContextService applicationContextService,
       ApplicationVersionService applicationVersionService,
-      ApplicationSummaryService applicationSummaryService,
       ApplicationWithdrawalService applicationWithdrawalService,
       CaseProcessingActionService caseProcessingActionService,
       CaseProcessingTaskListService caseProcessingTaskListService,
@@ -107,7 +104,6 @@ public class ApplicationCaseProcessingController {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
     this.applicationVersionService = applicationVersionService;
-    this.applicationSummaryService = applicationSummaryService;
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.caseProcessingTaskListService = caseProcessingTaskListService;
@@ -176,7 +172,7 @@ public class ApplicationCaseProcessingController {
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
         case CASE_HISTORY -> addCaseHistoryTab(modelAndView, latestApplicationVersion);
         case TASKS -> addTasksTab(modelAndView, latestApplicationVersion, user);
-        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsAndVersionOptionsToModelAndView(
+        case VIEW_APPLICATION -> caseProcessingControllerHelperService.addSummarySectionsAndVersionOptionsToModelAndView(
             selectedApplicationVersion,
             modelAndView,
             user
