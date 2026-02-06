@@ -1,9 +1,4 @@
-# com.google.protobuf:protobuf-java
-CVE-2024-7254
 # commons-io:commons-io
 CVE-2024-47554
 # ch.qos.logback:logback-core
-CVE-2025-11226
 CVE-2026-1225
-# io.netty:netty-codec-http
-CVE-2025-67735
