@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
-public enum ConsultationStatus {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum ConsultationStatus implements Displayable {
   OPEN("Open"),
   CLOSED("Closed");
 
@@ -10,6 +12,7 @@ public enum ConsultationStatus {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

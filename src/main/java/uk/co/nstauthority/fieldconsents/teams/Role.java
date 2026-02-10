@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
-public enum Role {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum Role implements Displayable {
 
   ACCESS_MANAGER(
       "Access manager",
@@ -77,6 +79,7 @@ public enum Role {
     return description;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

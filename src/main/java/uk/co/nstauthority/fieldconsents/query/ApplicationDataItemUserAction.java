@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.query;
 
-public enum ApplicationDataItemUserAction {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum ApplicationDataItemUserAction implements Displayable {
 
   VIEW_APPLICATION("View"),
   RESUME_APPLICATION("Resume");
@@ -11,6 +13,7 @@ public enum ApplicationDataItemUserAction {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return this.displayName;
   }

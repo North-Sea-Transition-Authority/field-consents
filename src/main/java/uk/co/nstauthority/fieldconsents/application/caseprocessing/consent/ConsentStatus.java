@@ -3,8 +3,9 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 import java.time.Clock;
 import java.time.LocalDate;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum ConsentStatus {
+public enum ConsentStatus implements Displayable {
 
   ISSUED("Consent issued"),
   ACTIVE("Consent active"),
@@ -17,6 +18,7 @@ public enum ConsentStatus {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

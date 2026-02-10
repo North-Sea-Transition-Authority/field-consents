@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
-public enum AssetType {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum AssetType implements Displayable {
 
   FIELD("Field"),
   TERMINAL("Facility"),
@@ -13,6 +15,7 @@ public enum AssetType {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

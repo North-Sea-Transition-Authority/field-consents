@@ -7,8 +7,9 @@ import java.util.Set;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum WorkAreaTab {
+public enum WorkAreaTab implements Displayable {
 
   MY_APPLICATIONS(
       "My applications",
@@ -93,7 +94,7 @@ public enum WorkAreaTab {
   )
   ;
 
-  private final String label;
+  private final String displayName;
   private final String value;
   private final String anchor;
   private final String url;
@@ -102,7 +103,7 @@ public enum WorkAreaTab {
   private final ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup;
 
   WorkAreaTab(
-      String label,
+      String displayName,
       String value,
       String anchor,
       String url,
@@ -110,7 +111,7 @@ public enum WorkAreaTab {
       Set<Role> roles,
       ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup
   ) {
-    this.label = label;
+    this.displayName = displayName;
     this.value = value;
     this.anchor = anchor;
     this.displayOrder = displayOrder;
@@ -119,8 +120,9 @@ public enum WorkAreaTab {
     this.applicationWorkAreaPriorityGroup = applicationWorkAreaPriorityGroup;
   }
 
-  public String getLabel() {
-    return label;
+  @Override
+  public String getDisplayName() {
+    return displayName;
   }
 
   public String getValue() {
@@ -135,6 +137,7 @@ public enum WorkAreaTab {
     return url;
   }
 
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
   }

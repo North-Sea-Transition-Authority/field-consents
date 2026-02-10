@@ -4,8 +4,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum AceFlagStatus {
+public enum AceFlagStatus implements Displayable {
   ACE("ACE", 10, true),
   NON_ACE("Non ACE", 20, false);
 
@@ -21,10 +22,12 @@ public enum AceFlagStatus {
     this.isAceApplication = isAceApplication;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
 
+  @Override
   public int getDisplayOrder() {
     return this.displayOrder;
   }

@@ -38,7 +38,7 @@
         <@fdsBackendTabs.tabs tabsHeading="work-area tabs">
           <@fdsBackendTabs.tabList>
             <#list workAreaTabs as tab>
-              <@fdsBackendTabs.tab tabLabel=tab.label tabUrl=tab.url tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value />
+              <@fdsBackendTabs.tab tabLabel=tab.displayName tabUrl=tab.url tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value />
             </#list>
           </@fdsBackendTabs.tabList>
           <#list workAreaTabs as tab>

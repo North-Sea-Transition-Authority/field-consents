@@ -9,8 +9,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.management.ScopedTeamManagementController;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum TeamType {
+public enum TeamType implements Displayable {
 
   REGULATOR(
       "Regulator",
@@ -88,6 +89,7 @@ public enum TeamType {
     this.createNewInstanceRoute = createNewInstanceRoute;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

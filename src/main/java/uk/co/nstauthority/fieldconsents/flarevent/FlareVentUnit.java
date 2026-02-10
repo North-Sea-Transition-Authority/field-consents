@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.flarevent;
 
-public enum FlareVentUnit {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum FlareVentUnit implements Displayable {
   TONNES_PER_MONTH("tonnes/month"),
   TONNES_PER_DAY("tonnes/day"),
   KG_PER_CUBIC_METER("kg/m3"),
@@ -14,6 +16,7 @@ public enum FlareVentUnit {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

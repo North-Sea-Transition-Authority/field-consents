@@ -11,8 +11,9 @@ import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.bulkissuecon
 import uk.co.nstauthority.fieldconsents.authorisation.role.HasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Role;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum BulkCaseAction {
+public enum BulkCaseAction implements Displayable {
 
   ASSIGN_CASE_OFFICER(
       BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER,
@@ -45,6 +46,7 @@ public enum BulkCaseAction {
     this.searchUrl = searchUrl;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

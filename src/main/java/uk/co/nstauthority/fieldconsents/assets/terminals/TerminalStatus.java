@@ -1,8 +1,9 @@
 package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum TerminalStatus {
+public enum TerminalStatus implements Displayable {
   ACTIVE("Active"),
   INACTIVE("Inactive");
 
@@ -16,6 +17,7 @@ public enum TerminalStatus {
     this.displayName = displayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

@@ -18,9 +18,10 @@ import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.teams.Role;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.management.TeamManagementController;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
-public enum TopNavigationItem {
+public enum TopNavigationItem implements Displayable {
 
   WORK_AREA("Work area",
       ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)),
@@ -71,6 +72,7 @@ public enum TopNavigationItem {
     this.rolesByTeamType = rolesByTeamType;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

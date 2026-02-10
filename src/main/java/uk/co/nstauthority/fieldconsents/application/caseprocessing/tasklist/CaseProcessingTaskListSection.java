@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist;
 
-public enum CaseProcessingTaskListSection {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum CaseProcessingTaskListSection implements Displayable {
 
   CASE_TASKS("Case tasks", 10),
   OPTIONAL_CASE_TASKS("Optional case tasks", 20);
@@ -13,10 +15,12 @@ public enum CaseProcessingTaskListSection {
     this.displayOrder = displayOrder;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
 
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
   }

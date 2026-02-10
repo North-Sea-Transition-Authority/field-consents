@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
-public enum TechnicalReviewStatus {
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum TechnicalReviewStatus implements Displayable {
   OPEN("Open"),
   CLOSED("Closed");
 
@@ -10,6 +12,7 @@ public enum TechnicalReviewStatus {
 
   private final String displayName;
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
