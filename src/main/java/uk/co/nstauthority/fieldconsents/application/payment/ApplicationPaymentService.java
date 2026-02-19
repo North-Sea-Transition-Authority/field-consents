@@ -178,6 +178,11 @@ public class ApplicationPaymentService {
     metadata.put("Fee line 1 description", paymentDescription);
     metadata.put("Fee line 1 amount pence", String.valueOf(paymentAmountPence));
 
+    metadata.put("EPPRS ref number override", "%s-%s".formatted(
+        getPaymentItemReference(applicationVersion),
+        applicationService.generateApplicationShortReference(applicationVersion))
+    );
+
     return metadata;
   }
 

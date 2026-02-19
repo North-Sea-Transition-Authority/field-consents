@@ -317,7 +317,8 @@ class ApplicationPaymentServiceTest {
         entry("Primary field", primaryAssetFieldName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
@@ -357,7 +358,8 @@ class ApplicationPaymentServiceTest {
         entry("Additional field", secondaryAssetFieldName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
@@ -398,7 +400,8 @@ class ApplicationPaymentServiceTest {
         entry("Additional fields", secondaryAsset1FieldName + ", " + secondaryAsset2FieldName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
@@ -434,7 +437,8 @@ class ApplicationPaymentServiceTest {
         entry("Primary field", primaryAssetFieldName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
@@ -472,7 +476,8 @@ class ApplicationPaymentServiceTest {
         entry("Facility", primaryAssetTerminalName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
@@ -507,7 +512,8 @@ class ApplicationPaymentServiceTest {
         entry("Primary field", primaryAssetFieldName),
         entry("Fee line 1 category", feeLineMnemonic.mnemonic()),
         entry("Fee line 1 description", paymentDescription),
-        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence))
+        entry("Fee line 1 amount pence", String.valueOf(paymentAmountPence)),
+        entry("EPPRS ref number override", "%s-%s".formatted(applicationVersion.getId(), applicationReference))
     );
   }
 
