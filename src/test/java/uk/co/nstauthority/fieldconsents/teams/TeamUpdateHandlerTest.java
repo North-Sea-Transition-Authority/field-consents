@@ -37,46 +37,46 @@ class TeamUpdateHandlerTest {
   private EnergyPortalOrganisationGroupEvent event;
 
   @Test
-  void accept_whenGroupCreated_thenDoNothing(){
+  void onEnergyPortalOrganisationGroupEvent_whenGroupCreated_thenDoNothing(){
     createEvent("Test Organisation", true);
 
-    teamUpdateHandler.accept(event);
+    teamUpdateHandler.onEnergyPortalOrganisationGroupEvent(event);
 
     verifyNoInteractions(teamQueryService);
     verifyNoInteractions(teamManagementService);
   }
 
   @Test
-  void accept_whenGroupUpdated_andNoTeam_thenDoNothing(){
+  void onEnergyPortalOrganisationGroupEvent_whenGroupUpdated_andNoTeam_thenDoNothing(){
     createEvent("Test Organisation", false);
 
     when(teamQueryService.getIndustryTypeTeamByScopeId(any())).thenReturn(Optional.empty());
 
-    teamUpdateHandler.accept(event);
+    teamUpdateHandler.onEnergyPortalOrganisationGroupEvent(event);
 
     verify(teamQueryService).getIndustryTypeTeamByScopeId(Long.toString(event.groupId()));
     verifyNoInteractions(teamManagementService);
   }
 
   @Test
-  void accept_whenGroupUpdated_andNameNotChanged_thenDoNothing(){
+  void onEnergyPortalOrganisationGroupEvent_whenGroupUpdated_andNameNotChanged_thenDoNothing(){
     createEvent("Test Organisation", false);
 
     when(teamQueryService.getIndustryTypeTeamByScopeId(any())).thenReturn(Optional.of(TEAM));
 
-    teamUpdateHandler.accept(event);
+    teamUpdateHandler.onEnergyPortalOrganisationGroupEvent(event);
 
     verify(teamQueryService).getIndustryTypeTeamByScopeId(Long.toString(event.groupId()));
     verifyNoInteractions(teamManagementService);
   }
 
   @Test
-  void accept_whenGroupUpdated_andNameChanged_thenUpdateTeamName(){
+  void onEnergyPortalOrganisationGroupEvent_whenGroupUpdated_andNameChanged_thenUpdateTeamName(){
     createEvent("Updated Test Organisation", false);
 
     when(teamQueryService.getIndustryTypeTeamByScopeId(any())).thenReturn(Optional.of(TEAM));
 
-    teamUpdateHandler.accept(event);
+    teamUpdateHandler.onEnergyPortalOrganisationGroupEvent(event);
 
     verify(teamQueryService).getIndustryTypeTeamByScopeId(Long.toString(event.groupId()));
     verify(teamManagementService).updateTeamName(TEAM, event.name());
