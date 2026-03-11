@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.generated.types.User;
@@ -42,6 +43,7 @@ import uk.co.nstauthority.fieldconsents.teams.management.form.MemberRolesFormVal
 import uk.co.nstauthority.fieldconsents.teams.management.view.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.management.view.TeamTypeView;
 import uk.co.nstauthority.fieldconsents.teams.management.view.TeamView;
+import uk.co.nstauthority.fieldconsents.user.AllowedDomainService;
 
 @SuppressWarnings({"unchecked", "DataFlowIssue"})
 @ContextConfiguration(classes = TeamManagementController.class)
@@ -58,6 +60,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
   @MockitoBean
   private EnergyPortalUserService energyPortalUserService;
+
+  @MockitoBean
+  private AllowedDomainService allowedDomainService;
 
   private static Team regTeam;
   private static Team organisationTeam;
@@ -551,8 +556,10 @@ class TeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void renderUserTeamRoles() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void renderUserTeamRoles(boolean isAllowed) throws Exception {
+
     when(teamManagementService.getTeam(regTeam.getId()))
         .thenReturn(Optional.of(regTeam));
 
@@ -561,6 +568,10 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
     when(teamManagementService.getTeamMemberView(regTeam, 999L))
         .thenReturn(regTeamMemberView);
+
+    when(allowedDomainService.isAllowedDomain(regTeamMemberView.email(), regTeam)).thenReturn(
+        isAllowed
+    );
 
     var expectedRoleDisplayNameByEnumName = Map.of(
         Role.ACCESS_MANAGER.name(), Role.ACCESS_MANAGER.getDisplayName(),
@@ -578,7 +589,8 @@ class TeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(model().attribute("rolesNamesMap", expectedRoleDisplayNameByEnumName))
         .andExpect(model().attribute("teamMemberView", regTeamMemberView))
-        .andExpect(model().attribute("rolesInTeam", regTeam.getTeamType().getAllowedRoles()));
+        .andExpect(model().attribute("rolesInTeam", regTeam.getTeamType().getAllowedRoles()))
+        .andExpect(model().attribute("userHasAllowedEmail", isAllowed));
   }
 
   @Test

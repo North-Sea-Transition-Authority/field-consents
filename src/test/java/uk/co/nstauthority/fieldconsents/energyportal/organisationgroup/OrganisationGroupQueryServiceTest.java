@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.energyportal.organisationgroup;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,17 +28,29 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportal.starter.configuration.WellKnownOrganisationGroupsConfigurationProperties;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationGroupEmailDomain;
 
 @ExtendWith(MockitoExtension.class)
 class OrganisationGroupQueryServiceTest {
 
   @Mock
   private OrganisationApi organisationApi;
+
+  @Mock
+  private WellKnownOrganisationGroupsConfigurationProperties wellKnownGroups;
+
+  @Mock
+  private WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup nsta;
+
+  @Mock
+  private WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup opred;
+
 
   @InjectMocks
   private OrganisationGroupQueryService organisationGroupQueryService;
@@ -49,8 +60,16 @@ class OrganisationGroupQueryServiceTest {
   @BeforeEach
   void setup() {
     groupList = List.of(
-        new OrganisationGroup(1, "Company 1", null, null, null, Collections.emptyList()),
-        new OrganisationGroup(2, "Company 2", null, null, null, Collections.emptyList())
+        OrganisationGroup.newBuilder()
+            .organisationGroupId(1)
+            .name("Company 1")
+            .emailDomains(List.of(OrganisationGroupEmailDomain.newBuilder().domain("company1.com").build()))
+            .build(),
+        OrganisationGroup.newBuilder()
+            .organisationGroupId(2)
+            .name("Company 2")
+            .emailDomains(List.of(OrganisationGroupEmailDomain.newBuilder().domain("company2.com").build()))
+            .build()
     );
   }
 
@@ -75,20 +94,29 @@ class OrganisationGroupQueryServiceTest {
         any(RequestPurpose.class)
     );
 
-    assertThat(argumentCaptor.getValue().getFields()).containsKeys("organisationGroupId", "name");
+    assertThat(argumentCaptor.getValue().getFields()).containsKeys("organisationGroupId", "name", "emailDomains");
     assertThat(organisationGroups)
         .extracting(
             OrganisationGroupDto::getOrganisationGroupId,
-            OrganisationGroupDto::getOrganisationGroupName
+            OrganisationGroupDto::getOrganisationGroupName,
+            OrganisationGroupDto::getEmailDomains
         )
         .containsExactly(
             tuple(
                 groupList.get(0).getOrganisationGroupId(),
-                groupList.get(0).getName()
+                groupList.get(0).getName(),
+                groupList.get(0).getEmailDomains()
+                    .stream()
+                    .map(OrganisationGroupEmailDomain::getDomain)
+                    .toList()
             ),
             tuple(
                 groupList.get(1).getOrganisationGroupId(),
-                groupList.get(1).getName()
+                groupList.get(1).getName(),
+                groupList.get(1).getEmailDomains()
+                    .stream()
+                    .map(OrganisationGroupEmailDomain::getDomain)
+                    .toList()
             )
         );
   }
@@ -103,7 +131,9 @@ class OrganisationGroupQueryServiceTest {
         "Shell",
         "shell.com",
         "ACTIVE",
-        Collections.emptyList());
+        Collections.emptyList(),
+        Collections.emptyList()
+    );
 
     when(organisationApi.findOrganisationGroup(
         eq(organisationGroup.getOrganisationGroupId()),
@@ -111,7 +141,7 @@ class OrganisationGroupQueryServiceTest {
         any(RequestPurpose.class)))
         .thenReturn(Optional.of(organisationGroup));
 
-    var returnedOrganisation = organisationGroupQueryService.getOrganisationGroupById(1);
+    organisationGroupQueryService.getOrganisationGroupById(1);
 
     verify(organisationApi).findOrganisationGroup(
         eq(organisationGroup.getOrganisationGroupId()),
@@ -119,9 +149,11 @@ class OrganisationGroupQueryServiceTest {
         any(RequestPurpose.class));
 
     assertThat(argumentCaptor.getValue().getFields())
-        .containsOnly(
-            entry("organisationGroupId", null),
-            entry("name", null));
+        .containsOnlyKeys(
+            "organisationGroupId",
+            "name",
+            "emailDomains"
+        );
   }
 
   @Test
@@ -132,7 +164,9 @@ class OrganisationGroupQueryServiceTest {
         "Shell",
         "shell.com",
         "ACTIVE",
-        Collections.emptyList());
+        Collections.emptyList(),
+        Collections.emptyList()
+    );
 
     when(organisationApi.getAllOrganisationGroupsByIds(
         eq(List.of(organisationGroup.getOrganisationGroupId())),
@@ -160,7 +194,9 @@ class OrganisationGroupQueryServiceTest {
         "Shell",
         "shell.com",
         "ACTIVE",
-        Collections.emptyList());
+        Collections.emptyList(),
+        Collections.emptyList()
+        );
 
     var organisationGroup2 = new OrganisationGroup(
         2,
@@ -168,7 +204,9 @@ class OrganisationGroupQueryServiceTest {
         "Shell",
         "shell.com",
         "ACTIVE",
-        Collections.emptyList());
+        Collections.emptyList(),
+        Collections.emptyList()
+    );
 
     when(organisationApi.getAllOrganisationGroupsByIds(
         eq(List.of(organisationGroup.getOrganisationGroupId(), organisationGroup2.getOrganisationGroupId())),
@@ -267,5 +305,37 @@ class OrganisationGroupQueryServiceTest {
 
     assertThat(returnedOrganisationUnitJsons)
         .isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  void getRegulatorOrganisationGroup() {
+    var expectedId = Math.toIntExact(10001L);
+
+    when(wellKnownGroups.nsta()).thenReturn(nsta);
+    when(nsta.idAsInteger()).thenReturn(expectedId);
+
+    organisationGroupQueryService.getRegulatorOrganisationGroup();
+
+    verify(organisationApi).findOrganisationGroup(
+        eq(expectedId),
+        any(),
+        any(RequestPurpose.class)
+    );
+  }
+
+  @Test
+  void getConsulteeOrganisationGroup() {
+    var expectedId = Math.toIntExact(10002L);
+
+    when(wellKnownGroups.opred()).thenReturn(opred);
+    when(opred.idAsInteger()).thenReturn(expectedId);
+
+    organisationGroupQueryService.getConsulteeOrganisationGroup();
+
+    verify(organisationApi).findOrganisationGroup(
+        eq(expectedId),
+        any(),
+        any(RequestPurpose.class)
+    );
   }
 }

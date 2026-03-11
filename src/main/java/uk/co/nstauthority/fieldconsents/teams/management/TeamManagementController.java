@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.teams.management.form.MemberRolesForm;
 import uk.co.nstauthority.fieldconsents.teams.management.form.MemberRolesFormValidator;
 import uk.co.nstauthority.fieldconsents.teams.management.view.TeamTypeView;
 import uk.co.nstauthority.fieldconsents.teams.management.view.TeamView;
+import uk.co.nstauthority.fieldconsents.user.AllowedDomainService;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @RestController
@@ -42,6 +43,7 @@ public class TeamManagementController {
   private final AddMemberFormValidator addMemberFormValidator;
   private final EnergyPortalConfiguration energyPortalConfiguration;
   private final EnergyPortalUserService energyPortalUserService;
+  private final AllowedDomainService allowedDomainService;
 
   TeamManagementController(
       TeamManagementService teamManagementService,
@@ -49,7 +51,8 @@ public class TeamManagementController {
       MemberRolesFormValidator memberRolesFormValidator,
       AddMemberFormValidator addMemberFormValidator,
       EnergyPortalConfiguration energyPortalConfiguration,
-      EnergyPortalUserService energyPortalUserService
+      EnergyPortalUserService energyPortalUserService,
+      AllowedDomainService allowedDomainService
   ) {
     this.teamManagementService = teamManagementService;
     this.teamQueryService = teamQueryService;
@@ -57,6 +60,7 @@ public class TeamManagementController {
     this.addMemberFormValidator = addMemberFormValidator;
     this.energyPortalConfiguration = energyPortalConfiguration;
     this.energyPortalUserService = energyPortalUserService;
+    this.allowedDomainService = allowedDomainService;
   }
 
   @GetMapping
@@ -263,10 +267,13 @@ public class TeamManagementController {
     var roleDisplayNameByEnumName = availableRoles.stream()
         .collect(StreamUtils.toLinkedHashMap(Enum::name, Role::getDisplayName));
 
+    boolean userHasAllowedEmail = allowedDomainService.isAllowedDomain(teamMemberView.email(), team);
+
     return new ModelAndView("fcs/teamManagement/editMemberRoles")
         .addObject("teamMemberView", teamMemberView)
         .addObject("rolesNamesMap", roleDisplayNameByEnumName)
         .addObject("rolesInTeam", availableRoles)
+        .addObject("userHasAllowedEmail", userHasAllowedEmail)
         .addObject("cancelUrl", teamMemberListUrl(team.getId()))
         .addObject(
             "backLinkUrl",
