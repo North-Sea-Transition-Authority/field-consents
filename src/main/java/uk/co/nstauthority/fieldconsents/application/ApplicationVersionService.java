@@ -53,6 +53,14 @@ public class ApplicationVersionService {
         .toList();
   }
 
+  public List<ApplicationVersion> findAllWhereLatestVersionIsSubmitted() {
+    return applicationVersionRepository.findAllWhereLatestVersionIsSubmitted();
+  }
+
+  public List<ApplicationVersion> findAllByPrimaryOperatorIn(List<Integer> primaryOperators) {
+    return applicationVersionRepository.findAllByPrimaryOperatorOuIdIn(primaryOperators);
+  }
+
   @Transactional
   public void deleteApplicationVersion(ApplicationVersion applicationVersion) {
     if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {

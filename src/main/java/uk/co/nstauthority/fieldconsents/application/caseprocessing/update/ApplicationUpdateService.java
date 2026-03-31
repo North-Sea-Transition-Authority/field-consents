@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -179,5 +180,9 @@ public class ApplicationUpdateService {
   public boolean isUpdatable(ApplicationVersion applicationVersion) {
     // Belt and braces to stop certain legacy cases from being updatable
     return !applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion);
+  }
+
+  public List<ApplicationUpdate> getUpdatesByPrimaryOperatorIds(Collection<Integer> primaryOperatorIds) {
+    return applicationUpdateRepository.findByApplicationVersion_primaryOperatorOuIdIn(primaryOperatorIds);
   }
 }

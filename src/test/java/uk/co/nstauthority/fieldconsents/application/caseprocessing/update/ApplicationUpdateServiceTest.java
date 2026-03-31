@@ -382,4 +382,21 @@ class ApplicationUpdateServiceTest {
     assertThat(applicationUpdateService.isUpdatable(applicationVersion))
         .isEqualTo(false);
   }
+
+  @Test
+  void getUpdatesByPrimaryOperatorIds() {
+    var operatorIds = List.of(304, 20);
+    var expected = List.of(
+        ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock),
+        ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock));
+
+    when(applicationUpdateRepository.findByApplicationVersion_primaryOperatorOuIdIn(operatorIds))
+        .thenReturn(expected);
+
+    var result = applicationUpdateService.getUpdatesByPrimaryOperatorIds(operatorIds);
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+
+    verify(applicationUpdateRepository).findByApplicationVersion_primaryOperatorOuIdIn(operatorIds);
+  }
 }

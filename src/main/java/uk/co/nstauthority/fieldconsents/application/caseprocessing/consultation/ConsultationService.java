@@ -226,4 +226,7 @@ public class ConsultationService {
     return ApplicationTypeFeature.EIA_SCREENING_DIRECTION.allowed(applicationType);
   }
 
+  public List<Consultation> findAllOpenConsultations() {
+    return repository.findAllByStatus(OPEN);
+  }
 }

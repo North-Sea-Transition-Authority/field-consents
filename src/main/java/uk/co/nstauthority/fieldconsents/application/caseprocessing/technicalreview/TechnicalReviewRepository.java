@@ -37,4 +37,6 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
       """
   )
   List<Long> findAllTechnicalReviewerWuaIdsByTechnicalReviewStatus(TechnicalReviewStatus status);
+
+  List<TechnicalReview> findAllByTechnicalReviewerWuaId(Long technicalReviewerWuaId);
 }

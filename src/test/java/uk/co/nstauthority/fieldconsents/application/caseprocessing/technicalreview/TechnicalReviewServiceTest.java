@@ -44,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -237,6 +238,16 @@ class TechnicalReviewServiceTest {
     assertThatThrownBy(() -> technicalReviewService.getTechnicalReviewRequestForm(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(OPEN_TECHNICAL_REVIEW_EXISTS.apply(String.valueOf(applicationVersion.getId())));
+  }
+
+  @Test
+  void findTechnicalReviewsByReviewer(){
+    var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
+
+    when(technicalReviewRepository.findAllByTechnicalReviewerWuaId(serviceUserDetail.wuaId()))
+        .thenReturn(List.of(technicalReview));
+
+    assertThat(technicalReviewService.findTechnicalReviewsByReviewer(serviceUserDetail)).containsExactly(technicalReview);
   }
 
   @Test

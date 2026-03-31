@@ -72,6 +72,22 @@ public class TeamQueryService {
         .isPresent();
   }
 
+  public Set<String> getScopeIdsWhereUserHasAtLeastOneScopedRole(
+      ServiceUserDetail userDetail,
+      TeamType teamType,
+      Collection<Role> roles
+  ) {
+    if (!teamType.isScoped()) {
+      throw new IllegalArgumentException("TeamType %s is not scoped".formatted(teamType));
+    }
+
+    return teamRoleRepository.findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        userDetail.wuaId(),
+        roles,
+        teamType
+    ).stream().map(teamRole -> teamRole.getTeam().getScopeId()).collect(Collectors.toSet());
+  }
+
   public List<TeamRole> getTeamRoles(ServiceUserDetail userDetail) {
     return teamRoleRepository.findAllByWuaId(userDetail.wuaId());
   }
@@ -117,7 +133,7 @@ public class TeamQueryService {
 
   public Team getStaticTeam(TeamType teamType) {
     if (teamType.isScoped()) {
-      throw new IllegalArgumentException("TeamType %s is not scoped".formatted(teamType));
+      throw new IllegalArgumentException("TeamType %s is not static".formatted(teamType));
     }
 
     var teams = teamRepository.findByTeamType(teamType);

@@ -31,4 +31,8 @@ interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
       ConsultationStatus consultationStatus
   );
 
+  List<Consultation> findAllByStatus(ConsultationStatus status);
+
+  List<Consultation> findAllByResponderWuaId(Long responderWuaId);
+
 }

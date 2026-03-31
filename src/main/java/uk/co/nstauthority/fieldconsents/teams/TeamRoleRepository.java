@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
@@ -33,5 +34,11 @@ public interface TeamRoleRepository extends ListCrudRepository<TeamRole, UUID> {
       TeamType teamType,
       String scopeType,
       Collection<String> scopeIds
+  );
+
+  Set<TeamRole> findDistinctByWuaIdAndRoleInAndTeam_teamType(
+      Long wuaId,
+      Collection<Role> roles,
+      TeamType teamType
   );
 }

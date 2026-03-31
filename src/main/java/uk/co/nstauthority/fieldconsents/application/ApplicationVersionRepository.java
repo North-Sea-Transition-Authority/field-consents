@@ -29,6 +29,22 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
 
   @Query(
       """
+      FROM ApplicationVersion av
+       WHERE av.status = 'SUBMITTED'
+       AND av.version = (
+         SELECT MAX(av2.version)
+         FROM ApplicationVersion av2
+         WHERE av2.application = av.application
+         AND av2.status != 'DELETED'
+        )
+      """
+  )
+  List<ApplicationVersion> findAllWhereLatestVersionIsSubmitted();
+
+  List<ApplicationVersion> findAllByPrimaryOperatorOuIdIn(List<Integer> primaryOperators);
+
+  @Query(
+      """
       SELECT DISTINCT av.caseOfficerWuaId
       FROM ApplicationVersion av
       WHERE av.status = :status

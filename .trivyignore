@@ -4,3 +4,14 @@ CVE-2024-47554
 CVE-2026-1225
 # com.fasterxml.jackson.core:jackson-core
 GHSA-72hv-8253-57qq
+# io.netty:netty-codec-http
+CVE-2026-33870
+# io.netty:netty-codec-http2
+CVE-2026-33871
+# org.apache.tomcat.embed:tomcat-embed-core
+CVE-2026-24734
+# org.springframework.security:spring-security-web
+CVE-2026-22732
+# org.springframework:spring-webmvc
+CVE-2026-22737
+CVE-2026-22735

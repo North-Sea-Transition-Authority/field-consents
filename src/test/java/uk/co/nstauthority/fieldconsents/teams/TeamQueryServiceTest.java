@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.teams;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 
@@ -183,6 +185,29 @@ class TeamQueryServiceTest {
 
     assertThat(teamQueryService.userHasAtLeastOneScopedRole(serviceUserDetail, TeamType.INDUSTRY, TeamScopeReference.from("1", TeamScopeReference.ORGANISATION_GROUP_ID), Set.of(Role.VIEWER)))
         .isFalse();
+  }
+
+  @Test
+  void getScopeIdsWhereUserHasAtLeastOneScopedRole() {
+    var roles = RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES;
+
+    var expected = TeamRoleTestUtil.newBuilder().withTeam(TeamTestUtil.newBuilder().withScopeId("100").build()).build();
+
+    when(teamRoleRepository.findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        serviceUserDetail.wuaId(),
+        roles,
+        TeamType.INDUSTRY
+    )).thenReturn(Set.of(expected));
+
+    var result = teamQueryService.getScopeIdsWhereUserHasAtLeastOneScopedRole(serviceUserDetail, TeamType.INDUSTRY, roles);
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(Set.of(expected.getTeam().getScopeId()));
+
+    verify(teamRoleRepository).findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        serviceUserDetail.wuaId(),
+        roles,
+        TeamType.INDUSTRY
+    );
   }
 
   @Test

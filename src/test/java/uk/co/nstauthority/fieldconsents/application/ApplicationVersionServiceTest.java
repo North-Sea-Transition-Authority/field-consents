@@ -152,6 +152,31 @@ class ApplicationVersionServiceTest {
   }
 
   @Test
+  void findAllWhereLatestVersionIsSubmitted() {
+    var expected = List.of(applicationVersion);
+    when(applicationVersionRepository.findAllWhereLatestVersionIsSubmitted())
+        .thenReturn(expected);
+
+    var result = applicationVersionService.findAllWhereLatestVersionIsSubmitted();
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    verify(applicationVersionRepository).findAllWhereLatestVersionIsSubmitted();
+  }
+
+  @Test
+  void findAllByPrimaryOperatorIn() {
+    var operatorIds = List.of(12, 304);
+    var expected = List.of(applicationVersion);
+    when(applicationVersionRepository.findAllByPrimaryOperatorOuIdIn(operatorIds))
+        .thenReturn(expected);
+
+    var result = applicationVersionService.findAllByPrimaryOperatorIn(operatorIds);
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    verify(applicationVersionRepository).findAllByPrimaryOperatorOuIdIn(operatorIds);
+  }
+
+  @Test
   void deleteApplicationVersion_whenCalled_thenVerifyEntityUpdatedAndSaved() {
     applicationVersionService.deleteApplicationVersion(applicationVersion);
 

@@ -94,6 +94,10 @@ public class TechnicalReviewService {
     return new TechnicalReviewRequestForm();
   }
 
+  public List<TechnicalReview> findTechnicalReviewsByReviewer(ServiceUserDetail serviceUserDetail) {
+    return technicalReviewRepository.findAllByTechnicalReviewerWuaId(serviceUserDetail.wuaId());
+  }
+
   @Transactional
   public void saveTechnicalReviewRequest(
       ApplicationVersion requestForApplicationVersion,

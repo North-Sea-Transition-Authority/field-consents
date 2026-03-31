@@ -471,4 +471,19 @@ class ConsultationServiceTest {
     assertThat(consultationService.requiresEiaRegsResponse(applicationVersion)).isFalse();
   }
 
+  @Test
+  void findAllOpenConsultations() {
+    var expected = List.of(
+        mock(Consultation.class)
+    );
+
+    when(repository.findAllByStatus(ConsultationStatus.OPEN))
+        .thenReturn(expected);
+
+    var result = consultationService.findAllOpenConsultations();
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    verify(repository).findAllByStatus(ConsultationStatus.OPEN);
+  }
+
 }
