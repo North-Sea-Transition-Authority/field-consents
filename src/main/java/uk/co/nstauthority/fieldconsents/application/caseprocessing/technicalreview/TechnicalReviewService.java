@@ -94,8 +94,14 @@ public class TechnicalReviewService {
     return new TechnicalReviewRequestForm();
   }
 
-  public List<TechnicalReview> findTechnicalReviewsByReviewer(ServiceUserDetail serviceUserDetail) {
-    return technicalReviewRepository.findAllByTechnicalReviewerWuaId(serviceUserDetail.wuaId());
+  public List<TechnicalReview> findTechnicalReviewsByReviewerAndStatus(
+      ServiceUserDetail serviceUserDetail,
+      TechnicalReviewStatus technicalReviewStatus
+  ) {
+    return technicalReviewRepository.findAllByTechnicalReviewerWuaIdAndTechnicalReviewStatus(
+        serviceUserDetail.wuaId(),
+        technicalReviewStatus
+    );
   }
 
   @Transactional

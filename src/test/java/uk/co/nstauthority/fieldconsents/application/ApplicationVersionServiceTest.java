@@ -152,28 +152,26 @@ class ApplicationVersionServiceTest {
   }
 
   @Test
-  void findAllWhereLatestVersionIsSubmitted() {
-    var expected = List.of(applicationVersion);
-    when(applicationVersionRepository.findAllWhereLatestVersionIsSubmitted())
-        .thenReturn(expected);
+  void countLatestSubmittedVersionsWithoutCaseOfficer() {
+    when(applicationVersionRepository.countWhereLatestVersionIsSubmittedWithoutCaseOfficer())
+        .thenReturn(5L);
 
-    var result = applicationVersionService.findAllWhereLatestVersionIsSubmitted();
+    var result = applicationVersionService.countLatestSubmittedVersionsWithoutCaseOfficer();
 
-    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
-    verify(applicationVersionRepository).findAllWhereLatestVersionIsSubmitted();
+    assertThat(result).usingRecursiveComparison().isEqualTo(5L);
+    verify(applicationVersionRepository).countWhereLatestVersionIsSubmittedWithoutCaseOfficer();
   }
 
   @Test
-  void findAllByPrimaryOperatorIn() {
+  void countByPrimaryOperatorInAndStatus() {
     var operatorIds = List.of(12, 304);
-    var expected = List.of(applicationVersion);
-    when(applicationVersionRepository.findAllByPrimaryOperatorOuIdIn(operatorIds))
-        .thenReturn(expected);
+    when(applicationVersionRepository.countByPrimaryOperatorOuIdInAndStatus(operatorIds, ApplicationVersionStatus.AWAITING_PAYMENT))
+        .thenReturn(3L);
 
-    var result = applicationVersionService.findAllByPrimaryOperatorIn(operatorIds);
+    var result = applicationVersionService.countByPrimaryOperatorInAndStatus(operatorIds, ApplicationVersionStatus.AWAITING_PAYMENT);
 
-    assertThat(result).usingRecursiveComparison().isEqualTo(expected);
-    verify(applicationVersionRepository).findAllByPrimaryOperatorOuIdIn(operatorIds);
+    assertThat(result).usingRecursiveComparison().isEqualTo(3L);
+    verify(applicationVersionRepository).countByPrimaryOperatorOuIdInAndStatus(operatorIds, ApplicationVersionStatus.AWAITING_PAYMENT);
   }
 
   @Test

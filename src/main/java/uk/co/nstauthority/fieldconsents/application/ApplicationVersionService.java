@@ -53,12 +53,12 @@ public class ApplicationVersionService {
         .toList();
   }
 
-  public List<ApplicationVersion> findAllWhereLatestVersionIsSubmitted() {
-    return applicationVersionRepository.findAllWhereLatestVersionIsSubmitted();
+  public long countLatestSubmittedVersionsWithoutCaseOfficer() {
+    return applicationVersionRepository.countWhereLatestVersionIsSubmittedWithoutCaseOfficer();
   }
 
-  public List<ApplicationVersion> findAllByPrimaryOperatorIn(List<Integer> primaryOperators) {
-    return applicationVersionRepository.findAllByPrimaryOperatorOuIdIn(primaryOperators);
+  public long countByPrimaryOperatorInAndStatus(List<Integer> primaryOperators, ApplicationVersionStatus status) {
+    return applicationVersionRepository.countByPrimaryOperatorOuIdInAndStatus(primaryOperators, status);
   }
 
   @Transactional

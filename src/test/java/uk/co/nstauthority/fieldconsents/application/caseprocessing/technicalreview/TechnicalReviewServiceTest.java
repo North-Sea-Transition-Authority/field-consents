@@ -241,16 +241,6 @@ class TechnicalReviewServiceTest {
   }
 
   @Test
-  void findTechnicalReviewsByReviewer(){
-    var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
-
-    when(technicalReviewRepository.findAllByTechnicalReviewerWuaId(serviceUserDetail.wuaId()))
-        .thenReturn(List.of(technicalReview));
-
-    assertThat(technicalReviewService.findTechnicalReviewsByReviewer(serviceUserDetail)).containsExactly(technicalReview);
-  }
-
-  @Test
   void saveTechnicalReviewRequest() {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
 

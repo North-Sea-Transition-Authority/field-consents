@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
@@ -20,6 +22,10 @@ import uk.co.nstauthority.fieldconsents.teams.Role;
 @Entity
 @Audited
 @Table(name = "application_versions")
+@NamedEntityGraph(
+    name = "applicationVersion",
+    attributeNodes = {@NamedAttributeNode("application")}
+)
 public class ApplicationVersion implements DomainReference {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -59,7 +59,7 @@ steps:
         - ./gradlew generateJooq
         - ./gradlew publishEpmqMessagesIntegrationTestPublicationToMavenLocal
         - ./gradlew checkstyleMain test epmqMessagesJarIntegrationTest bootJar --continue --parallel --max-workers=3
-      build_image: repo1.dev.fivium.local:5000/docker-compose-java21
+      build_image: repo1.dev.fivium.local:5000/docker-compose-java25
 
   - name: sync-reports
     image: alpine:3.16.0
@@ -73,7 +73,7 @@ steps:
       status: [ success, failure ]
 
   - name: code-analysis
-    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java21:latest
+    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java25:latest
     environment:
       SONARCLOUD_TOKEN:
         from_secret: sonarcloud_token
@@ -138,7 +138,7 @@ steps:
         - success
 
   - name: publish-epmq-messages-jar-snapshot
-    image: eclipse-temurin:21-jdk
+    image: eclipse-temurin:25-jdk
     environment:
       NEXUS_USERNAME: jenkins
       NEXUS_PASSWORD:
@@ -152,7 +152,7 @@ steps:
         - push
 
   - name: publish-epmq-messages-jar-release
-    image: eclipse-temurin:21-jdk
+    image: eclipse-temurin:25-jdk
     environment:
       NEXUS_USERNAME: jenkins
       NEXUS_PASSWORD:
@@ -303,11 +303,11 @@ steps:
         - chmod +x gradlew
         - ./gradlew generateJooq
         - ./gradlew checkstyleMain test bootJar --continue --parallel --max-workers=3
-      build_image: repo1.dev.fivium.local:5000/docker-compose-java21
+      build_image: repo1.dev.fivium.local:5000/docker-compose-java25
 
   # This is in the PR pipeline as only PR events get the necessary information for proper github integration
   - name: code-analysis
-    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java21:latest
+    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java25:latest
     environment:
       SONARCLOUD_TOKEN:
         from_secret: sonarcloud_token

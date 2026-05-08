@@ -6,6 +6,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
@@ -15,6 +17,10 @@ import org.hibernate.envers.Audited;
 @Audited
 @Entity
 @Table(name = "team_roles")
+@NamedEntityGraph(
+    name = "teamRole",
+    attributeNodes = {@NamedAttributeNode("team")}
+)
 public class TeamRole {
 
   @Id

@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,14 +22,16 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -49,13 +50,14 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
   private static final Long USER_WUA_ID = 1L;
+  private static final String SCOPE_ID_ONE = "100";
+  private static final String SCOPE_ID_TWO = "101";
   private static final ServiceUserDetail SERVICE_USER_DETAIL = ServiceUserDetailTestUtil.Builder().build();
-  private static final Team INDUSTRY_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).build();
+  private static final Team INDUSTRY_TEAM_ONE = TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).withScopeId(SCOPE_ID_ONE).build();
+  private static final Team INDUSTRY_TEAM_TWO = TeamTestUtil.newBuilder().withTeamType(TeamType.INDUSTRY).withScopeId(SCOPE_ID_TWO).build();
   private static final Team REGULATOR_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.REGULATOR).build();
   private static final Team CONSULTEE_TEAM = TeamTestUtil.newBuilder().withTeamType(TeamType.CONSULTEE).build();
   private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-03-23T05:00:00.00Z"), ZoneId.of("UTC"));
-  private static final String SCOPE_ID_ONE = "100";
-  private static final String SCOPE_ID_TWO = "101";
   private static final OrganisationUnitJson ORG_UNIT_ONE = OrganisationUnitJson.from(orgUnit1);
   private static final OrganisationUnitJson ORG_UNIT_TWO = OrganisationUnitJson.from(orgUnit2);
   private static final ApplicationVersion APPLICATION_VERSION = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -104,19 +106,16 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
     @BeforeEach
     void setUp() {
-      when(teamQueryService.getTeamRoles(SERVICE_USER_DETAIL)).thenReturn(List.of(TeamRoleTestUtil.newBuilder()
-          .withRole(Role.SUBMITTER)
-          .withTeam(INDUSTRY_TEAM)
-          .build()
+      when(teamQueryService.getTeamRoles(SERVICE_USER_DETAIL)).thenReturn(List.of(
+          TeamRoleTestUtil.newBuilder()
+            .withRole(Role.SUBMITTER)
+            .withTeam(INDUSTRY_TEAM_ONE)
+            .build(),
+          TeamRoleTestUtil.newBuilder()
+            .withRole(Role.FINANCE_ADMINISTRATOR)
+            .withTeam(INDUSTRY_TEAM_TWO)
+            .build()
       ));
-
-      when(teamQueryService.getScopeIdsWhereUserHasAtLeastOneScopedRole(
-          SERVICE_USER_DETAIL,
-          TeamType.INDUSTRY,
-          RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES
-      )).thenReturn(
-          Set.of(SCOPE_ID_ONE, SCOPE_ID_TWO)
-      );
 
       when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(anyList())).thenReturn(
           List.of(ORG_UNIT_ONE, ORG_UNIT_TWO)
@@ -125,11 +124,12 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
     @Test
     void getUserContext_addApplicationsAwaitingPayment_noneAwaitingPayment() {
-      when(applicationVersionService.findAllByPrimaryOperatorIn(List.of(
+      when(applicationVersionService.countByPrimaryOperatorInAndStatus(List.of(
           ORG_UNIT_ONE.organisationUnitId(),
-          ORG_UNIT_TWO.organisationUnitId()
-      ))).thenReturn(
-          List.of(APPLICATION_VERSION)
+          ORG_UNIT_TWO.organisationUnitId()),
+          ApplicationVersionStatus.AWAITING_PAYMENT))
+          .thenReturn(
+            0L
       );
 
       var expectedUserContext = VersionedUserContext.newBuilder().v1().build();
@@ -139,12 +139,13 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
     @Test
     void getUserContext_addApplicationsAwaitingPayment() {
-      when(applicationVersionService.findAllByPrimaryOperatorIn(List.of(
-          ORG_UNIT_ONE.organisationUnitId(),
-          ORG_UNIT_TWO.organisationUnitId()
-      ))).thenReturn(
-          List.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.FLARE))
-      );
+      when(applicationVersionService.countByPrimaryOperatorInAndStatus(List.of(
+              ORG_UNIT_ONE.organisationUnitId(),
+              ORG_UNIT_TWO.organisationUnitId()),
+          ApplicationVersionStatus.AWAITING_PAYMENT))
+          .thenReturn(
+              1L
+          );
 
       var expectedUserContext = VersionedUserContext.newBuilder().v1()
           .low(1, "application awaiting payment")
@@ -155,9 +156,11 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
     @Test
     void getUserContext_addUpdatesRequestedAndOverdue_noneDueSoonAndOverdue() {
-      when(applicationUpdateService.getUpdatesByPrimaryOperatorIds(List.of(
-          ORG_UNIT_ONE.organisationUnitId(),
-          ORG_UNIT_TWO.organisationUnitId()
+      when(applicationUpdateService.getUpdatesByStatusAndPrimaryOperatorIds(
+          ApplicationUpdateStatus.OPEN,
+          List.of(
+            ORG_UNIT_ONE.organisationUnitId(),
+            ORG_UNIT_TWO.organisationUnitId()
       ))).thenReturn(
           List.of()
       );
@@ -172,10 +175,12 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
        var overdueUpdate = ApplicationUpdateTestUtil.getOpenApplicationUpdate(APPLICATION_VERSION, CLOCK);
        overdueUpdate.setDeadlineDateTime(Instant.now(CLOCK).minus(2, ChronoUnit.DAYS));
 
-      when(applicationUpdateService.getUpdatesByPrimaryOperatorIds(List.of(
-          ORG_UNIT_ONE.organisationUnitId(),
-          ORG_UNIT_TWO.organisationUnitId()
-      ))).thenReturn(
+      when(applicationUpdateService.getUpdatesByStatusAndPrimaryOperatorIds(
+          ApplicationUpdateStatus.OPEN,
+          List.of(
+              ORG_UNIT_ONE.organisationUnitId(),
+              ORG_UNIT_TWO.organisationUnitId()
+          ))).thenReturn(
           List.of(
               ApplicationUpdateTestUtil.getOpenApplicationUpdate(APPLICATION_VERSION, CLOCK),
               ApplicationUpdateTestUtil.getOpenApplicationUpdate(APPLICATION_VERSION, CLOCK),
@@ -193,18 +198,13 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
 
   @Test
   void getUserContext_addApplicationsUnassignedToCaseOfficer_noneUnassigned() {
-    var applicationWithCaseOfficer = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
-    applicationWithCaseOfficer.setCaseOfficerWuaId(2L);
-
     when(teamQueryService.getTeamRoles(SERVICE_USER_DETAIL)).thenReturn(List.of(TeamRoleTestUtil.newBuilder()
         .withRole(Role.CASE_MANAGER)
         .withTeam(REGULATOR_TEAM)
         .build()
     ));
 
-    when(applicationVersionService.findAllWhereLatestVersionIsSubmitted()).thenReturn(List.of(
-        applicationWithCaseOfficer
-    ));
+    when(applicationVersionService.countLatestSubmittedVersionsWithoutCaseOfficer()).thenReturn(0L);
 
     var expectedUserContext = VersionedUserContext.newBuilder().v1().build();
 
@@ -219,9 +219,7 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
         .build()
     ));
 
-    when(applicationVersionService.findAllWhereLatestVersionIsSubmitted()).thenReturn(List.of(
-        APPLICATION_VERSION
-    ));
+    when(applicationVersionService.countLatestSubmittedVersionsWithoutCaseOfficer()).thenReturn(1L);
 
     var expectedUserContext = VersionedUserContext.newBuilder().v1()
         .low(1, "application awaiting assignment")
@@ -241,7 +239,7 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
         .build()
     ));
 
-    when(technicalReviewService.findTechnicalReviewsByReviewer(SERVICE_USER_DETAIL)).thenReturn(
+    when(technicalReviewService.findTechnicalReviewsByReviewerAndStatus(SERVICE_USER_DETAIL, TechnicalReviewStatus.OPEN)).thenReturn(
         List.of(
             technicalReviewNotDueSoon,
             TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(APPLICATION_VERSION, TechnicalReviewResponseType.APPROVE)
@@ -267,7 +265,7 @@ class FieldConsentsEnergyPortalUserServicesContextProviderTest {
         .build()
     ));
 
-    when(technicalReviewService.findTechnicalReviewsByReviewer(SERVICE_USER_DETAIL)).thenReturn(
+    when(technicalReviewService.findTechnicalReviewsByReviewerAndStatus(SERVICE_USER_DETAIL, TechnicalReviewStatus.OPEN)).thenReturn(
         List.of(
             technicalReviewOverdue,
             technicalReviewDueSoon

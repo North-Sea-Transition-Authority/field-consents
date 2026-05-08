@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -17,13 +18,16 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
       TechnicalReviewStatus status
   );
 
+  @EntityGraph("technicalReview")
   Optional<TechnicalReview> findByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(
       Application application,
       TechnicalReviewStatus status
   );
 
+  @EntityGraph("technicalReview")
   List<TechnicalReview> findByRequestApplicationVersion_Application(Application application);
 
+  @EntityGraph("technicalReview")
   Optional<TechnicalReview> findByRequestApplicationVersion_ApplicationAndId(
       Application application,
       Integer technicalReviewId
@@ -38,5 +42,12 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
   )
   List<Long> findAllTechnicalReviewerWuaIdsByTechnicalReviewStatus(TechnicalReviewStatus status);
 
+  @EntityGraph("technicalReview")
   List<TechnicalReview> findAllByTechnicalReviewerWuaId(Long technicalReviewerWuaId);
+
+  @EntityGraph("technicalReview")
+  List<TechnicalReview> findAllByTechnicalReviewerWuaIdAndTechnicalReviewStatus(
+      Long technicalReviewerWuaId,
+      TechnicalReviewStatus status
+  );
 }

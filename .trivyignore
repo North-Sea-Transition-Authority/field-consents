@@ -1,26 +1,6 @@
 # commons-io:commons-io
 CVE-2024-47554
-# ch.qos.logback:logback-core
-CVE-2026-1225
-# com.fasterxml.jackson.core:jackson-core
-GHSA-72hv-8253-57qq
-# io.netty:netty-codec-http
-CVE-2026-33870
-# io.netty:netty-codec-http2
-CVE-2026-33871
 # org.apache.tomcat.embed:tomcat-embed-core
-CVE-2026-24734
-CVE-2026-29145
 CVE-2026-34483
 CVE-2026-34487
-CVE-2026-25854
-CVE-2026-32990
 CVE-2026-34500
-# org.springframework.security:spring-security-web
-CVE-2026-22732
-# org.springframework:spring-webmvc
-CVE-2026-22737
-CVE-2026-22735
-# org.bouncycastle:bcpkix-jdk18on
-CVE-2026-5588
-CVE-2026-0636

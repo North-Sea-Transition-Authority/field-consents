@@ -182,7 +182,13 @@ public class ApplicationUpdateService {
     return !applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion);
   }
 
-  public List<ApplicationUpdate> getUpdatesByPrimaryOperatorIds(Collection<Integer> primaryOperatorIds) {
-    return applicationUpdateRepository.findByApplicationVersion_primaryOperatorOuIdIn(primaryOperatorIds);
+  public List<ApplicationUpdate> getUpdatesByStatusAndPrimaryOperatorIds(
+      ApplicationUpdateStatus status,
+      Collection<Integer> primaryOperatorIds
+  ) {
+    return applicationUpdateRepository.findByApplicationUpdateStatusAndApplicationVersion_primaryOperatorOuIdIn(
+        status,
+        primaryOperatorIds
+    );
   }
 }

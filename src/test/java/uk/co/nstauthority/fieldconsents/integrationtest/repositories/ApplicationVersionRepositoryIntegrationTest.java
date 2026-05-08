@@ -6,7 +6,6 @@ import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TE
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 
@@ -18,12 +17,8 @@ class ApplicationVersionRepositoryIntegrationTest extends AbstractIntegrationTes
 
   @Test
   void shouldFindAllWhereLatestVersionIsSubmitted() {
-    var results = applicationVersionRepository.findAllWhereLatestVersionIsSubmitted();
+    var number = applicationVersionRepository.countWhereLatestVersionIsSubmittedWithoutCaseOfficer();
 
-    assertThat(results)
-        .hasSize(3)
-        .extracting(ApplicationVersion::getId)
-        .containsExactlyInAnyOrder(10001, 10004, 10005)
-        .doesNotContain(10002, 10003, 10006);
+    assertThat(number).isEqualTo(3L);
   }
 }

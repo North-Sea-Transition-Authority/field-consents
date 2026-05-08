@@ -7,6 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -17,6 +19,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.respon
 @Entity
 @Audited
 @Table(name = "application_updates")
+@NamedEntityGraph(
+    name = "applicationUpdate",
+    attributeNodes = {@NamedAttributeNode("applicationVersion"), @NamedAttributeNode("responseApplicationVersion")}
+)
 public class ApplicationUpdate {
 
   @GeneratedValue(strategy = GenerationType.IDENTITY)

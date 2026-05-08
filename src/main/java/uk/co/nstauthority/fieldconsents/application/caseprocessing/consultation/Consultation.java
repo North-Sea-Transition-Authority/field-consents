@@ -9,6 +9,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -20,6 +22,14 @@ import uk.co.nstauthority.fieldconsents.teams.Team;
 @Entity
 @Audited
 @Table(name = "application_consultations")
+@NamedEntityGraph(
+    name = "consultation",
+    attributeNodes = {
+        @NamedAttributeNode("requestApplicationVersion"),
+        @NamedAttributeNode("responseApplicationVersion"),
+        @NamedAttributeNode("consultationTeam")
+    }
+)
 public class Consultation {
 
   @Id

@@ -13,7 +13,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
@@ -66,11 +65,8 @@ class FieldConsentsEnergyPortalUserServicesContextProvider implements EnergyPort
     var now = Instant.now(clock);
 
     if (userRoleContext.hasAnyRole(TeamType.INDUSTRY, RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES)) {
-      var organisationGroupIds = teamQueryService.getScopeIdsWhereUserHasAtLeastOneScopedRole(
-              serviceUserDetail,
-              TeamType.INDUSTRY,
-              RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES
-          )
+      var organisationGroupIds = userRoleContext
+          .scopeIdsForAnyIndustryRole(RoleGroup.INDUSTRY_PAY_AND_SUBMIT_APPLICATION_ROLES)
           .stream()
           .map(Integer::parseInt)
           .toList();
@@ -81,15 +77,17 @@ class FieldConsentsEnergyPortalUserServicesContextProvider implements EnergyPort
           .toList();
 
       if (!organisationUnitIds.isEmpty()) {
-        var numApplicationsAwaitingPayment = applicationVersionService.findAllByPrimaryOperatorIn(organisationUnitIds)
-            .stream()
-            .filter(applicationVersion -> applicationVersion.getStatus() == ApplicationVersionStatus.AWAITING_PAYMENT)
-            .count();
+        var numApplicationsAwaitingPayment = applicationVersionService.countByPrimaryOperatorInAndStatus(
+              organisationUnitIds,
+              ApplicationVersionStatus.AWAITING_PAYMENT
+        );
 
         addApplicationsAwaitingPayment(numApplicationsAwaitingPayment, userContextBuilder);
 
-        var numUpdatesByOverdue = applicationUpdateService.getUpdatesByPrimaryOperatorIds(organisationUnitIds).stream()
-            .filter(update -> update.getApplicationUpdateStatus() == ApplicationUpdateStatus.OPEN)
+        var numUpdatesByOverdue = applicationUpdateService.getUpdatesByStatusAndPrimaryOperatorIds(
+              ApplicationUpdateStatus.OPEN,
+              organisationUnitIds
+            ).stream()
             .filter(update -> update.getDeadlineDateTime() != null)
             .collect(Collectors.partitioningBy(update -> !update.getDeadlineDateTime().isAfter(now), Collectors.counting()));
 
@@ -98,17 +96,16 @@ class FieldConsentsEnergyPortalUserServicesContextProvider implements EnergyPort
     }
 
     if (userRoleContext.hasRole(TeamType.REGULATOR, Role.CASE_MANAGER)) {
-      var numApplicationsWithoutCaseOfficer = applicationVersionService.findAllWhereLatestVersionIsSubmitted()
-          .stream()
-          .filter(applicationVersion -> applicationVersion.getCaseOfficerWuaId() == null)
-          .count();
+      var numApplicationsWithoutCaseOfficer = applicationVersionService.countLatestSubmittedVersionsWithoutCaseOfficer();
 
       addApplicationsUnassignedToCaseOfficer(numApplicationsWithoutCaseOfficer, userContextBuilder);
     }
 
     if (userRoleContext.hasRole(TeamType.REGULATOR, Role.TECHNICAL_REVIEWER)) {
-      var numTechReviewsByOverdue = technicalReviewService.findTechnicalReviewsByReviewer(serviceUserDetail).stream()
-          .filter(technicalReview -> technicalReview.getTechnicalReviewStatus() == TechnicalReviewStatus.OPEN)
+      var numTechReviewsByOverdue = technicalReviewService.findTechnicalReviewsByReviewerAndStatus(
+            serviceUserDetail,
+            TechnicalReviewStatus.OPEN
+          ).stream()
           .filter(technicalReview -> {
             var deadline = technicalReview.getDeadlineDateTime();
             return deadline != null && !deadline.isAfter(now.plus(24, ChronoUnit.HOURS));
@@ -138,7 +135,6 @@ class FieldConsentsEnergyPortalUserServicesContextProvider implements EnergyPort
       if (userRoleContext.hasRole(TeamType.CONSULTEE, Role.RESPONDER)) {
         var numConsultationsByOverdue = openConsultations.stream()
             .filter(consultation -> Objects.equals(consultation.getResponderWuaId(), serviceUserDetail.wuaId()))
-            .filter(consultation -> consultation.getStatus() == ConsultationStatus.OPEN)
             .filter(consultation -> {
               var deadline = consultation.getRequestDeadline();
               return deadline != null && !deadline.isAfter(now.plus(24, ChronoUnit.HOURS));

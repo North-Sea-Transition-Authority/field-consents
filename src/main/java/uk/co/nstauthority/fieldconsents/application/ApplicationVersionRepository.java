@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application;
 
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -11,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 @NotDuplicationSource
 public interface ApplicationVersionRepository extends CrudRepository<ApplicationVersion, Integer> {
 
+  @EntityGraph("applicationVersion")
   List<ApplicationVersion> findAllByApplicationIdOrderByVersion(Integer applicationId);
 
   @Query(
@@ -25,12 +27,15 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
         AND av2.status != 'DELETED')
       """
   )
+  @EntityGraph("applicationVersion")
   List<ApplicationVersion> findLatestByApplicationIds(Collection<Integer> applicationIds);
 
   @Query(
       """
+      SELECT COUNT(av)
       FROM ApplicationVersion av
        WHERE av.status = 'SUBMITTED'
+       AND av.caseOfficerWuaId IS NULL
        AND av.version = (
          SELECT MAX(av2.version)
          FROM ApplicationVersion av2
@@ -39,9 +44,9 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
         )
       """
   )
-  List<ApplicationVersion> findAllWhereLatestVersionIsSubmitted();
+  long countWhereLatestVersionIsSubmittedWithoutCaseOfficer();
 
-  List<ApplicationVersion> findAllByPrimaryOperatorOuIdIn(List<Integer> primaryOperators);
+  long countByPrimaryOperatorOuIdInAndStatus(List<Integer> primaryOperators, ApplicationVersionStatus status);
 
   @Query(
       """

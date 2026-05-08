@@ -384,19 +384,19 @@ class ApplicationUpdateServiceTest {
   }
 
   @Test
-  void getUpdatesByPrimaryOperatorIds() {
+  void getUpdatesByStatusAndPrimaryOperatorIds() {
     var operatorIds = List.of(304, 20);
     var expected = List.of(
         ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock),
         ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock));
 
-    when(applicationUpdateRepository.findByApplicationVersion_primaryOperatorOuIdIn(operatorIds))
+    when(applicationUpdateRepository.findByApplicationUpdateStatusAndApplicationVersion_primaryOperatorOuIdIn(ApplicationUpdateStatus.OPEN, operatorIds))
         .thenReturn(expected);
 
-    var result = applicationUpdateService.getUpdatesByPrimaryOperatorIds(operatorIds);
+    var result = applicationUpdateService.getUpdatesByStatusAndPrimaryOperatorIds(ApplicationUpdateStatus.OPEN, operatorIds);
 
     assertThat(result).usingRecursiveComparison().isEqualTo(expected);
 
-    verify(applicationUpdateRepository).findByApplicationVersion_primaryOperatorOuIdIn(operatorIds);
+    verify(applicationUpdateRepository).findByApplicationUpdateStatusAndApplicationVersion_primaryOperatorOuIdIn(ApplicationUpdateStatus.OPEN, operatorIds);
   }
 }
