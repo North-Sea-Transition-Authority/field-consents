@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -25,9 +26,15 @@ import uk.co.nstauthority.fieldconsents.teams.Team;
 @NamedEntityGraph(
     name = "consultation",
     attributeNodes = {
-        @NamedAttributeNode("requestApplicationVersion"),
-        @NamedAttributeNode("responseApplicationVersion"),
+        @NamedAttributeNode(value = "requestApplicationVersion", subgraph = "applicationVersion"),
+        @NamedAttributeNode(value = "responseApplicationVersion", subgraph = "applicationVersion"),
         @NamedAttributeNode("consultationTeam")
+    },
+    subgraphs = {
+        @NamedSubgraph(
+            name = "applicationVersion",
+            attributeNodes = @NamedAttributeNode("application")
+        )
     }
 )
 public class Consultation {
