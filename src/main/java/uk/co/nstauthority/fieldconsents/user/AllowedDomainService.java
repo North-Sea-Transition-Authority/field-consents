@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.user;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupDto;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
@@ -18,20 +17,16 @@ public class AllowedDomainService {
   }
 
   public boolean isAllowedDomain(String userEmail, Team team) {
-    Optional<OrganisationGroupDto> group;
-    switch (team.getTeamType()) {
-      case TeamType.INDUSTRY -> group = organisationGroupQueryService
+    var group = switch (team.getTeamType()) {
+      case TeamType.INDUSTRY -> organisationGroupQueryService
           .getOrganisationGroupById(Integer.parseInt(team.getScopeId()));
-      case TeamType.REGULATOR -> group = organisationGroupQueryService.getRegulatorOrganisationGroup();
-      case TeamType.CONSULTEE ->  group = organisationGroupQueryService.getConsulteeOrganisationGroup();
-      default -> throw new IllegalStateException("Unexpected value: " + team.getTeamType());
-    }
+      case TeamType.REGULATOR -> organisationGroupQueryService.getRegulatorOrganisationGroup();
+      case TeamType.CONSULTEE -> organisationGroupQueryService.getConsulteeOrganisationGroup();
+    };
 
-    List<String> emailDomains = List.of();
-    if (group.isPresent()) {
-      emailDomains = group.get().getEmailDomains();
-    }
-
-    return emailDomains.contains(userEmail.split("@")[1]);
+    var lowerEmail = userEmail.toLowerCase();
+    return group.map(OrganisationGroupDto::getEmailDomains).orElse(List.of()).stream()
+        .map(String::toLowerCase)
+        .anyMatch(domain -> lowerEmail.endsWith("@" + domain));
   }
 }
