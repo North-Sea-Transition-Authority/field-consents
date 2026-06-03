@@ -5,6 +5,7 @@
 <#import '../macros/taskList.ftl' as taskList>
 <#import '../macros/_multiLineText.ftl' as multiLineText>
 <#import '../macros/mailTo.ftl' as mailTo>
+<#import '../macros/requestNewCompany.ftl' as requestNewCompany>
 
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->

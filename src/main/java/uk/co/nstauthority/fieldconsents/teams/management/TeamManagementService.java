@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportal.starter.accounts.EnergyPortalServiceAccessService;
-import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderUserRolesService;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalAccountsMessagePublishingService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.generated.client.UserProjectionRoot;
@@ -33,7 +33,7 @@ public class TeamManagementService {
   private final TeamQueryService teamQueryService;
   private final UserApi userApi;
   private final EnergyPortalServiceAccessService energyPortalServiceAccessService;
-  private final EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService;
+  private final EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService;
 
   TeamManagementService(
       TeamRepository teamRepository,
@@ -41,14 +41,14 @@ public class TeamManagementService {
       UserApi userApi,
       TeamQueryService teamQueryService,
       EnergyPortalServiceAccessService energyPortalServiceAccessService,
-      EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService
+      EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService
   ) {
     this.teamRepository = teamRepository;
     this.teamRoleRepository = teamRoleRepository;
     this.userApi = userApi;
     this.teamQueryService = teamQueryService;
     this.energyPortalServiceAccessService = energyPortalServiceAccessService;
-    this.energyPortalServiceProviderUserRolesService = energyPortalServiceProviderUserRolesService;
+    this.energyPortalAccountsMessagePublishingService = energyPortalAccountsMessagePublishingService;
   }
 
   public Team createScopedTeam(String name, TeamType teamType, TeamScopeReference scopeRef) {
@@ -195,7 +195,7 @@ public class TeamManagementService {
       throw new TeamManagementException("At least 1 team manager must exist in team %s".formatted(team.getId()));
     }
 
-    energyPortalServiceProviderUserRolesService.publishUsersRolesForTeam(
+    energyPortalAccountsMessagePublishingService.publishUsersRolesForTeam(
         wuaId,
         team.getId().toString(),
         team.getTeamType().name(),
@@ -219,7 +219,7 @@ public class TeamManagementService {
       energyPortalServiceAccessService.removeUser(wuaId);
     }
 
-    energyPortalServiceProviderUserRolesService.publishRemoveUserFromTeam(
+    energyPortalAccountsMessagePublishingService.publishRemoveUserFromTeam(
         wuaId,
         team.getId().toString()
     );

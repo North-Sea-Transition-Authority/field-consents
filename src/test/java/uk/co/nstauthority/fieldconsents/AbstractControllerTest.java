@@ -14,6 +14,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.co.fivium.energyportal.starter.accounts.EnergyPortalAccountsControllerAdvice;
+import uk.co.fivium.energyportal.starter.configuration.EnergyPortalAccountsConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -80,7 +82,8 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     PostAuthenticationRequestMdcFilter.class,
     TeamManagementHandlerInterceptor.class,
     StaticRoleHandlerInterceptor.class,
-    UserCanManageAssetsInterceptor.class
+    UserCanManageAssetsInterceptor.class,
+    EnergyPortalAccountsControllerAdvice.class,
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
@@ -88,7 +91,8 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     ServiceConfigurationProperties.class,
     AccessibilityConfigurationProperties.class,
     AnalyticsConfigurationProperties.class,
-    FeedbackConfigurationProperties.class
+    FeedbackConfigurationProperties.class,
+    EnergyPortalAccountsConfigurationProperties.class,
 })
 public abstract class AbstractControllerTest {
 

@@ -16,6 +16,13 @@
       hintText="The field or facility operator has been preselected here."
       selectorMinInputLength=2
     />
+      <@fdsDetails.summaryDetails
+        summaryTitle="The primary operator I want to select is not shown in the list"
+      >
+        <p class="govuk-body">
+          If the primary operator you want to select is not shown in the list then you can <@requestNewCompany.requestCompanyLink/>
+        </p>
+      </@fdsDetails.summaryDetails>
     <@fdsAction.submitButtons
       linkSecondaryAction=true
       secondaryLinkText="Cancel"
