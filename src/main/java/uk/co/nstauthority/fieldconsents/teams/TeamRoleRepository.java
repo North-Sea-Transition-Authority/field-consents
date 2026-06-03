@@ -50,4 +50,8 @@ public interface TeamRoleRepository extends ListCrudRepository<TeamRole, UUID> {
       Collection<Role> roles,
       TeamType teamType
   );
+
+  @EntityGraph("teamRole")
+  boolean existsByWuaId(long wuaId);
+
 }

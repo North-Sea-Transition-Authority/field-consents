@@ -48,3 +48,5 @@ node_modules
 
 /src/main/resources/document-assets/all.css
 /src/main/resources/document-assets/all.css.map
+
+application-local.properties
