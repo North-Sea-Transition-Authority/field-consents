@@ -54,8 +54,7 @@ class TeamRolesUpdateHandlerTest {
           SERVICE_NAME,
       "dev1",
       false,
-      false,
-      null,
+      "testBaseUrl",
       null
   );
 
