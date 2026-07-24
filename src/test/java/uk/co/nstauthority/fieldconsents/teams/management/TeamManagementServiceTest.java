@@ -300,8 +300,6 @@ class TeamManagementServiceTest {
 
     when(userApi.findUserById(eq(1L), refEq(expectedProjection), any(RequestPurpose.class)))
         .thenReturn(Optional.of(USER_1));
-    when(teamRoleRepository.findByTeam(regTeam))
-        .thenReturn(List.of(regTeamUser1RoleManage)); // Make doesTeamHaveTeamManager() check return true
 
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
@@ -326,7 +324,6 @@ class TeamManagementServiceTest {
   @Test
   void setUserTeamRoles_isNewUser_andNonFoxIdp() {
     when(userApi.findUserById(anyLong(), any(), any())).thenReturn(Optional.of(USER_1));
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of());
 
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
@@ -337,25 +334,11 @@ class TeamManagementServiceTest {
   @Test
   void setUserTeamRoles_isNotNewUser() {
     when(userApi.findUserById(anyLong(), any(), any())).thenReturn(Optional.of(USER_1));
-    when(teamRoleRepository.findByTeam(regTeam)).thenReturn(List.of(regTeamUser1RoleManage));
     when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of(regTeamUser1RoleManage));
 
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
     verifyNoInteractions(energyPortalServiceAccessService);
-  }
-
-  @Test
-  void setUserTeamRoles_noTeamManagerLeft() {
-    when(userApi.findUserById(eq(1L), any(), any(RequestPurpose.class)))
-        .thenReturn(Optional.of(USER_1));
-
-    when(teamRoleRepository.findByTeam(regTeam))
-        .thenReturn(List.of()); // Make doesTeamHaveTeamManager() check return false
-
-    var roles = List.of(Role.INDUSTRY_ACCESS_MANAGER);
-    assertThatExceptionOfType(TeamManagementException.class)
-        .isThrownBy(() -> teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, roles));
   }
 
   @Test

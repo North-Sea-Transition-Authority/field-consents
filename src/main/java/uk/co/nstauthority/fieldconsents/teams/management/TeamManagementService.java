@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams.management;
 
 import jakarta.transaction.Transactional;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -154,6 +155,19 @@ public class TeamManagementService {
     return teamQueryService.getTeamMemberViews(teamRoles);
   }
 
+  /**
+   * This sets the roles for a given user and team. It also validates:
+   * - The given roles are valid for the team type of the given team.
+   * - A user exists for the given wuaId.
+   * - The given wuaId is active.
+   * - The given wuaId is not a shared account.
+   * It does not, however, validate that a team has at least one access manager after the roles have been updated. Consumers
+   * should validate that before calling this method, unless calling it in response to an EPAS EPMQ message.
+   *
+   * @param wuaId The wuaId of the user who's roles we want to update
+   * @param team  The team which the user roles are being set for.
+   * @param roles The roles to assign to the user.
+   */
   @Transactional
   public void setUserTeamRoles(Long wuaId, Team team, Collection<Role> roles) {
     if (!new HashSet<>(team.getTeamType().getAllowedRoles()).containsAll(roles)) {
@@ -190,10 +204,6 @@ public class TeamManagementService {
         }).toList();
 
     teamRoleRepository.saveAll(newTeamRoles);
-
-    if (!doesTeamHaveTeamManager(team)) {
-      throw new TeamManagementException("At least 1 team manager must exist in team %s".formatted(team.getId()));
-    }
 
     energyPortalAccountsMessagePublishingService.publishUsersRolesForTeam(
         wuaId,
@@ -278,12 +288,10 @@ public class TeamManagementService {
     return teamRepository.findByTeamType(teamType);
   }
 
-  private boolean doesTeamHaveTeamManager(Team team) {
-    return teamRoleRepository.findByTeam(team).stream()
-        .anyMatch(teamRole -> teamRole.getRole().equals(Role.ACCESS_MANAGER));
-  }
-
   private Set<Team> getTeamsUserCanManage(ServiceUserDetail userDetail) {
+    if (userDetail == null) {
+      return Collections.emptySet();
+    }
     var userTeamRoles = teamRoleRepository.findByWuaIdAndRole(userDetail.wuaId(), Role.ACCESS_MANAGER);
     return userTeamRoles.stream()
         .map(TeamRole::getTeam)
