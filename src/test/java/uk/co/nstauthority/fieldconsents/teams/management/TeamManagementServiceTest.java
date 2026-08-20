@@ -301,23 +301,47 @@ class TeamManagementServiceTest {
     when(userApi.findUserById(eq(1L), refEq(expectedProjection), any(RequestPurpose.class)))
         .thenReturn(Optional.of(USER_1));
 
+    when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of(regTeamUser1RoleManage, regTeamUser1RoleOrgAdmin));
+
     teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER));
 
     verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_1_WUA_ID, regTeam);
     verify(teamRoleRepository).saveAll(teamRoleListCaptor.capture());
+    verify(energyPortalServiceAccessService, never()).removeUser(anyLong());
 
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getTeam)
-        .contains(regTeam, regTeam);
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getWuaId)
-        .contains(USER_1_WUA_ID, USER_1_WUA_ID);
-    assertThat(teamRoleListCaptor.getValue()).extracting(TeamRole::getRole)
-        .contains(Role.ACCESS_MANAGER, Role.INDUSTRY_ACCESS_MANAGER);
+    assertThat(teamRoleListCaptor.getValue()).containsExactlyInAnyOrder(regTeamUser1RoleManage, regTeamUser1RoleOrgAdmin);
 
     verify(energyPortalAccountsMessagePublishingService).publishUsersRolesForTeam(
         USER_1_WUA_ID,
         regTeam.getId().toString(),
         regTeam.getTeamType().name(),
         Set.of(Role.ACCESS_MANAGER.name(), Role.INDUSTRY_ACCESS_MANAGER.name())
+    );
+  }
+
+  @Test
+  void setUserTeamRoles_whenNoTeamRolesLeft_thenRemoveEpasAccess() {
+    var expectedProjection = new UserProjectionRoot()
+        .isAccountShared()
+        .canLogin();
+
+    when(userApi.findUserById(eq(USER_1_WUA_ID), refEq(expectedProjection), any(RequestPurpose.class)))
+        .thenReturn(Optional.of(USER_1));
+    when(teamRoleRepository.findAllByWuaId(USER_1_WUA_ID)).thenReturn(List.of());
+
+    teamManagementService.setUserTeamRoles(USER_1_WUA_ID, regTeam, List.of());
+
+    verify(teamRoleRepository).deleteByWuaIdAndTeam(USER_1_WUA_ID, regTeam);
+    verify(teamRoleRepository).saveAll(teamRoleListCaptor.capture());
+    verify(energyPortalServiceAccessService).removeUser(USER_1_WUA_ID);
+
+    assertThat(teamRoleListCaptor.getValue()).isEqualTo(List.of());
+
+    verify(energyPortalAccountsMessagePublishingService).publishUsersRolesForTeam(
+        USER_1_WUA_ID,
+        regTeam.getId().toString(),
+        regTeam.getTeamType().name(),
+        Set.of()
     );
   }
 
@@ -451,7 +475,7 @@ class TeamManagementServiceTest {
   }
 
   @Test
-  void updateTeamName(){
+  void updateTeamName() {
     var newName = "New Team Name";
 
     teamManagementService.updateTeamName(orgTeam1, newName);

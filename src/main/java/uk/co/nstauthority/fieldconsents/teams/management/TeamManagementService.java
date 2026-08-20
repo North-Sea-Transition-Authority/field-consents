@@ -215,6 +215,10 @@ public class TeamManagementService {
     if (isNewUser) {
       energyPortalServiceAccessService.addUser(wuaId);
     }
+
+    if (teamRoleRepository.findAllByWuaId(wuaId).isEmpty()) {
+      energyPortalServiceAccessService.removeUser(wuaId);
+    }
   }
 
   @Transactional
