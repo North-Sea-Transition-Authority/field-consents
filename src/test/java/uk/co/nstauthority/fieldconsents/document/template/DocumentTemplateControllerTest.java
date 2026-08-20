@@ -89,6 +89,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
 
     var topLevelDocumentTemplateSectionSummaryViews = List.of(
         new DocumentTemplateSectionSummaryView(
+            UUID.randomUUID(),
             "1",
             "Test title 1",
             "Test content 1",
@@ -100,6 +101,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
             List.of()
         ),
         new DocumentTemplateSectionSummaryView(
+            UUID.randomUUID(),
             "1",
             "Test title 2",
             "Test content 2",

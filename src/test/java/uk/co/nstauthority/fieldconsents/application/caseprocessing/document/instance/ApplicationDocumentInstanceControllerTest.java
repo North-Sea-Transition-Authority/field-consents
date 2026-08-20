@@ -98,7 +98,9 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var documentInstanceSectionSummaryViews = List.of(
+
         new DocumentInstanceSectionSummaryView(
+            UUID.randomUUID(),
             "1",
             "Test title 1",
             "Test content 1",
@@ -109,6 +111,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             List.of()
         ),
         new DocumentInstanceSectionSummaryView(
+            UUID.randomUUID(),
             "2",
             "Test title 2",
             "Test content 2",

@@ -8,6 +8,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,7 @@ class FieldConsentsDocumentTemplateSectionViewServiceTest {
 
     var topLevelDocumentTemplateSectionSummaryViews = List.of(
         new DocumentTemplateSectionSummaryView(
+            UUID.randomUUID(),
             "1",
             "Test title",
             "Test content",

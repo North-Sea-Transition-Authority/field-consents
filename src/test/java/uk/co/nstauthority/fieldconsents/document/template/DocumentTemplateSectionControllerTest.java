@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.template;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -91,18 +93,29 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
-    mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionBefore(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/addOrEditDocumentTemplateSection"))
-        .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateDto.id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsKey("form")
+        .extracting(m -> m.get("form"))
+        .asInstanceOf(type(DocumentTemplateSectionForm.class))
+        .usingRecursiveComparison()
+        .isEqualTo(DocumentTemplateSectionForm.empty());
   }
 
   @SecurityTest
@@ -275,18 +288,29 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
-    mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionAfter(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/addOrEditDocumentTemplateSection"))
-        .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateDto.id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsKey("form")
+        .extracting(m -> m.get("form"))
+        .asInstanceOf(type(DocumentTemplateSectionForm.class))
+        .usingRecursiveComparison()
+        .isEqualTo(DocumentTemplateSectionForm.empty());
   }
 
   @SecurityTest
@@ -459,18 +483,29 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
-    mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSubsection(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/addOrEditDocumentTemplateSection"))
-        .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateDto.id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsKey("form")
+        .extracting(m -> m.get("form"))
+        .asInstanceOf(type(DocumentTemplateSectionForm.class))
+        .usingRecursiveComparison()
+        .isEqualTo(DocumentTemplateSectionForm.empty());
   }
 
   @SecurityTest
@@ -604,18 +639,29 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
-    mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getEditDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/addOrEditDocumentTemplateSection"))
-        .andExpect(model().attribute("form", DocumentTemplateSectionForm.from(documentTemplateSectionDto)))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.EDIT_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateDto.id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsKey("form")
+        .extracting(m -> m.get("form"))
+        .asInstanceOf(type(DocumentTemplateSectionForm.class))
+        .usingRecursiveComparison()
+        .isEqualTo(DocumentTemplateSectionForm.from(documentTemplateSectionDto));
   }
 
   @SecurityTest

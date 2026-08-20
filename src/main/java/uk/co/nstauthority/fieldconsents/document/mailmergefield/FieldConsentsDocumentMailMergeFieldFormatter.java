@@ -15,4 +15,9 @@ public class FieldConsentsDocumentMailMergeFieldFormatter implements DocumentMai
   public String formatError(String value) {
     return "<span class=\"govuk-tag--red\">%s</span>".formatted(value);
   }
+
+  @Override
+  public String formatFootnotes(String value) {
+    return "<span class=\"govuk-tag--yellow\">%s</span>".formatted(value);
+  }
 }
