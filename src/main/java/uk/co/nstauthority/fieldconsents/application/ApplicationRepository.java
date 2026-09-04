@@ -24,6 +24,8 @@ public interface ApplicationRepository extends CrudRepository<Application, Integ
   )
   Optional<Integer> findLatestNonMigratedApplicationNumber();
 
+  // A revision application only blocks a further revision while it is still live. WITHDRAWN, DELETED and CLOSED are all
+  // terminal statuses which leave the consent free to be revised again.
   // If a revised application has two versions, SUBMITTED (1) and DELETED (2), the SUBMITTED one will be considered to
   // be the latest version as DELETED is a special status that reverts the application back to the previous version.
   @Query(
@@ -40,11 +42,10 @@ public interface ApplicationRepository extends CrudRepository<Application, Integ
           AND av.status != 'DELETED'
         )
       WHERE a = :application
-      AND trav.status != 'WITHDRAWN'
-      AND trav.status != 'DELETED'
+      AND trav.status NOT IN ('WITHDRAWN', 'DELETED', 'CLOSED')
       """
   )
-  boolean nonWithdrawnOrDeletedRevisionApplicationExists(Application application);
+  boolean activeRevisionApplicationExists(Application application);
 
   @Query(
       """

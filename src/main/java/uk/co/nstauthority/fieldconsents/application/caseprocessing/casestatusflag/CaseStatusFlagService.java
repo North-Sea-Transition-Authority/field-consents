@@ -88,10 +88,10 @@ public class CaseStatusFlagService {
       case CONSENT_APPROVED_FOR_ISSUE -> consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application);
       case CONSENT_NOT_APPROVED_FOR_ISSUE -> !consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application);
       case NON_EXPIRED_CONSENT_EXISTS -> consentService.nonExpiredConsentExists(applicationVersion);
-      case NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST ->
-          !applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application);
 
       // Revisions
+      case ACTIVE_REVISION_APPLICATION_DOES_NOT_EXIST ->
+          !applicationService.activeRevisionApplicationExists(application);
       case IS_REVISABLE -> applicationRevisionService.isRevisable(applicationVersion);
 
       // Consultation

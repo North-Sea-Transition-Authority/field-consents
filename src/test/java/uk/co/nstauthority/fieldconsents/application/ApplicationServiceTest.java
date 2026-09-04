@@ -625,13 +625,13 @@ public class ApplicationServiceTest {
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
-  void nonWithdrawnOrDeletedRevisionApplicationExists(boolean nonWithdrawnOrDeletedRevisionApplicationExists) {
+  void activeRevisionApplicationExists(boolean activeRevisionApplicationExists) {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    when(applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(application))
-        .thenReturn(nonWithdrawnOrDeletedRevisionApplicationExists);
+    when(applicationRepository.activeRevisionApplicationExists(application))
+        .thenReturn(activeRevisionApplicationExists);
 
-    assertThat(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application))
-        .isEqualTo(nonWithdrawnOrDeletedRevisionApplicationExists);
+    assertThat(applicationService.activeRevisionApplicationExists(application))
+        .isEqualTo(activeRevisionApplicationExists);
   }
 }

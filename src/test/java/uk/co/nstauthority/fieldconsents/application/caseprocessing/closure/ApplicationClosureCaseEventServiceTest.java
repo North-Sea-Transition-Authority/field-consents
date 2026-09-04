@@ -106,6 +106,41 @@ class ApplicationClosureCaseEventServiceTest {
   }
 
   @Test
+  void getCaseEvents_whenVersionHasBeenClosedMoreThanOnce_thenLatestClosureIsUsed() {
+    var laterClosureDateTime = applicationVersion1ClosureAudit.auditDateTime().plusSeconds(60);
+    var applicationVersion1SecondClosureAudit = new ApplicationVersionAudit(
+        applicationVersion1ClosureAudit.applicationVersionId(),
+        101L,
+        laterClosureDateTime,
+        101L,
+        ApplicationVersionStatus.CLOSED,
+        200L,
+        Role.CASE_OFFICER
+    );
+
+    var applicationVersionAudits = List.of(
+        applicationVersion1CreationAudit,
+        applicationVersion1ClosureAudit,
+        applicationVersion1SecondClosureAudit,
+        applicationVersion2CreationAudit
+    );
+
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationId))
+        .thenReturn(applicationVersions);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions))
+        .thenReturn(applicationVersionAudits);
+
+    var expectedCaseEvent = CaseEvent.builder(applicationVersions.getFirst())
+        .withEventType(CaseEventType.APPLICATION_CLOSED)
+        .withMainEventUserWuaId(applicationVersion1SecondClosureAudit.caseOfficerWuaId())
+        .withEventDateTime(laterClosureDateTime)
+        .build();
+
+    assertThat(applicationClosureCaseEventService.getCaseEvents(application))
+        .containsExactly(expectedCaseEvent);
+  }
+
+  @Test
   void getCaseEvents_withNoClosureEvent() {
     var applicationVersionAudits = List.of(
         applicationVersion1CreationAudit,

@@ -46,7 +46,10 @@ public class ApplicationClosureCaseEventService implements CaseEventService<Appl
             .filter((applicationVersionAudit -> ApplicationVersionStatus.CLOSED.equals(applicationVersionAudit.status())))
             .collect(Collectors.toMap(
                 ApplicationVersionAudit::applicationVersionId,
-                Function.identity()
+                Function.identity(),
+                // A version can be closed more than once if a closure is reverted, so keep the most recent audit row.
+                // Audits are returned in ascending date order, so the later row wins.
+                (earlierAudit, laterAudit) -> laterAudit
             ));
 
     applicationVersionClosedAuditsByApplicationVersionId.forEach(

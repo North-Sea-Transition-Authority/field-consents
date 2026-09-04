@@ -298,8 +298,8 @@ public class ApplicationService {
     return applicationVersionRepository.existsByApplicationAndMigratedTrue(application);
   }
 
-  public boolean nonWithdrawnOrDeletedRevisionApplicationExists(Application application) {
-    return applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(application);
+  public boolean activeRevisionApplicationExists(Application application) {
+    return applicationRepository.activeRevisionApplicationExists(application);
   }
 
   private Application newApplication(

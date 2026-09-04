@@ -218,12 +218,13 @@ class CaseStatusFlagServiceTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void isCaseStatusFlagApplicable_NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST(boolean nonWithdrawnOrDeletedRevisionApplicationExists) {
-    when(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application))
-        .thenReturn(nonWithdrawnOrDeletedRevisionApplicationExists);
+  void isCaseStatusFlagApplicable_ACTIVE_REVISION_APPLICATION_DOES_NOT_EXIST(boolean activeRevisionApplicationExists) {
+    when(applicationService.activeRevisionApplicationExists(application))
+        .thenReturn(activeRevisionApplicationExists);
 
-    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST))
-        .isEqualTo(!nonWithdrawnOrDeletedRevisionApplicationExists);
+    assertThat(caseStatusFlagService
+        .isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.ACTIVE_REVISION_APPLICATION_DOES_NOT_EXIST))
+        .isEqualTo(!activeRevisionApplicationExists);
   }
 
   @ParameterizedTest
