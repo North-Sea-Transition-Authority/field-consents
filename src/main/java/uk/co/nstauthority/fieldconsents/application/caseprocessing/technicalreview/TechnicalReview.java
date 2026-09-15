@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -21,7 +22,16 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 @Table(name = "application_technical_reviews")
 @NamedEntityGraph(
     name = "technicalReview",
-    attributeNodes = {@NamedAttributeNode("requestApplicationVersion"), @NamedAttributeNode("responseApplicationVersion")}
+    attributeNodes = {
+        @NamedAttributeNode(value = "requestApplicationVersion", subgraph = "applicationVersionWithApplication"),
+        @NamedAttributeNode(value = "responseApplicationVersion", subgraph = "applicationVersionWithApplication")
+    },
+    subgraphs = {
+        @NamedSubgraph(
+            name = "applicationVersionWithApplication",
+            attributeNodes = {@NamedAttributeNode("application")}
+        )
+    }
 )
 public class TechnicalReview {
 

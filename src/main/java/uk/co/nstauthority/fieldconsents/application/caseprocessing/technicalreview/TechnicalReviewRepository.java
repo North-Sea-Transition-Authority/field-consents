@@ -43,9 +43,6 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
   List<Long> findAllTechnicalReviewerWuaIdsByTechnicalReviewStatus(TechnicalReviewStatus status);
 
   @EntityGraph("technicalReview")
-  List<TechnicalReview> findAllByTechnicalReviewerWuaId(Long technicalReviewerWuaId);
-
-  @EntityGraph("technicalReview")
   List<TechnicalReview> findAllByTechnicalReviewerWuaIdAndTechnicalReviewStatus(
       Long technicalReviewerWuaId,
       TechnicalReviewStatus status
