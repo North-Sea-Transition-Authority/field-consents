@@ -3,9 +3,9 @@ package uk.co.nstauthority.fieldconsents.summary;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil.summaryDataView;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
 
 class SummaryCardTest {

@@ -16,7 +16,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -52,8 +51,7 @@ class ConsentFileControllerTest extends AbstractApplicationControllerTest {
   @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @Captor
-  private ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor;
+  private final ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor = ArgumentCaptor.captor();
 
   private static final int APPLICATION_ID = 1;
   private static final UUID FILE_ID = UUID.randomUUID();

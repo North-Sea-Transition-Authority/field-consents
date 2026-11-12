@@ -151,6 +151,9 @@ class EmailServiceTest {
       static void setup() {
         given(notificationLibraryClient.isRunningProductionMode())
             .willReturn(true);
+        // the mock is shared across nested classes, so reset the test mode stub in case WhenInTestMode ran first
+        given(notificationLibraryClient.isRunningTestMode())
+            .willReturn(false);
       }
 
       @DisplayName("THEN a blank string test email subject prefix will be included as a mail merge field")

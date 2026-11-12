@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,8 +47,7 @@ class CaseNoteFileControllerTest extends AbstractApplicationControllerTest {
   @MockitoBean
   private CaseNotesService caseNotesService;
 
-  @Captor
-  private ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor;
+  private final ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor = ArgumentCaptor.captor();
 
   private Application application;
 

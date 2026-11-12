@@ -22,7 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -54,8 +53,7 @@ public class FieldControllerTest extends AbstractControllerTest {
   @MockitoBean
   private AssetService assetService;
 
-  @Captor
-  private ArgumentCaptor<Supplier<FieldWithOperatorAndLicencesJson>> fieldJsonSupplierCaptor;
+  private final ArgumentCaptor<Supplier<FieldWithOperatorAndLicencesJson>> fieldJsonSupplierCaptor = ArgumentCaptor.captor();
 
   @SecurityTest
   void manageField_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {

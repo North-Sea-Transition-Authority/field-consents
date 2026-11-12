@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.RoleGroup;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;

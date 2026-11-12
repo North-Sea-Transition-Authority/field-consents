@@ -23,7 +23,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -65,8 +64,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   @MockitoBean
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
-  @Captor
-  private ArgumentCaptor<ConsentDataForm> consentDataFormCaptor;
+  private final ArgumentCaptor<ConsentDataForm> consentDataFormCaptor = ArgumentCaptor.captor();
 
   private Application application;
   private ApplicationVersion applicationVersion;

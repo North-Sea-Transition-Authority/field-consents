@@ -28,7 +28,6 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -77,8 +76,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   @MockitoBean
   private ApplicationSummaryService applicationSummaryService;
 
-  @Captor
-  private ArgumentCaptor<TechnicalReviewResponseForm> formCaptor;
+  private final ArgumentCaptor<TechnicalReviewResponseForm> formCaptor = ArgumentCaptor.captor();
 
   private ApplicationVersion applicationVersion;
 

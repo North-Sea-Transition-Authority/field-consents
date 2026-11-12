@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
@@ -70,8 +70,7 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   private MockHttpSession session;
 
-  @Mock
-  private BulkAssignCaseOfficerSessionContext sessionContext;
+  private final BulkAssignCaseOfficerSessionContext sessionContext = mock(BulkAssignCaseOfficerSessionContext.class);
 
   @BeforeEach
   void setUp() {

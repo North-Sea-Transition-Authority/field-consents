@@ -35,7 +35,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -70,8 +69,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @Captor
-  private ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor;
+  private final ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor = ArgumentCaptor.captor();
 
   private ApplicationVersion applicationVersion;
 

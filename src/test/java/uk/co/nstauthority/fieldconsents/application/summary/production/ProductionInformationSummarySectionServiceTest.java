@@ -9,8 +9,6 @@ import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUt
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +21,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -95,7 +94,7 @@ class ProductionInformationSummarySectionServiceTest {
       objectMapper.writeValueAsString(gasProductionChartData);
   ApplicationVersion applicationVersion;
 
-  ProductionInformationSummarySectionServiceTest() throws JsonProcessingException {
+  ProductionInformationSummarySectionServiceTest() {
   }
 
   @BeforeEach

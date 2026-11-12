@@ -24,10 +24,8 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -67,8 +65,7 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
   @MockitoBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @Captor
-  private ArgumentCaptor<ConsentPreparationSupportingDocumentsForm> consentSupportingDocumentsFormCaptor;
+  private final ArgumentCaptor<ConsentPreparationSupportingDocumentsForm> consentSupportingDocumentsFormCaptor = ArgumentCaptor.captor();
 
   private ApplicationVersion applicationVersion;
   private Application application;

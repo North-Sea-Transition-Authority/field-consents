@@ -29,7 +29,6 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -82,8 +81,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   @Autowired
   private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
-  @Captor
-  private ArgumentCaptor<Function<UUID, String>> returnUrlArgumentCaptor;
+  private final ArgumentCaptor<Function<UUID, String>> returnUrlArgumentCaptor = ArgumentCaptor.captor();
 
   private ApplicationVersion applicationVersion;
 

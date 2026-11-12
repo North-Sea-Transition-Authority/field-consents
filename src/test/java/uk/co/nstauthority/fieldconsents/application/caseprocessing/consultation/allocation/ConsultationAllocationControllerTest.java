@@ -64,10 +64,11 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
       true
   );
   private static final ServiceUserDetail RESPONDER_SERVICE_USER = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
+  // explicit wuaIds as the builder's random ones can collide, which breaks the map below
   private static final List<TeamMemberView> TEAM_MEMBER_VIEWS = List.of(
-      TeamMemberViewTestUtil.newBuilder().build(),
-      TeamMemberViewTestUtil.newBuilder().build(),
-      TeamMemberViewTestUtil.newBuilder().build()
+      TeamMemberViewTestUtil.newBuilder().withWuaId(100L).build(),
+      TeamMemberViewTestUtil.newBuilder().withWuaId(101L).build(),
+      TeamMemberViewTestUtil.newBuilder().withWuaId(102L).build()
   );
   private static final Map<String, String> TEAM_MEMBER_VIEWS_AS_MAP = TEAM_MEMBER_VIEWS
       .stream()

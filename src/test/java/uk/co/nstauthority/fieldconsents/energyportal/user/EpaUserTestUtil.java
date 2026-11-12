@@ -26,6 +26,7 @@ class EpaUserTestUtil {
     private String middleInitials = "initial";
     private String primaryEmailAddress = "email address";
     private String telephoneNumber = "telephone number";
+    private String jobTitle = "job title";
     private boolean canLogin = true;
     private boolean isAccountShared = false;
     private AccountStatus accountStatus = AccountStatus.NEW;
@@ -102,6 +103,7 @@ class EpaUserTestUtil {
           middleInitials,
           primaryEmailAddress,
           telephoneNumber,
+          jobTitle,
           canLogin,
           isAccountShared,
           accountStatus

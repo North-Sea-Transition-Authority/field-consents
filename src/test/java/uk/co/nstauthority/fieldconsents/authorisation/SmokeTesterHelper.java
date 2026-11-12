@@ -14,7 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -112,9 +112,9 @@ public abstract class SmokeTesterHelper<T> {
     );
   }
 
-  private MockHttpServletRequestBuilder constructRequestToTest(TestableEndpoint testableEndpoint) {
+  private AbstractMockHttpServletRequestBuilder<?> constructRequestToTest(TestableEndpoint testableEndpoint) {
 
-    MockHttpServletRequestBuilder requestToTest;
+    AbstractMockHttpServletRequestBuilder<?> requestToTest;
 
     if (testableEndpoint.requestMethod().equals(SmokeTestHttpMethod.GET)) {
       requestToTest = get(testableEndpoint.url());

@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import uk.co.nstauthority.fieldconsents.charts.EmissionsChartData;
 import uk.co.nstauthority.fieldconsents.charts.ProductionChartData;
 
@@ -66,7 +66,7 @@ public record SummaryCard(
       var chartDataJson = objectMapper.writeValueAsString(emissionsChartData);
       var summaryChart = new SummaryChart(SummaryChartType.STACKED_BAR_CHART, chartDataJson);
       return new SummaryCard(null, SummaryCardType.CHART_SUMMARY, summaryChart);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to serialise chart data into JSON");
     }
   }
@@ -77,7 +77,7 @@ public record SummaryCard(
       var chartDataJson = objectMapper.writeValueAsString(productionChartData);
       var summaryChart = new SummaryChart(SummaryChartType.FLOATING_BAR_CHART, chartDataJson);
       return new SummaryCard(null, SummaryCardType.CHART_SUMMARY, summaryChart);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to serialise chart data into JSON");
     }
   }

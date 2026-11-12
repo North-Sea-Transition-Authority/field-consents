@@ -14,8 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import uk.co.nstauthority.fieldconsents.configuration.EnergyPortalMessageQueueTestConfiguration;
 
@@ -32,12 +32,12 @@ public abstract class AbstractIntegrationTest {
   @Autowired
   protected EntityManager entityManager;
 
-  protected static PostgreSQLContainer<?> fcsDb;
+  protected static PostgreSQLContainer fcsDb;
 
   @SuppressWarnings("resource")
   @DynamicPropertySource
   private static void addProperties(DynamicPropertyRegistry registry) {
-    fcsDb = new PostgreSQLContainer<>(DockerImageName.parse("postgres:14.3-alpine"))
+    fcsDb = new PostgreSQLContainer(DockerImageName.parse("postgres:14.3-alpine"))
         .withDatabaseName("fcs")
         .withUsername("fcs_app")
         .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("Postgres")));

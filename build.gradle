@@ -1,5 +1,5 @@
 plugins {
-  id("org.springframework.boot") version "3.5.15"
+  id("org.springframework.boot") version "4.1.2"
   id("io.spring.dependency-management") version "1.1.7"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
@@ -23,7 +23,12 @@ java {
   }
 }
 
-def fileUploadLibraryVersion = 'v3.0.0'
+def fileUploadLibraryVersion = 'v4.0.0'
+def epmqVersion = 'v5.0.0'
+
+// The EPA client's DGS 12 GraphQL client needs com.jayway.jsonpath.spi.json.Jackson3JsonProvider, which only
+// exists from json-path 3.0.0. Spring Boot 4.1's BOM still pins 2.10.0, so override it here.
+ext['json-path.version'] = '3.0.0'
 
 sourceSets {
   epmqMessagesJarIntegrationTest {}
@@ -42,42 +47,41 @@ dependencies {
   developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
   implementation 'org.springframework.boot:spring-boot-starter-freemarker'
-  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-webmvc'
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
-  implementation 'org.springframework.boot:spring-boot-starter-aop'
+  implementation 'org.springframework.boot:spring-boot-starter-aspectj'
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-configuration-processor'
   implementation 'org.springframework.boot:spring-boot-starter-security'
   implementation "org.springframework.data:spring-data-envers"
-  implementation 'org.springframework.security:spring-security-saml2-service-provider'
-  implementation 'org.springframework.session:spring-session-core'
-  implementation 'org.springframework.session:spring-session-jdbc'
-  implementation 'org.flywaydb:flyway-core'
+  implementation 'org.springframework.boot:spring-boot-starter-security-saml2'
+  implementation 'org.springframework.boot:spring-boot-starter-session-jdbc'
+  implementation 'org.springframework.boot:spring-boot-starter-flyway'
   implementation 'org.flywaydb:flyway-database-postgresql'
   implementation 'org.apache.commons:commons-lang3:3.18.0'
   implementation 'org.apache.commons:commons-collections4:4.4'
   implementation 'org.apache.commons:commons-text:1.12.0'
   implementation 'net.logstash.logback:logstash-logback-encoder:7.2'
 
-  implementation 'uk.co.fivium.energyportalapi:client:v17.0.0'
-  implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:spring-boot-3.2-support-SNAPSHOT'
+  implementation 'uk.co.fivium.energyportalapi:client:v22.0.0'
+  implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v5.0.0'
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
-  implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v4.0.0'
-  implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.2.1'
-  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:v3.7.1'
-  implementation 'uk.co.fivium:ftss-client-spring-boot-starter:v1.0.0'
-  implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
-  implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
-  implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v9.0.0'
-  implementation 'uk.co.fivium:digital-enum-materialisation-library-spring-boot-starter:v1.1.2'
+  implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v5.0.0'
+  implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v2.0.0'
+  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:v4.0.0'
+  implementation 'uk.co.fivium:ftss-client-spring-boot-starter:v2.0.0'
+  implementation 'uk.co.fivium.feedbackmanagementservice:client:v3.0.0'
+  implementation "uk.co.fivium.energyportalmessagequeue:spring-boot-starter:${epmqVersion}"
+  implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v10.0.0'
+  implementation 'uk.co.fivium:digital-enum-materialisation-library-spring-boot-starter:v2.0.0'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'
   implementation 'org.jooq:jooq-meta'
 
-  implementation 'net.javacrumbs.shedlock:shedlock-spring:5.6.0'
-  implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.6.0'
+  implementation 'net.javacrumbs.shedlock:shedlock-spring:7.10.1'
+  implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1'
 
   implementation 'io.micrometer:micrometer-registry-statsd'
 
@@ -90,16 +94,17 @@ dependencies {
   testImplementation "uk.co.fivium:file-upload-spring-boot-starter-test:${fileUploadLibraryVersion}"
 
   testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test'
-  testImplementation 'org.testcontainers:postgresql'
-  testImplementation 'org.testcontainers:junit-jupiter'
-  testImplementation 'org.springframework.security:spring-security-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+  testImplementation 'org.testcontainers:testcontainers-postgresql'
+  testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
 
   testImplementation 'net.datafaker:datafaker:2.4.1'
 
   epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:fieldconsents-epmq-messages:integration-test'
-  epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
+  epmqMessagesJarIntegrationTestImplementation "uk.co.fivium.energyportalmessagequeue:spring-boot-starter:${epmqVersion}"
 
   constraints {
     implementation("com.google.guava:guava:32.1.3-jre") {

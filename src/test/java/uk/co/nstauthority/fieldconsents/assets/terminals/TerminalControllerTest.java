@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -38,7 +37,7 @@ import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTer
 import uk.co.nstauthority.fieldconsents.teams.Role;
 
 @ContextConfiguration(classes = TerminalController.class)
-public class TerminalControllerTest extends AbstractControllerTest {
+class TerminalControllerTest extends AbstractControllerTest {
 
   private static final Set<Role> INDUSTRY_ROLES = EnumSet.of(
       Role.CREATOR,
@@ -55,8 +54,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @MockitoBean
   private AssetService assetService;
 
-  @Captor
-  private ArgumentCaptor<Supplier<TerminalWithOperatorJson>> terminalJsonSupplierCaptor;
+  private final ArgumentCaptor<Supplier<TerminalWithOperatorJson>> terminalJsonSupplierCaptor = ArgumentCaptor.captor();
 
   @SecurityTest
   void manageTerminal_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {

@@ -178,7 +178,7 @@ class ConsentDataFormValidatorTest {
     assertThat(errorMap).containsOnly(
         entry(
             "longTermProductionConsentProductionFromDateInput.dayInput.inputValue",
-            List.of("Consent production from date must be a real date")
+            List.of("Enter a complete consent production from date")
         ),
         entry(
             "longTermProductionConsentProductionFromDateInput.monthInput.inputValue",
